@@ -1,0 +1,1 @@
+const String kBaseUrl = 'http://35.178.123.67:8071/api/v1';
