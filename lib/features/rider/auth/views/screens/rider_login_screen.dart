@@ -1,4 +1,4 @@
-import 'package:delivery_boy/pages/login_signup/widget/customphone.widget.dart';
+import 'package:delivery_boy/features/rider/shared_widgets/app_phone_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,6 +6,7 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:go_router/go_router.dart';
 import 'package:delivery_boy/constant/asset_images.dart';
+import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/constant/constant.dart';
 import 'package:delivery_boy/core/router/app_routes.dart';
 import 'package:delivery_boy/features/rider/auth/viewmodels/rider_auth_viewmodel.dart';
@@ -19,14 +20,14 @@ class RiderLoginScreen extends ConsumerStatefulWidget {
 
 class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
     with SingleTickerProviderStateMixin {
+  final _formKey = GlobalKey<FormState>();
+
   bool _obscurePassword = true;
-  String _phone = '';
+  String _fullPhone = '';
   String _password = '';
-  String _selectedCountryCode = '+233';
   DateTime? _lastBackPress;
 
-  late TextEditingController _phoneController;
-  late FocusNode _phoneFocusNode;
+  final _passwordCtrl = TextEditingController();
 
   late AnimationController _animController;
   late Animation<double> _fadeAnim;
@@ -35,34 +36,35 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
   @override
   void initState() {
     super.initState();
-    _phoneController = TextEditingController();
-    _phoneFocusNode = FocusNode();
-
     _animController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 800),
+      duration: const Duration(milliseconds: 700),
     );
-    _fadeAnim = CurvedAnimation(parent: _animController, curve: Curves.easeOut);
-    _slideAnim =
-        Tween<Offset>(begin: const Offset(0, 0.08), end: Offset.zero).animate(
-      CurvedAnimation(parent: _animController, curve: Curves.easeOut),
-    );
+    _fadeAnim =
+        CurvedAnimation(parent: _animController, curve: Curves.easeOut);
+    _slideAnim = Tween<Offset>(
+      begin: const Offset(0, 0.05),
+      end: Offset.zero,
+    ).animate(
+        CurvedAnimation(parent: _animController, curve: Curves.easeOut));
     _animController.forward();
   }
 
   @override
   void dispose() {
-    _phoneController.dispose();
-    _phoneFocusNode.dispose();
+    _passwordCtrl.dispose();
     _animController.dispose();
     super.dispose();
   }
 
-  bool get _isFilled => _phone.isNotEmpty && _password.isNotEmpty;
+  // Phone digits only (without country code) need ≥ 9 chars
+  bool get _isFilled => _fullPhone.length >= 12 && _password.isNotEmpty;
 
   Future<void> _login() async {
+    FocusScope.of(context).unfocus();
+    if (!_formKey.currentState!.validate()) return;
     final success = await ref.read(riderAuthProvider.notifier).login(
-          phone: '$_selectedCountryCode$_phone',
+          phone: _fullPhone,
           password: _password,
         );
     if (success && mounted) {
@@ -70,79 +72,27 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
     }
   }
 
-  Widget _buildInputField({
-    required Widget prefixWidget,
-    required String hint,
-    required void Function(String) onChanged,
-    bool obscure = false,
-    TextInputType keyboardType = TextInputType.text,
-    Widget? suffixWidget,
-  }) {
-    final size = MediaQuery.of(context).size;
-    final width = size.width;
-    final height = size.height;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.grey.shade200, width: 1.5),
-      ),
-      child: Row(
-        children: [
-          prefixWidget,
-          Expanded(
-            child: TextField(
-              obscureText: obscure,
-              enableSuggestions: !obscure,
-              autocorrect: !obscure,
-              keyboardType: keyboardType,
-              style: TextStyle(
-                  fontSize: width * 0.04, fontWeight: FontWeight.w500),
-              decoration: InputDecoration(
-                hintText: hint,
-                hintStyle: TextStyle(
-                    color: Colors.grey.shade400, fontSize: width * 0.036),
-                border: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(
-                    horizontal: width * 0.032, vertical: height * 0.022),
-              ),
-              onChanged: (v) => onChanged(v.trim()),
-            ),
-          ),
-          if (suffixWidget != null) suffixWidget,
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(riderAuthProvider);
     final isLoading = authState.status == AuthStatus.loading;
 
-    // Show error snackbar
     ref.listen<RiderAuthState>(riderAuthProvider, (_, next) {
       if (next.errorMessage != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(next.errorMessage!),
-            backgroundColor: Colors.red.shade700,
+            backgroundColor: AppColors.error,
           ),
         );
         ref.read(riderAuthProvider.notifier).clearError();
       }
     });
 
-    final size = MediaQuery.of(context).size;
-    final width = size.width;
-    final height = size.height;
-    final horizontalPadding = width * 0.064;
-    final spaceXL = height * 0.054;
-    final spaceL = height * 0.043;
-    final spaceM = height * 0.027;
-    final spaceS = height * 0.016;
-    final controlHeight = height * 0.075;
+    final mq = MediaQuery.of(context);
+    final w = mq.size.width;
+    final h = mq.size.height;
+    final hPad = (w * 0.06).clamp(20.0, 40.0);
 
     return PopScope(
       canPop: false,
@@ -162,187 +112,332 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
         }
       },
       child: Scaffold(
-        backgroundColor: scaffoldBgColor,
+        backgroundColor: AppColors.scaffold,
         body: SafeArea(
           child: FadeTransition(
             opacity: _fadeAnim,
             child: SlideTransition(
               position: _slideAnim,
-              child: SingleChildScrollView(
-                padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(height: spaceXL),
+              child: Form(
+                key: _formKey,
+                child: CustomScrollView(
+                  slivers: [
+                    SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(horizontal: hPad),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SizedBox(height: h * 0.06),
 
-                    // Logo
-                    Center(
-                      child: Container(
-                        width: width * 0.24,
-                        height: width * 0.24,
-                        decoration: BoxDecoration(
-                          color: primaryColor.withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(24),
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(24),
-                          child: Image.asset(
-                            AssetImages.deliveryBoy,
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                      ),
-                    ),
+                            // ── Logo + Brand ───────────────────────────────
+                            Center(
+                              child: Column(
+                                children: [
+                                  Container(
+                                    width: (w * 0.22).clamp(72.0, 100.0),
+                                    height: (w * 0.22).clamp(72.0, 100.0),
+                                    decoration: BoxDecoration(
+                                      borderRadius:
+                                          BorderRadius.circular(22),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: AppColors.primary
+                                              .withValues(alpha: 0.22),
+                                          blurRadius: 24,
+                                          offset: const Offset(0, 8),
+                                        ),
+                                      ],
+                                    ),
+                                    child: ClipRRect(
+                                      borderRadius:
+                                          BorderRadius.circular(22),
+                                      child: Image.asset(
+                                        AssetImages.bagyesLogo,
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(height: h * 0.014),
+                                  RichText(
+                                    text: TextSpan(
+                                      children: [
+                                        TextSpan(
+                                          text: 'Bagyes',
+                                          style: TextStyle(
+                                            fontFamily: 'Mukta',
+                                            fontSize: (w * 0.058)
+                                                .clamp(18.0, 26.0),
+                                            fontWeight: FontWeight.w900,
+                                            color: AppColors.textPrimary,
+                                            letterSpacing: -0.4,
+                                          ),
+                                        ),
+                                        TextSpan(
+                                          text: 'RUSH',
+                                          style: TextStyle(
+                                            fontFamily: 'Mukta',
+                                            fontSize: (w * 0.058)
+                                                .clamp(18.0, 26.0),
+                                            fontWeight: FontWeight.w900,
+                                            color: AppColors.primary,
+                                            letterSpacing: -0.4,
+                                          ),
+                                        ),
+                                        TextSpan(
+                                          text: ' Rider',
+                                          style: TextStyle(
+                                            fontFamily: 'Mukta',
+                                            fontSize: (w * 0.042)
+                                                .clamp(13.0, 18.0),
+                                            fontWeight: FontWeight.w500,
+                                            color: AppColors.textSecondary,
+                                            letterSpacing: 0,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
 
-                    SizedBox(height: spaceL),
+                            SizedBox(height: h * 0.048),
 
-                    Text(
-                      'Welcome back',
-                      style: TextStyle(
-                        fontSize: width * 0.074,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.grey.shade900,
-                        letterSpacing: -0.5,
-                      ),
-                    ),
-                    SizedBox(height: spaceS),
-                    Text(
-                      'Sign in to continue delivering',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey.shade500,
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
+                            // ── Heading ────────────────────────────────────
+                            Text(
+                              'Welcome back',
+                              style: TextStyle(
+                                fontFamily: 'Mukta',
+                                fontSize: (w * 0.072).clamp(24.0, 34.0),
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.textPrimary,
+                                letterSpacing: -0.8,
+                                height: 1.1,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              'Sign in to continue delivering',
+                              style: TextStyle(
+                                fontFamily: 'Mukta',
+                                fontSize: (w * 0.036).clamp(12.0, 16.0),
+                                color: AppColors.textSecondary,
+                                fontWeight: FontWeight.w400,
+                              ),
+                            ),
 
-                    SizedBox(height: spaceM),
-                    buildPhoneInputSection(
-                      loading: isLoading,
-                      sw: width,
-                      phoneController: _phoneController,
-                      phoneFocusNode: _phoneFocusNode,
-                      proceed: (_) =>
-                          setState(() => _phone = _phoneController.text.trim()),
-                      context: context,
-                    ),
+                            SizedBox(height: h * 0.036),
 
-                    SizedBox(height: spaceS),
+                            // ── Phone Field ────────────────────────────────
+                            AppPhoneField(
+                              onChanged: (full) =>
+                                  setState(() => _fullPhone = full),
+                              validator: (v) {
+                                if (v == null || v.trim().length < 9) {
+                                  return 'Enter a valid phone number';
+                                }
+                                return null;
+                              },
+                            ),
 
-                    Text(
-                      'Password',
-                      style: TextStyle(
-                        fontSize: width * 0.034,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.grey.shade700,
-                        letterSpacing: 0.2,
-                      ),
-                    ),
-                    SizedBox(height: spaceS),
-                    _buildInputField(
-                      prefixWidget: Padding(
-                        padding:
-                            EdgeInsets.symmetric(horizontal: width * 0.036),
-                        child: Icon(Icons.lock_outline_rounded,
-                            size: width * 0.053, color: Colors.grey.shade400),
-                      ),
-                      hint: 'Enter your password',
-                      obscure: _obscurePassword,
-                      onChanged: (v) => setState(() => _password = v),
-                      suffixWidget: GestureDetector(
-                        onTap: () => setState(
-                            () => _obscurePassword = !_obscurePassword),
-                        child: Padding(
-                          padding: EdgeInsets.only(right: width * 0.036),
-                          child: Icon(
-                            _obscurePassword
-                                ? Icons.visibility_off_outlined
-                                : Icons.visibility_outlined,
-                            size: 20,
-                            color: Colors.grey.shade400,
-                          ),
-                        ),
-                      ),
-                    ),
+                            SizedBox(height: h * 0.02),
 
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton(
-                        onPressed: () => context.push(AppRoutes.forgotPassword),
-                        style: TextButton.styleFrom(
-                            padding:
-                                EdgeInsets.symmetric(vertical: height * 0.012)),
-                        child: Text(
-                          'Forgot Password?',
-                          style: TextStyle(
-                            color: primaryColor,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    SizedBox(height: spaceS),
-
-                    SizedBox(
-                      width: double.infinity,
-                      height: controlHeight,
-                      child: ElevatedButton(
-                        onPressed: (isLoading || !_isFilled) ? null : _login,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: primaryColor,
-                          disabledBackgroundColor:
-                              primaryColor.withValues(alpha: 0.6),
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                        ),
-                        child: isLoading
-                            ? const SpinKitRing(
-                                color: Colors.white,
-                                lineWidth: 2,
-                                size: 24,
-                              )
-                            : const Text(
-                                'Sign In',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: 0.3,
+                            // ── Password Field ─────────────────────────────
+                            TextFormField(
+                              controller: _passwordCtrl,
+                              obscureText: _obscurePassword,
+                              enableSuggestions: false,
+                              autocorrect: false,
+                              keyboardType: TextInputType.visiblePassword,
+                              textInputAction: TextInputAction.done,
+                              enabled: !isLoading,
+                              onChanged: (v) =>
+                                  setState(() => _password = v.trim()),
+                              onFieldSubmitted: (_) {
+                                if (!isLoading && _isFilled) _login();
+                              },
+                              validator: (v) {
+                                if (v == null || v.trim().isEmpty) {
+                                  return 'Please enter your password';
+                                }
+                                return null;
+                              },
+                              style: const TextStyle(
+                                fontFamily: 'Mukta',
+                                fontSize: 15,
+                                fontWeight: FontWeight.w500,
+                                color: AppColors.textPrimary,
+                              ),
+                              decoration: InputDecoration(
+                                labelText: 'Password',
+                                hintText: 'Enter your password',
+                                prefixIcon: Icon(
+                                  Icons.lock_outline_rounded,
+                                  size: 20,
+                                  color: Colors.grey.shade400,
+                                ),
+                                suffixIcon: GestureDetector(
+                                  onTap: () => setState(() =>
+                                      _obscurePassword = !_obscurePassword),
+                                  child: Icon(
+                                    _obscurePassword
+                                        ? Icons.visibility_off_outlined
+                                        : Icons.visibility_outlined,
+                                    size: 20,
+                                    color: Colors.grey.shade400,
+                                  ),
+                                ),
+                                labelStyle: TextStyle(
+                                  fontFamily: 'Mukta',
+                                  fontSize: 14,
+                                  color: Colors.grey.shade500,
+                                ),
+                                hintStyle: TextStyle(
+                                  fontFamily: 'Mukta',
+                                  fontSize: 14,
+                                  color: Colors.grey.shade400,
+                                ),
+                                filled: true,
+                                fillColor: isLoading
+                                    ? Colors.grey.shade100
+                                    : Colors.grey.shade50,
+                                contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 16),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(
+                                      color: Colors.grey.shade200),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(
+                                      color: Colors.grey.shade200,
+                                      width: 1.5),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(
+                                      color: AppColors.primary, width: 2),
+                                ),
+                                errorBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(
+                                      color: AppColors.error, width: 1.5),
+                                ),
+                                focusedErrorBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(
+                                      color: AppColors.error, width: 2),
+                                ),
+                                disabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(
+                                      color: Colors.grey.shade200),
                                 ),
                               ),
+                            ),
+
+                            // ── Forgot Password ────────────────────────────
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: TextButton(
+                                onPressed: isLoading
+                                    ? null
+                                    : () => context
+                                        .push(AppRoutes.forgotPassword),
+                                style: TextButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 8, horizontal: 0),
+                                ),
+                                child: const Text(
+                                  'Forgot Password?',
+                                  style: TextStyle(
+                                    fontFamily: 'Mukta',
+                                    color: AppColors.primary,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ),
+
+                            SizedBox(height: h * 0.01),
+
+                            // ── Sign In Button ─────────────────────────────
+                            SizedBox(
+                              width: double.infinity,
+                              height: (h * 0.072).clamp(50.0, 60.0),
+                              child: ElevatedButton(
+                                onPressed:
+                                    (isLoading || !_isFilled) ? null : _login,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.primary,
+                                  disabledBackgroundColor:
+                                      AppColors.primary.withValues(alpha: 0.5),
+                                  elevation: 0,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                ),
+                                child: isLoading
+                                    ? const SpinKitRing(
+                                        color: Colors.white,
+                                        lineWidth: 2.5,
+                                        size: 26,
+                                      )
+                                    : const Text(
+                                        'Sign In',
+                                        style: TextStyle(
+                                          fontFamily: 'Mukta',
+                                          color: Colors.white,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w700,
+                                          letterSpacing: 0.4,
+                                        ),
+                                      ),
+                              ),
+                            ),
+
+                            const Spacer(),
+
+                            // ── Sign Up link ───────────────────────────────
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 28),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    "Don't have an account? ",
+                                    style: TextStyle(
+                                      fontFamily: 'Mukta',
+                                      color: AppColors.textSecondary,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  GestureDetector(
+                                    onTap: isLoading
+                                        ? null
+                                        : () =>
+                                            context.go(AppRoutes.signup),
+                                    child: const Text(
+                                      'Sign Up',
+                                      style: TextStyle(
+                                        fontFamily: 'Mukta',
+                                        color: AppColors.primary,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-
-                    SizedBox(height: spaceL),
-
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          "Don't have an account? ",
-                          style: TextStyle(
-                            color: Colors.grey.shade500,
-                            fontSize: 14,
-                          ),
-                        ),
-                        GestureDetector(
-                          onTap: () => context.go(AppRoutes.signup),
-                          child: Text(
-                            'Sign Up',
-                            style: TextStyle(
-                              color: primaryColor,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 32),
                   ],
                 ),
               ),

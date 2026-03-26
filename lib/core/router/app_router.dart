@@ -23,6 +23,8 @@ import 'package:delivery_boy/features/rider/notifications/views/screens/rider_no
 import 'package:delivery_boy/features/rider/settings/views/screens/rider_settings_screen.dart';
 // ── Onboarding (profile setup stepper) ────────────────────────────────────────
 import 'package:delivery_boy/features/rider/onboarding/views/screens/rider_onboarding_screen.dart';
+// ── KYC ───────────────────────────────────────────────────────────────────────
+import 'package:delivery_boy/features/rider/kyc/views/screens/kyc_screen.dart';
 // ── Tracking ──────────────────────────────────────────────────────────────────
 import 'package:delivery_boy/features/rider/tracking/views/screens/rider_map_screen.dart';
 // ── Auth model ────────────────────────────────────────────────────────────────
@@ -157,6 +159,11 @@ GoRouter createAppRouter() {
             path: 'settings',
             pageBuilder: (_, state) =>
                 _slideRight(state, const RiderSettingsScreen()),
+          ),
+          GoRoute(
+            path: 'kyc',
+            pageBuilder: (_, state) =>
+                _slideRight(state, const KycScreen()),
           ),
         ],
       ),

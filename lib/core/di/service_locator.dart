@@ -27,6 +27,10 @@ import 'package:delivery_boy/features/rider/tracking/services/rider_tracking_api
 import 'package:delivery_boy/features/rider/notifications/repositories/rider_notifications_repository.dart';
 import 'package:delivery_boy/features/rider/notifications/repositories/rider_notifications_repository_impl.dart';
 import 'package:delivery_boy/features/rider/notifications/services/rider_notifications_api_service.dart';
+// Phase 8: KYC
+import 'package:delivery_boy/features/rider/kyc/services/kyc_api_service.dart';
+import 'package:delivery_boy/features/rider/kyc/repositories/kyc_repository.dart';
+import 'package:delivery_boy/features/rider/kyc/repositories/kyc_repository_impl.dart';
 
 final sl = GetIt.instance;
 
@@ -77,5 +81,11 @@ Future<void> initServiceLocator() async {
   sl.registerLazySingleton(() => RiderNotificationsApiService(sl<Dio>()));
   sl.registerLazySingleton<RiderNotificationsRepository>(
     () => RiderNotificationsRepositoryImpl(sl<RiderNotificationsApiService>()),
+  );
+
+  // ── KYC ─────────────────────────────────────────────────────────────────
+  sl.registerLazySingleton(() => KycApiService(sl<Dio>()));
+  sl.registerLazySingleton<KycRepository>(
+    () => KycRepositoryImpl(sl<KycApiService>()),
   );
 }
