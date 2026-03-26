@@ -5,6 +5,7 @@ abstract final class AppRoutes {
   static const signup = '/signup';
   static const otp = '/otp';
   static const forgotPassword = '/forgot-password';
+  static const vehicleInfo = '/vehicle-info';
   static const onboarding = '/onboarding';
   static const dashboard = '/dashboard';
   static const map = '/dashboard/map';

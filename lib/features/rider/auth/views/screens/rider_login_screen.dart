@@ -275,18 +275,22 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
                                 hintText: 'Enter your password',
                                 prefixIcon: Icon(
                                   Icons.lock_outline_rounded,
-                                  size: 20,
+                                  size: 28,
                                   color: Colors.grey.shade400,
                                 ),
                                 suffixIcon: GestureDetector(
                                   onTap: () => setState(() =>
                                       _obscurePassword = !_obscurePassword),
-                                  child: Icon(
-                                    _obscurePassword
-                                        ? Icons.visibility_off_outlined
-                                        : Icons.visibility_outlined,
-                                    size: 20,
-                                    color: Colors.grey.shade400,
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 12),
+                                    child: Icon(
+                                      _obscurePassword
+                                          ? Icons.visibility_off_outlined
+                                          : Icons.visibility_outlined,
+                                      size: 28,
+                                      color: Colors.grey.shade400,
+                                    ),
                                   ),
                                 ),
                                 labelStyle: TextStyle(
@@ -303,8 +307,8 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
                                 fillColor: isLoading
                                     ? Colors.grey.shade100
                                     : Colors.grey.shade50,
-                                contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 16, vertical: 16),
+                                contentPadding: const EdgeInsets.only(
+                                    left: 0, right: 16, top: 18, bottom: 18),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
                                   borderSide: BorderSide(

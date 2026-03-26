@@ -167,3 +167,34 @@ class RiderAuthNotifier extends Notifier<RiderAuthState> {
 
 final riderAuthProvider =
     NotifierProvider<RiderAuthNotifier, RiderAuthState>(RiderAuthNotifier.new);
+
+// ── Pending Vehicle Info (collected before OTP, submitted after signup) ────────
+
+class PendingVehicleInfo {
+  final String type;
+  final String regNumber;
+  final String year;
+  final String make;
+  final String model;
+  final String color;
+
+  const PendingVehicleInfo({
+    required this.type,
+    required this.regNumber,
+    required this.year,
+    required this.make,
+    required this.model,
+    required this.color,
+  });
+
+  Map<String, dynamic> toMap() => {
+    'vehicleType': type,
+    'numberPlate': regNumber,
+    'vehicleYear': year,
+    'vehicleMake': make,
+    'vehicleModel': model,
+    'vehicleColor': color,
+  };
+}
+
+final pendingVehicleProvider = StateProvider<PendingVehicleInfo?>((ref) => null);

@@ -95,7 +95,7 @@ class _RiderSignupScreenState extends State<RiderSignupScreen>
       return;
     }
 
-    context.go(AppRoutes.otp, extra: {
+    context.go(AppRoutes.vehicleInfo, extra: {
       'name': _nameCtrl.text.trim(),
       'phone': _phone,
       'email': _emailCtrl.text.trim(),

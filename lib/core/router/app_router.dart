@@ -12,6 +12,7 @@ import 'package:delivery_boy/features/rider/auth/views/screens/rider_login_scree
 import 'package:delivery_boy/features/rider/auth/views/screens/rider_signup_screen.dart';
 import 'package:delivery_boy/features/rider/auth/views/screens/rider_otp_screen.dart';
 import 'package:delivery_boy/features/rider/auth/views/screens/rider_forgot_password_screen.dart';
+import 'package:delivery_boy/features/rider/auth/views/screens/rider_vehicle_info_screen.dart';
 // ── Dashboard ─────────────────────────────────────────────────────────────────
 import 'package:delivery_boy/features/rider/dashboard/views/screens/rider_dashboard_screen.dart';
 // ── Profile ───────────────────────────────────────────────────────────────────
@@ -44,6 +45,7 @@ GoRouter createAppRouter() {
           location == AppRoutes.login ||
           location == AppRoutes.signup ||
           location == AppRoutes.otp ||
+          location == AppRoutes.vehicleInfo ||
           location == AppRoutes.forgotPassword;
 
       // Authenticated user landing on intro (e.g. back-press) → skip to app
@@ -113,6 +115,15 @@ GoRouter createAppRouter() {
         pageBuilder: (_, state) => _slideRight(
           state,
           RiderOtpScreen(
+            credentials: (state.extra as Map<String, dynamic>?) ?? {},
+          ),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.vehicleInfo,
+        pageBuilder: (_, state) => _slideRight(
+          state,
+          RiderVehicleInfoScreen(
             credentials: (state.extra as Map<String, dynamic>?) ?? {},
           ),
         ),

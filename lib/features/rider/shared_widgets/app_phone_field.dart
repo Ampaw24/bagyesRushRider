@@ -104,8 +104,8 @@ class _AppPhoneFieldState extends State<AppPhoneField> {
         ),
         filled: true,
         fillColor: Colors.grey.shade50,
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        contentPadding: const EdgeInsets.only(
+            left: 0, right: 16, top: 18, bottom: 18),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: Colors.grey.shade200),
@@ -146,7 +146,7 @@ class _CountryCodePicker extends StatelessWidget {
           value: selected,
           isDense: true,
           icon: Icon(Icons.keyboard_arrow_down_rounded,
-              size: 16, color: Colors.grey.shade500),
+              size: 24, color: Colors.grey.shade500),
           items: _countryCodes
               .map((c) => DropdownMenuItem(
                     value: c.code,

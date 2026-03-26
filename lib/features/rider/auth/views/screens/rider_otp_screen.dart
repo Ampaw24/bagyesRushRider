@@ -105,42 +105,9 @@ class _RiderOtpScreenState extends ConsumerState<RiderOtpScreen>
     if (!mounted) return;
     if (success) {
       HapticFeedback.mediumImpact();
+      ref.read(pendingVehicleProvider.notifier).state = null;
       if (!mounted) return;
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (ctx) => AlertDialog(
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16)),
-          title: const Text(
-            'Welcome!',
-            style: TextStyle(
-              fontFamily: 'Roboto',
-              fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          content: const Text(
-            'Your account has been created successfully.',
-            style: TextStyle(fontFamily: 'Roboto'),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(ctx);
-                context.go(AppRoutes.dashboard);
-              },
-              child: const Text(
-                'Get Started',
-                style: TextStyle(
-                    fontFamily: 'Roboto',
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w700),
-              ),
-            ),
-          ],
-        ),
-      );
+      context.go(AppRoutes.dashboard);
     }
   }
 
