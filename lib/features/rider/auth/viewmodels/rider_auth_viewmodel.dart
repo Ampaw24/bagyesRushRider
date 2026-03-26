@@ -99,11 +99,18 @@ class RiderAuthNotifier extends Notifier<RiderAuthState> {
     required String phone,
     required String password,
     required String otp,
+    required String name,
+    String? email,
   }) async {
     state = state.copyWith(status: AuthStatus.loading, clearError: true);
 
-    final result =
-        await _repo.signup(phone: phone, password: password, otp: otp);
+    final result = await _repo.signup(
+      phone: phone,
+      password: password,
+      otp: otp,
+      name: name,
+      email: email,
+    );
     return result.fold(
       (failure) {
         state = state.copyWith(

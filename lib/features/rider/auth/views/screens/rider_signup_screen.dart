@@ -6,6 +6,10 @@ import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/constant/asset_images.dart';
 import 'package:delivery_boy/core/router/app_routes.dart';
 import 'package:delivery_boy/core/widgets/app_gradient_button.dart';
+import 'package:delivery_boy/features/rider/shared_widgets/app_text_field.dart';
+import 'package:delivery_boy/features/rider/shared_widgets/app_password_field.dart';
+import 'package:delivery_boy/features/rider/shared_widgets/app_phone_field.dart';
+import 'package:delivery_boy/features/rider/shared_widgets/password_strength_validator.dart';
 
 class RiderSignupScreen extends StatefulWidget {
   const RiderSignupScreen({super.key});
@@ -16,9 +20,14 @@ class RiderSignupScreen extends StatefulWidget {
 
 class _RiderSignupScreenState extends State<RiderSignupScreen>
     with SingleTickerProviderStateMixin {
+  final _formKey = GlobalKey<FormState>();
+  final _nameCtrl = TextEditingController();
+  final _emailCtrl = TextEditingController();
+  final _passwordCtrl = TextEditingController();
+  final _confirmCtrl = TextEditingController();
+
   String _phone = '';
   String _password = '';
-  bool _obscurePassword = true;
   DateTime? _lastBackPress;
 
   late AnimationController _animController;
@@ -35,87 +44,63 @@ class _RiderSignupScreenState extends State<RiderSignupScreen>
     _fadeAnim =
         CurvedAnimation(parent: _animController, curve: Curves.easeOut);
     _slideAnim =
-        Tween<Offset>(begin: const Offset(0, 0.08), end: Offset.zero)
-            .animate(
+        Tween<Offset>(begin: const Offset(0, 0.08), end: Offset.zero).animate(
       CurvedAnimation(parent: _animController, curve: Curves.easeOut),
     );
     _animController.forward();
+    _passwordCtrl.addListener(() {
+      setState(() => _password = _passwordCtrl.text);
+    });
   }
 
   @override
   void dispose() {
     _animController.dispose();
+    _nameCtrl.dispose();
+    _emailCtrl.dispose();
+    _passwordCtrl.dispose();
+    _confirmCtrl.dispose();
     super.dispose();
   }
 
-  bool get _isFilled => _phone.length >= 9 && _password.isNotEmpty;
-
-  void _proceed() {
-    if (_phone.length < 9) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter a valid phone number'),
-          backgroundColor: AppColors.error,
-        ),
-      );
-      return;
-    }
-    if (_password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter a password'),
-          backgroundColor: AppColors.error,
-        ),
-      );
-      return;
-    }
-    context.go(AppRoutes.otp,
-        extra: {'phone': _phone, 'password': _password});
+  bool get _isFilled {
+    final strength = evaluatePasswordStrength(_password);
+    return _nameCtrl.text.trim().length >= 2 &&
+        _phone.length >= 9 &&
+        _password.isNotEmpty &&
+        strength != PasswordStrength.weak &&
+        _confirmCtrl.text == _password;
   }
 
-  Widget _buildInputField({
-    required IconData icon,
-    required String hint,
-    required void Function(String) onChanged,
-    bool obscure = false,
-    TextInputType keyboardType = TextInputType.text,
-    Widget? suffix,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.grey.shade200, width: 1.5),
-      ),
-      child: Row(
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14),
-            child: Icon(icon, size: 20, color: Colors.grey.shade400),
-          ),
-          Expanded(
-            child: TextField(
-              obscureText: obscure,
-              enableSuggestions: !obscure,
-              autocorrect: !obscure,
-              keyboardType: keyboardType,
-              style:
-                  const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
-              decoration: InputDecoration(
-                hintText: hint,
-                hintStyle:
-                    TextStyle(color: Colors.grey.shade400, fontSize: 14),
-                border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 0, vertical: 16),
-              ),
-              onChanged: (v) => onChanged(v.trim()),
-            ),
-          ),
-          if (suffix != null) suffix,
-        ],
-      ),
-    );
+  void _proceed() {
+    if (!_formKey.currentState!.validate()) return;
+
+    final strength = evaluatePasswordStrength(_password);
+    if (strength == PasswordStrength.weak) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please use a stronger password'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+    if (_confirmCtrl.text != _password) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Passwords do not match'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
+    context.go(AppRoutes.otp, extra: {
+      'name': _nameCtrl.text.trim(),
+      'phone': _phone,
+      'email': _emailCtrl.text.trim(),
+      'password': _password,
+    });
   }
 
   @override
@@ -144,146 +129,186 @@ class _RiderSignupScreenState extends State<RiderSignupScreen>
             opacity: _fadeAnim,
             child: SlideTransition(
               position: _slideAnim,
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 40),
+              child: Form(
+                key: _formKey,
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 40),
 
-                    // Logo
-                    Center(
-                      child: Container(
-                        width: 90,
-                        height: 90,
-                        decoration: BoxDecoration(
-                          color:
-                              AppColors.primary.withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(24),
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(24),
-                          child: Image.asset(
-                            AssetImages.deliveryBoy,
-                            fit: BoxFit.cover,
+                      // Logo
+                      Center(
+                        child: Container(
+                          width: 90,
+                          height: 90,
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(24),
                           ),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 32),
-
-                    const Text(
-                      'Create account',
-                      style: TextStyle(
-                        fontFamily: 'Roboto',
-                        fontSize: 28,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.textPrimary,
-                        letterSpacing: -0.5,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      'Join BagyesRUSH and start delivering',
-                      style: TextStyle(
-                        fontFamily: 'Roboto',
-                        fontSize: 14,
-                        color: Colors.grey.shade500,
-                      ),
-                    ),
-
-                    const SizedBox(height: 36),
-
-                    Text(
-                      'Phone Number',
-                      style: TextStyle(
-                        fontFamily: 'Roboto',
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.grey.shade700,
-                        letterSpacing: 0.2,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    _buildInputField(
-                      icon: Icons.phone_outlined,
-                      hint: 'Enter your phone number',
-                      keyboardType: TextInputType.phone,
-                      onChanged: (v) => setState(() => _phone = v),
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    Text(
-                      'Password',
-                      style: TextStyle(
-                        fontFamily: 'Roboto',
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.grey.shade700,
-                        letterSpacing: 0.2,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    _buildInputField(
-                      icon: Icons.lock_outline_rounded,
-                      hint: 'Create a password',
-                      obscure: _obscurePassword,
-                      onChanged: (v) => setState(() => _password = v),
-                      suffix: GestureDetector(
-                        onTap: () => setState(
-                            () => _obscurePassword = !_obscurePassword),
-                        child: Padding(
-                          padding: const EdgeInsets.only(right: 14),
-                          child: Icon(
-                            _obscurePassword
-                                ? Icons.visibility_off_outlined
-                                : Icons.visibility_outlined,
-                            size: 20,
-                            color: Colors.grey.shade400,
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 32),
-
-                    AppGradientButton(
-                      label: 'Continue',
-                      onPressed: _isFilled ? _proceed : null,
-                    ),
-
-                    const SizedBox(height: 28),
-
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'Already have an account? ',
-                          style: TextStyle(
-                            fontFamily: 'Roboto',
-                            color: Colors.grey.shade500,
-                            fontSize: 14,
-                          ),
-                        ),
-                        GestureDetector(
-                          onTap: () => context.go(AppRoutes.login),
-                          child: const Text(
-                            'Sign In',
-                            style: TextStyle(
-                              fontFamily: 'Roboto',
-                              color: AppColors.primary,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(24),
+                            child: Image.asset(
+                              AssetImages.deliveryBoy,
+                              fit: BoxFit.cover,
                             ),
                           ),
                         ),
-                      ],
-                    ),
+                      ),
 
-                    const SizedBox(height: 32),
-                  ],
+                      const SizedBox(height: 32),
+
+                      const Text(
+                        'Create account',
+                        style: TextStyle(
+                          fontFamily: 'Roboto',
+                          fontSize: 28,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textPrimary,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        'Join BagyesRUSH and start delivering',
+                        style: TextStyle(
+                          fontFamily: 'Roboto',
+                          fontSize: 14,
+                          color: Colors.grey.shade500,
+                        ),
+                      ),
+
+                      const SizedBox(height: 32),
+
+                      // Full Name
+                      AppTextField(
+                        label: 'Full Name',
+                        hint: 'Enter your full name',
+                        prefixIcon: Icons.person_outline_rounded,
+                        controller: _nameCtrl,
+                        textCapitalization: TextCapitalization.words,
+                        onChanged: (_) => setState(() {}),
+                        validator: (v) {
+                          if (v == null || v.trim().length < 2) {
+                            return 'Enter your full name (min 2 characters)';
+                          }
+                          return null;
+                        },
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // Phone Number
+                      AppPhoneField(
+                        onChanged: (full) =>
+                            setState(() => _phone = full),
+                        validator: (v) {
+                          if (v == null || v.trim().length < 9) {
+                            return 'Enter a valid phone number';
+                          }
+                          return null;
+                        },
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // Email (optional)
+                      AppTextField(
+                        label: 'Email Address (optional)',
+                        hint: 'rider@example.com',
+                        prefixIcon: Icons.email_outlined,
+                        controller: _emailCtrl,
+                        keyboardType: TextInputType.emailAddress,
+                        validator: (v) {
+                          if (v == null || v.trim().isEmpty) return null;
+                          final emailRegex =
+                              RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+                          if (!emailRegex.hasMatch(v.trim())) {
+                            return 'Enter a valid email address';
+                          }
+                          return null;
+                        },
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // Password
+                      AppPasswordField(
+                        label: 'Password',
+                        hint: 'Create a strong password',
+                        controller: _passwordCtrl,
+                        textInputAction: TextInputAction.next,
+                        validator: (v) {
+                          if (v == null || v.isEmpty) {
+                            return 'Please enter a password';
+                          }
+                          if (evaluatePasswordStrength(v) ==
+                              PasswordStrength.weak) {
+                            return 'Password is too weak';
+                          }
+                          return null;
+                        },
+                      ),
+
+                      // Password strength
+                      PasswordStrengthValidator(password: _password),
+
+                      const SizedBox(height: 16),
+
+                      // Confirm Password
+                      AppPasswordField(
+                        label: 'Confirm Password',
+                        hint: 'Re-enter your password',
+                        controller: _confirmCtrl,
+                        textInputAction: TextInputAction.done,
+                        onChanged: (_) => setState(() {}),
+                        validator: (v) {
+                          if (v != _password) {
+                            return 'Passwords do not match';
+                          }
+                          return null;
+                        },
+                      ),
+
+                      const SizedBox(height: 32),
+
+                      AppGradientButton(
+                        label: 'Continue',
+                        onPressed: _isFilled ? _proceed : null,
+                      ),
+
+                      const SizedBox(height: 28),
+
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Already have an account? ',
+                            style: TextStyle(
+                              fontFamily: 'Roboto',
+                              color: Colors.grey.shade500,
+                              fontSize: 14,
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () => context.go(AppRoutes.login),
+                            child: const Text(
+                              'Sign In',
+                              style: TextStyle(
+                                fontFamily: 'Roboto',
+                                color: AppColors.primary,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 32),
+                    ],
+                  ),
                 ),
               ),
             ),

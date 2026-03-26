@@ -5,7 +5,8 @@
       "Bash(wc -l /Users/safo/Documents/projects/BagyesRushApp/bagyes-rush-rider-master/lib/pages/home/*.dart /Users/safo/Documents/projects/BagyesRushApp/bagyes-rush-rider-master/lib/pages/login_signup/*.dart /Users/safo/Documents/projects/BagyesRushApp/bagyes-rush-rider-master/lib/pages/profile/*.dart)",
       "Bash(wc -l /Users/safo/Documents/projects/BagyesRushApp/bagyes-rush-rider-master/lib/**/*.dart /Users/safo/Documents/projects/BagyesRushApp/bagyes-rush-rider-master/lib/*.dart)",
       "Bash(find lib/pages -name \"*.dart\" -exec sed -i '' 's/jsonDecode\\(value\\\\.body\\)/value.data/g; s/jsonDecode\\(res\\\\.body\\)/res.data/g; s/jsonDecode\\(response\\\\.body\\)/response.data/g' {} +)",
-      "Bash(dart analyze:*)"
+      "Bash(dart analyze:*)",
+      "Bash(ls -la /Users/safo/Documents/projects/BagyesRushApp/bagyes-rush-rider-master/lib/*.dart)"
     ]
   }
 }

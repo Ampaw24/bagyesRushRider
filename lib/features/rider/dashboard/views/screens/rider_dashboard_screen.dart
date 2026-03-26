@@ -3,10 +3,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/core/di/service_locator.dart';
 import 'package:delivery_boy/core/router/app_routes.dart';
 import 'package:delivery_boy/core/services/user_session_manager.dart';
+import 'package:delivery_boy/features/rider/auth/models/rider_user_model.dart';
 import 'package:delivery_boy/core/widgets/sos_floating_button.dart';
 import 'package:delivery_boy/features/rider/notifications/providers/rider_notifications_providers.dart';
 import 'package:delivery_boy/features/rider/orders/providers/rider_orders_providers.dart';
@@ -21,6 +23,26 @@ final riderQueueProvider = StateProvider<bool>((ref) {
   final user = sl<UserSessionManager>().currentUser;
   return user?['queue'] as bool? ?? false;
 });
+
+/// Tracks whether the rider dismissed the KYC reminder banner this session.
+final kycBannerDismissedProvider = StateProvider<bool>((ref) {
+  return sl<SharedPreferences>().getBool('kyc_banner_dismissed') ?? false;
+});
+
+KycStatus _currentKycStatus() {
+  final userData = sl<UserSessionManager>().currentUser;
+  if (userData == null) return KycStatus.notStarted;
+  switch (userData['kycStatus'] as String?) {
+    case 'approved':
+      return KycStatus.approved;
+    case 'pendingReview':
+      return KycStatus.pendingReview;
+    case 'rejected':
+      return KycStatus.rejected;
+    default:
+      return KycStatus.notStarted;
+  }
+}
 
 class RiderDashboardScreen extends ConsumerStatefulWidget {
   const RiderDashboardScreen({super.key});
@@ -49,6 +71,19 @@ class _RiderDashboardScreenState extends ConsumerState<RiderDashboardScreen> {
       if (user == null) return;
 
       final currentQueue = ref.read(riderQueueProvider);
+      // Block going online if KYC is not approved
+      if (!currentQueue && _currentKycStatus() != KycStatus.approved) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Complete identity verification to go online'),
+            backgroundColor: AppColors.warning,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return;
+      }
+
       final newQueue = !currentQueue;
 
       ref.read(riderQueueProvider.notifier).state = newQueue;
@@ -281,11 +316,18 @@ class _OrdersTab extends ConsumerWidget {
             ],
           ),
         ),
-        body: const TabBarView(
+        body: Column(
           children: [
-            RiderNewOrdersScreen(),
-            RiderActiveOrdersScreen(),
-            RiderOrderHistoryScreen(),
+            _KycBanner(),
+            const Expanded(
+              child: TabBarView(
+                children: [
+                  RiderNewOrdersScreen(),
+                  RiderActiveOrdersScreen(),
+                  RiderOrderHistoryScreen(),
+                ],
+              ),
+            ),
           ],
         ),
       ),
@@ -344,5 +386,145 @@ class _PulseAnimationState extends State<_PulseAnimation>
   @override
   Widget build(BuildContext context) {
     return ScaleTransition(scale: _scale, child: widget.child);
+  }
+}
+
+/// KYC status banner shown above the orders tab until KYC is approved.
+class _KycBanner extends ConsumerWidget {
+  const _KycBanner();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final kycStatus = _currentKycStatus();
+    final dismissed = ref.watch(kycBannerDismissedProvider);
+
+    if (kycStatus == KycStatus.approved) return const SizedBox.shrink();
+    if (dismissed && kycStatus != KycStatus.pendingReview) {
+      return const SizedBox.shrink();
+    }
+
+    final isPending = kycStatus == KycStatus.pendingReview;
+
+    return AnimatedSize(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+      child: Container(
+        width: double.infinity,
+        margin: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: isPending
+              ? Colors.blue.shade50
+              : Colors.amber.shade50,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isPending
+                ? Colors.blue.shade200
+                : Colors.amber.shade300,
+          ),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(
+              isPending
+                  ? Icons.hourglass_top_rounded
+                  : Icons.verified_user_outlined,
+              size: 18,
+              color: isPending
+                  ? Colors.blue.shade600
+                  : Colors.amber.shade700,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    isPending
+                        ? 'Verification Under Review'
+                        : kycStatus == KycStatus.rejected
+                            ? 'Verification Rejected — Resubmit'
+                            : 'Complete Identity Verification',
+                    style: TextStyle(
+                      fontFamily: 'Roboto',
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: isPending
+                          ? Colors.blue.shade800
+                          : Colors.amber.shade900,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    isPending
+                        ? 'Your documents are being reviewed. You\'ll be notified once approved.'
+                        : kycStatus == KycStatus.rejected
+                            ? 'Your submission was rejected. Please review and resubmit your documents.'
+                            : 'Verify your identity to start accepting delivery orders.',
+                    style: TextStyle(
+                      fontFamily: 'Roboto',
+                      fontSize: 11,
+                      color: isPending
+                          ? Colors.blue.shade700
+                          : Colors.amber.shade800,
+                    ),
+                  ),
+                  if (!isPending) ...[
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () => context.push(AppRoutes.kyc),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 5),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              kycStatus == KycStatus.rejected
+                                  ? 'Resubmit'
+                                  : 'Start Verification',
+                              style: const TextStyle(
+                                fontFamily: 'Roboto',
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        GestureDetector(
+                          onTap: () async {
+                            ref
+                                .read(kycBannerDismissedProvider.notifier)
+                                .state = true;
+                            final prefs = sl<SharedPreferences>();
+                            await prefs.setBool(
+                                'kyc_banner_dismissed', true);
+                          },
+                          child: Text(
+                            'Later',
+                            style: TextStyle(
+                              fontFamily: 'Roboto',
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

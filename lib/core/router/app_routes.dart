@@ -12,4 +12,5 @@ abstract final class AppRoutes {
   static const documentUpload = '/dashboard/profile/documents';
   static const notifications = '/dashboard/notifications';
   static const settings = '/dashboard/settings';
+  static const kyc = '/dashboard/kyc';
 }

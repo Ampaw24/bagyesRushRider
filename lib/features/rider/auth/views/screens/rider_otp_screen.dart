@@ -7,9 +7,11 @@ import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/core/router/app_routes.dart';
 import 'package:delivery_boy/core/widgets/app_gradient_button.dart';
 import 'package:delivery_boy/features/rider/auth/viewmodels/rider_auth_viewmodel.dart';
+import 'package:delivery_boy/features/rider/shared_widgets/otp_input_field.dart';
 
 class RiderOtpScreen extends ConsumerStatefulWidget {
-  /// Passed via GoRouter extra: {'phone': String, 'password': String}
+  /// Passed via GoRouter extra:
+  /// {'name': String, 'phone': String, 'email': String?, 'password': String}
   final Map<String, dynamic> credentials;
 
   const RiderOtpScreen({super.key, required this.credentials});
@@ -20,9 +22,7 @@ class RiderOtpScreen extends ConsumerStatefulWidget {
 
 class _RiderOtpScreenState extends ConsumerState<RiderOtpScreen>
     with SingleTickerProviderStateMixin {
-  final List<TextEditingController> _controllers =
-      List.generate(5, (_) => TextEditingController());
-  final List<FocusNode> _focusNodes = List.generate(5, (_) => FocusNode());
+  final _otpKey = GlobalKey<OtpInputFieldState>();
 
   late AnimationController _animController;
   late Animation<double> _fadeAnim;
@@ -30,14 +30,14 @@ class _RiderOtpScreenState extends ConsumerState<RiderOtpScreen>
 
   int _secondsLeft = 60;
   Timer? _countdownTimer;
+  String _otp = '';
 
   String get _phone => widget.credentials['phone'] as String? ?? '';
+  String get _name => widget.credentials['name'] as String? ?? '';
+  String get _email => widget.credentials['email'] as String? ?? '';
   String get _password => widget.credentials['password'] as String? ?? '';
 
-  String get _otp =>
-      _controllers.map((c) => c.text).join();
-
-  bool get _isComplete => _otp.length == 5;
+  bool get _isComplete => _otp.length == 6;
 
   @override
   void initState() {
@@ -49,23 +49,15 @@ class _RiderOtpScreenState extends ConsumerState<RiderOtpScreen>
     _fadeAnim =
         CurvedAnimation(parent: _animController, curve: Curves.easeOut);
     _slideAnim =
-        Tween<Offset>(begin: const Offset(0, 0.08), end: Offset.zero)
-            .animate(
+        Tween<Offset>(begin: const Offset(0, 0.08), end: Offset.zero).animate(
       CurvedAnimation(parent: _animController, curve: Curves.easeOut),
     );
     _animController.forward();
-
     WidgetsBinding.instance.addPostFrameCallback((_) => _sendOtp());
   }
 
   @override
   void dispose() {
-    for (final c in _controllers) {
-      c.dispose();
-    }
-    for (final f in _focusNodes) {
-      f.dispose();
-    }
     _countdownTimer?.cancel();
     _animController.dispose();
     super.dispose();
@@ -106,6 +98,8 @@ class _RiderOtpScreenState extends ConsumerState<RiderOtpScreen>
           phone: _phone,
           password: _password,
           otp: _otp,
+          name: _name,
+          email: _email.isNotEmpty ? _email : null,
         );
 
     if (!mounted) return;
@@ -114,9 +108,10 @@ class _RiderOtpScreenState extends ConsumerState<RiderOtpScreen>
       if (!mounted) return;
       showDialog(
         context: context,
+        barrierDismissible: false,
         builder: (ctx) => AlertDialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16)),
           title: const Text(
             'Welcome!',
             style: TextStyle(
@@ -147,19 +142,6 @@ class _RiderOtpScreenState extends ConsumerState<RiderOtpScreen>
         ),
       );
     }
-  }
-
-  void _onDigitChanged(int index, String value) {
-    if (value.length == 1) {
-      if (index < 4) {
-        _focusNodes[index + 1].requestFocus();
-      } else {
-        _focusNodes[index].unfocus();
-      }
-    } else if (value.isEmpty && index > 0) {
-      _focusNodes[index - 1].requestFocus();
-    }
-    setState(() {});
   }
 
   @override
@@ -220,7 +202,8 @@ class _RiderOtpScreenState extends ConsumerState<RiderOtpScreen>
                       color: Colors.grey.shade500,
                     ),
                     children: [
-                      const TextSpan(text: 'Enter the 5-digit code sent to '),
+                      const TextSpan(
+                          text: 'Enter the 6-digit code sent to '),
                       TextSpan(
                         text: _phone,
                         style: const TextStyle(
@@ -234,28 +217,20 @@ class _RiderOtpScreenState extends ConsumerState<RiderOtpScreen>
 
                 const SizedBox(height: 44),
 
-                // ── 5 pin boxes ────────────────────────────────────────────────
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: List.generate(5, (i) => _PinBox(
-                    controller: _controllers[i],
-                    focusNode: _focusNodes[i],
-                    onChanged: (v) => _onDigitChanged(i, v),
-                    onBackspace: i > 0
-                        ? () {
-                            if (_controllers[i].text.isEmpty) {
-                              _focusNodes[i - 1].requestFocus();
-                              _controllers[i - 1].clear();
-                              setState(() {});
-                            }
-                          }
-                        : null,
-                  )),
+                // 6-digit OTP input
+                OtpInputField(
+                  key: _otpKey,
+                  digitCount: 6,
+                  enabled: !isLoading,
+                  onCompleted: (otp) {
+                    setState(() => _otp = otp);
+                    _submit();
+                  },
                 ),
 
                 const SizedBox(height: 40),
 
-                // ── Countdown / Resend ─────────────────────────────────────────
+                // Countdown / Resend
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -304,75 +279,6 @@ class _RiderOtpScreenState extends ConsumerState<RiderOtpScreen>
               ],
             ),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Individual pin box with auto-advance and backspace support
-class _PinBox extends StatelessWidget {
-  final TextEditingController controller;
-  final FocusNode focusNode;
-  final void Function(String) onChanged;
-  final VoidCallback? onBackspace;
-
-  const _PinBox({
-    required this.controller,
-    required this.focusNode,
-    required this.onChanged,
-    this.onBackspace,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 54,
-      height: 60,
-      child: KeyboardListener(
-        focusNode: FocusNode(),
-        onKeyEvent: (event) {
-          if (event is KeyDownEvent &&
-              event.logicalKey == LogicalKeyboardKey.backspace &&
-              controller.text.isEmpty) {
-            onBackspace?.call();
-          }
-        },
-        child: TextField(
-          controller: controller,
-          focusNode: focusNode,
-          textAlign: TextAlign.center,
-          keyboardType: TextInputType.number,
-          maxLength: 1,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          style: const TextStyle(
-            fontFamily: 'Roboto',
-            fontSize: 22,
-            fontWeight: FontWeight.w700,
-            color: AppColors.textPrimary,
-          ),
-          decoration: InputDecoration(
-            counterText: '',
-            filled: true,
-            fillColor: focusNode.hasFocus
-                ? AppColors.primary.withValues(alpha: 0.05)
-                : Colors.white,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey.shade200),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey.shade200, width: 1.5),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide:
-                  const BorderSide(color: AppColors.primary, width: 2),
-            ),
-            contentPadding: EdgeInsets.zero,
-          ),
-          onChanged: onChanged,
         ),
       ),
     );

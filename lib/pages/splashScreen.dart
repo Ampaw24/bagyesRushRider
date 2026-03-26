@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:delivery_boy/constant/constant.dart';
-import 'package:delivery_boy/pages/login_signup/login.dart';
+import 'package:delivery_boy/features/rider/auth/views/screens/rider_login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 
@@ -19,7 +19,7 @@ class _SplashScreenState extends State<SplashScreen> {
         Duration(seconds: 3),
         () => Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => Login()),
+              MaterialPageRoute(builder: (context) => const RiderLoginScreen()),
             ));
   }
 

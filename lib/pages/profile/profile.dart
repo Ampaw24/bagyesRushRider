@@ -1,5 +1,5 @@
 import 'package:delivery_boy/constant/constant.dart';
-import 'package:delivery_boy/pages/login_signup/login.dart';
+import 'package:delivery_boy/features/rider/auth/views/screens/rider_login_screen.dart';
 import 'package:delivery_boy/states/app.state.dart';
 import 'package:flutter/material.dart';
 import 'package:page_transition/page_transition.dart';
@@ -13,28 +13,26 @@ class Profile extends StatefulWidget {
 }
 
 class _ProfileState extends State<Profile> {
-
-
-  Future<void> _inviteFriends () async {
+  Future<void> _inviteFriends() async {
     try {
-      var name=context.read<AppState>().user['name'];
-      var _text="$name is inviting you to download BagyesRUSH-> Tap to download now!";
+      var name = context.read<AppState>().user['name'];
+      var _text =
+          "$name is inviting you to download BagyesRUSH-> Tap to download now!";
       await Clipboard.setData(ClipboardData(text: _text));
       showDialog(
-            context: context,
-            builder: (context) => AlertDialog(
-                  title: Text('Share Invite!'),
-                  content: Text(_text),
-                  actions: [
-                    TextButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
-                        child: Text('Copy'))
-                  ],
-                ));
-    } catch (e) { 
-    }
+          context: context,
+          builder: (context) => AlertDialog(
+                title: Text('Share Invite!'),
+                content: Text(_text),
+                actions: [
+                  TextButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      child: Text('Copy'))
+                ],
+              ));
+    } catch (e) {}
   }
 
   @override
@@ -89,8 +87,12 @@ class _ProfileState extends State<Profile> {
                       ),
                       InkWell(
                         onTap: () {
-                          Navigator.push(context,
-                              MaterialPageRoute(builder: (context) => Login()));
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const RiderLoginScreen(),
+                            ),
+                          );
                         },
                         child: Container(
                           width: (width / 3.5),
@@ -203,7 +205,9 @@ class _ProfileState extends State<Profile> {
             child: Column(
               children: <Widget>[
                 InkWell(
-                  onTap: () {_inviteFriends();},
+                  onTap: () {
+                    _inviteFriends();
+                  },
                   child: getTile(
                       Icon(Icons.group_add,
                           color: Colors.grey.withOpacity(0.6)),

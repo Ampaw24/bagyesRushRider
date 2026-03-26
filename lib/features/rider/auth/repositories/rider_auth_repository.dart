@@ -13,6 +13,8 @@ abstract class RiderAuthRepository {
     required String phone,
     required String password,
     required String otp,
+    required String name,
+    String? email,
   });
 
   ResultFuture<void> sendOtp({required String phoneNumber});

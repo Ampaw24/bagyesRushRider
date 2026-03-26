@@ -32,12 +32,16 @@ class RiderAuthRepositoryImpl implements RiderAuthRepository {
     required String phone,
     required String password,
     required String otp,
+    required String name,
+    String? email,
   }) =>
       _run(() async {
         final response = await _api.signup({
           'phone': phone,
           'password': password,
           'otp': otp,
+          'name': name,
+          if (email != null && email.isNotEmpty) 'email': email,
         });
         final body = response.data as Map<String, dynamic>;
         if (body['success'] != true) {

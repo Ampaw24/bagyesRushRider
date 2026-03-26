@@ -1,5 +1,20 @@
 import 'package:equatable/equatable.dart';
 
+enum KycStatus { notStarted, pendingReview, approved, rejected }
+
+KycStatus _kycStatusFromJson(String? value) {
+  switch (value) {
+    case 'pendingReview':
+      return KycStatus.pendingReview;
+    case 'approved':
+      return KycStatus.approved;
+    case 'rejected':
+      return KycStatus.rejected;
+    default:
+      return KycStatus.notStarted;
+  }
+}
+
 class RiderUserModel extends Equatable {
   final String id;
   final String? name;
@@ -13,6 +28,7 @@ class RiderUserModel extends Equatable {
   final String? roadWorthy;
   final String? numberPlate;
   final bool queue;
+  final KycStatus kycStatus;
 
   const RiderUserModel({
     required this.id,
@@ -26,6 +42,7 @@ class RiderUserModel extends Equatable {
     this.roadWorthy,
     this.numberPlate,
     this.queue = false,
+    this.kycStatus = KycStatus.notStarted,
   });
 
   bool get isProfileComplete =>
@@ -51,6 +68,7 @@ class RiderUserModel extends Equatable {
       roadWorthy: json['roadWorthy'] as String?,
       numberPlate: json['numberPlate'] as String?,
       queue: json['queue'] as bool? ?? false,
+      kycStatus: _kycStatusFromJson(json['kycStatus'] as String?),
     );
   }
 
@@ -66,6 +84,7 @@ class RiderUserModel extends Equatable {
         'roadWorthy': roadWorthy,
         'numberPlate': numberPlate,
         'queue': queue,
+        'kycStatus': kycStatus.name,
       };
 
   RiderUserModel copyWith({
@@ -80,6 +99,7 @@ class RiderUserModel extends Equatable {
     String? roadWorthy,
     String? numberPlate,
     bool? queue,
+    KycStatus? kycStatus,
   }) {
     return RiderUserModel(
       id: id ?? this.id,
@@ -93,6 +113,7 @@ class RiderUserModel extends Equatable {
       roadWorthy: roadWorthy ?? this.roadWorthy,
       numberPlate: numberPlate ?? this.numberPlate,
       queue: queue ?? this.queue,
+      kycStatus: kycStatus ?? this.kycStatus,
     );
   }
 
@@ -109,5 +130,6 @@ class RiderUserModel extends Equatable {
         roadWorthy,
         numberPlate,
         queue,
+        kycStatus,
       ];
 }

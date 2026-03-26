@@ -32,4 +32,9 @@ abstract final class ApiEndpoints {
   // ── Password Reset ────────────────────────────────────────────────────────
   // Re-uses sendOtp for the OTP step; then PUT /couriers/update for the new password.
   static const resetPassword = '/couriers/update';
+
+  // ── KYC ───────────────────────────────────────────────────────────────────
+  static const submitKyc = '/couriers/kyc/submit';
+  static String getKycStatus(String id) => '/couriers/kyc/$id';
+  static const uploadKycDoc = '/couriers/kyc/upload';
 }

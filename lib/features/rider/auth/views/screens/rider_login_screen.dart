@@ -1,3 +1,4 @@
+import 'package:delivery_boy/pages/login_signup/widget/customphone.widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -43,8 +44,7 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
       vsync: this,
       duration: const Duration(milliseconds: 800),
     );
-    _fadeAnim =
-        CurvedAnimation(parent: _animController, curve: Curves.easeOut);
+    _fadeAnim = CurvedAnimation(parent: _animController, curve: Curves.easeOut);
     _slideAnim =
         Tween<Offset>(begin: const Offset(0, 0.08), end: Offset.zero).animate(
       CurvedAnimation(parent: _animController, curve: Curves.easeOut),
@@ -112,13 +112,19 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
   }
 
   Widget _buildCountryCodePicker() {
+    final size = MediaQuery.of(context).size;
+    final width = size.width;
+    final height = size.height;
+
     return GestureDetector(
       onTap: _showCountryPicker,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+        padding: EdgeInsets.symmetric(
+            horizontal: width * 0.032, vertical: height * 0.02),
         decoration: BoxDecoration(
-          border:
-              Border(right: BorderSide(color: Colors.grey.shade200, width: 1.5)),
+          border: Border(
+              right: BorderSide(
+                  color: Colors.grey.shade200, width: width * 0.004)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -126,19 +132,19 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
             Text(
               _countryCodes.firstWhere(
                   (c) => c['code'] == _selectedCountryCode)['flag']!,
-              style: const TextStyle(fontSize: 18),
+              style: TextStyle(fontSize: width * 0.048),
             ),
-            const SizedBox(width: 4),
+            SizedBox(width: width * 0.01),
             Text(
               _selectedCountryCode,
               style: TextStyle(
-                fontSize: 14,
+                fontSize: width * 0.038,
                 fontWeight: FontWeight.w600,
                 color: Colors.grey.shade700,
               ),
             ),
             Icon(Icons.keyboard_arrow_down_rounded,
-                size: 16, color: Colors.grey.shade500),
+                size: width * 0.04, color: Colors.grey.shade500),
           ],
         ),
       ),
@@ -153,6 +159,10 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
     TextInputType keyboardType = TextInputType.text,
     Widget? suffixWidget,
   }) {
+    final size = MediaQuery.of(context).size;
+    final width = size.width;
+    final height = size.height;
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.grey.shade50,
@@ -168,15 +178,15 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
               enableSuggestions: !obscure,
               autocorrect: !obscure,
               keyboardType: keyboardType,
-              style:
-                  const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+              style: TextStyle(
+                  fontSize: width * 0.04, fontWeight: FontWeight.w500),
               decoration: InputDecoration(
                 hintText: hint,
-                hintStyle:
-                    TextStyle(color: Colors.grey.shade400, fontSize: 14),
+                hintStyle: TextStyle(
+                    color: Colors.grey.shade400, fontSize: width * 0.036),
                 border: InputBorder.none,
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                contentPadding: EdgeInsets.symmetric(
+                    horizontal: width * 0.032, vertical: height * 0.022),
               ),
               onChanged: (v) => onChanged(v.trim()),
             ),
@@ -205,6 +215,16 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
       }
     });
 
+    final size = MediaQuery.of(context).size;
+    final width = size.width;
+    final height = size.height;
+    final horizontalPadding = width * 0.064;
+    final spaceXL = height * 0.054;
+    final spaceL = height * 0.043;
+    final spaceM = height * 0.027;
+    final spaceS = height * 0.016;
+    final controlHeight = height * 0.075;
+
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
@@ -230,17 +250,17 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
             child: SlideTransition(
               position: _slideAnim,
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
+                padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 40),
+                    SizedBox(height: spaceXL),
 
                     // Logo
                     Center(
                       child: Container(
-                        width: 90,
-                        height: 90,
+                        width: width * 0.24,
+                        height: width * 0.24,
                         decoration: BoxDecoration(
                           color: primaryColor.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(24),
@@ -255,18 +275,18 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
                       ),
                     ),
 
-                    const SizedBox(height: 32),
+                    SizedBox(height: spaceL),
 
                     Text(
                       'Welcome back',
                       style: TextStyle(
-                        fontSize: 28,
+                        fontSize: width * 0.074,
                         fontWeight: FontWeight.w800,
                         color: Colors.grey.shade900,
                         letterSpacing: -0.5,
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    SizedBox(height: spaceS),
                     Text(
                       'Sign in to continue delivering',
                       style: TextStyle(
@@ -276,24 +296,13 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
                       ),
                     ),
 
-                    const SizedBox(height: 36),
-
-                    Text(
-                      'Phone Number',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.grey.shade700,
-                        letterSpacing: 0.2,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    _buildInputField(
-                      prefixWidget: _buildCountryCodePicker(),
-                      hint: '00 000 0000',
-                      keyboardType: TextInputType.phone,
-                      onChanged: (v) => setState(() => _phone = v),
-                    ),
+                    SizedBox(height: spaceM),
+                    buildPhoneInputSection(
+                        sw: null,
+                        phoneController: null,
+                        phoneFocusNode: null,
+                        proceed: (BuildContext p1) {},
+                        context: null),
 
                     const SizedBox(height: 20),
 
@@ -306,12 +315,13 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
                         letterSpacing: 0.2,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: spaceS),
                     _buildInputField(
                       prefixWidget: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 14),
+                        padding:
+                            EdgeInsets.symmetric(horizontal: width * 0.036),
                         child: Icon(Icons.lock_outline_rounded,
-                            size: 20, color: Colors.grey.shade400),
+                            size: width * 0.053, color: Colors.grey.shade400),
                       ),
                       hint: 'Enter your password',
                       obscure: _obscurePassword,
@@ -320,7 +330,7 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
                         onTap: () => setState(
                             () => _obscurePassword = !_obscurePassword),
                         child: Padding(
-                          padding: const EdgeInsets.only(right: 14),
+                          padding: EdgeInsets.only(right: width * 0.036),
                           child: Icon(
                             _obscurePassword
                                 ? Icons.visibility_off_outlined
@@ -338,7 +348,7 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
                         onPressed: () => context.push(AppRoutes.forgotPassword),
                         style: TextButton.styleFrom(
                             padding:
-                                const EdgeInsets.symmetric(vertical: 8)),
+                                EdgeInsets.symmetric(vertical: height * 0.012)),
                         child: Text(
                           'Forgot Password?',
                           style: TextStyle(
@@ -350,12 +360,11 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
                       ),
                     ),
 
-                    const SizedBox(height: 8),
-
+                    SizedBox(height: spaceS),
 
                     SizedBox(
                       width: double.infinity,
-                      height: 54,
+                      height: controlHeight,
                       child: ElevatedButton(
                         onPressed: (isLoading || !_isFilled) ? null : _login,
                         style: ElevatedButton.styleFrom(
@@ -385,7 +394,7 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
                       ),
                     ),
 
-                    const SizedBox(height: 32),
+                    SizedBox(height: spaceL),
 
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
