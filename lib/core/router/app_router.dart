@@ -3,21 +3,30 @@ import 'package:go_router/go_router.dart';
 import 'package:delivery_boy/core/di/service_locator.dart';
 import 'package:delivery_boy/core/services/user_session_manager.dart';
 import 'package:delivery_boy/core/router/app_routes.dart';
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/constant/constant.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart';
 
-// ── Screen imports ── added as each feature module is created ──────────────
-// Phase 2: Auth
+// ── Splash / Intro ─────────────────────────────────────────────────────────────
+import 'package:delivery_boy/pages/unboardingscreen/splashscreen.dart';
+import 'package:delivery_boy/pages/unboardingscreen/onboarding_screen.dart';
+// ── Auth screens ──────────────────────────────────────────────────────────────
 import 'package:delivery_boy/features/rider/auth/views/screens/rider_login_screen.dart';
 import 'package:delivery_boy/features/rider/auth/views/screens/rider_signup_screen.dart';
 import 'package:delivery_boy/features/rider/auth/views/screens/rider_otp_screen.dart';
-// Phase 4: Dashboard
+import 'package:delivery_boy/features/rider/auth/views/screens/rider_forgot_password_screen.dart';
+// ── Dashboard ─────────────────────────────────────────────────────────────────
 import 'package:delivery_boy/features/rider/dashboard/views/screens/rider_dashboard_screen.dart';
-// Phase 6: Profile
-// import 'package:delivery_boy/features/rider/profile/views/screens/rider_edit_profile_screen.dart';
-// Phase 7: Tracking
+// ── Profile ───────────────────────────────────────────────────────────────────
+import 'package:delivery_boy/features/rider/profile/views/screens/rider_profile_edit_screen.dart';
+import 'package:delivery_boy/features/rider/profile/views/screens/rider_document_upload_screen.dart';
+// ── Notifications ─────────────────────────────────────────────────────────────
+import 'package:delivery_boy/features/rider/notifications/views/screens/rider_notifications_screen.dart';
+// ── Settings ──────────────────────────────────────────────────────────────────
+import 'package:delivery_boy/features/rider/settings/views/screens/rider_settings_screen.dart';
+// ── Onboarding (profile setup stepper) ────────────────────────────────────────
+import 'package:delivery_boy/features/rider/onboarding/views/screens/rider_onboarding_screen.dart';
+// ── Tracking ──────────────────────────────────────────────────────────────────
 import 'package:delivery_boy/features/rider/tracking/views/screens/rider_map_screen.dart';
+// ── Auth model ────────────────────────────────────────────────────────────────
+import 'package:delivery_boy/features/rider/auth/models/rider_user_model.dart';
 
 GoRouter createAppRouter() {
   return GoRouter(
@@ -25,68 +34,129 @@ GoRouter createAppRouter() {
     redirect: (context, state) {
       final session = sl<UserSessionManager>();
       final isLoggedIn = session.isLoggedIn;
+      final location = state.matchedLocation;
 
-      final isAuthRoute = state.matchedLocation == AppRoutes.login ||
-          state.matchedLocation == AppRoutes.signup ||
-          state.matchedLocation == AppRoutes.otp ||
-          state.matchedLocation == AppRoutes.splash;
+      // Public routes — no auth required
+      final isPublicRoute = location == AppRoutes.splash ||
+          location == AppRoutes.intro ||
+          location == AppRoutes.login ||
+          location == AppRoutes.signup ||
+          location == AppRoutes.otp ||
+          location == AppRoutes.forgotPassword;
 
-      // Not logged in and trying to access protected route → send to login
-      if (!isLoggedIn && !isAuthRoute) return AppRoutes.login;
-
-      // Logged in and on splash → send to dashboard
-      if (isLoggedIn && state.matchedLocation == AppRoutes.splash) {
+      // Authenticated user landing on intro (e.g. back-press) → skip to app
+      if (isLoggedIn && location == AppRoutes.intro) {
+        final userData = session.currentUser;
+        if (userData != null) {
+          final user = RiderUserModel.fromJson(userData);
+          if (!user.isProfileComplete) return AppRoutes.onboarding;
+        }
         return AppRoutes.dashboard;
       }
 
-      // Not logged in on splash → send to login
-      if (!isLoggedIn && state.matchedLocation == AppRoutes.splash) {
-        return AppRoutes.login;
-      }
+      // Unauthenticated user trying to reach a protected screen
+      if (!isLoggedIn && !isPublicRoute) return AppRoutes.login;
 
+      // Splash is always allowed — SplashScreen itself drives navigation
       return null;
     },
     routes: [
-      // ── Splash ──────────────────────────────────────────────────────────
+      // ── Splash (no transition — it IS the initial frame) ──────────────────
       GoRoute(
         path: AppRoutes.splash,
-        builder: (_, __) => const _SplashScreen(),
-      ),
-
-      // ── Auth ────────────────────────────────────────────────────────────
-      GoRoute(
-        path: AppRoutes.login,
-        builder: (_, __) => const RiderLoginScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.signup,
-        builder: (_, __) => const RiderSignupScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.otp,
-        builder: (_, state) => RiderOtpScreen(
-          credentials: (state.extra as Map<String, dynamic>?) ?? {},
+        pageBuilder: (_, state) => const NoTransitionPage(
+          child: SplashScreen(),
         ),
       ),
 
-      // ── Dashboard (shell with nested routes) ────────────────────────────
+      // ── Intro swipe onboarding — fade up from splash ───────────────────────
+      GoRoute(
+        path: AppRoutes.intro,
+        pageBuilder: (_, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const OnboardingIntroScreen(),
+          transitionDuration: const Duration(milliseconds: 700),
+          reverseTransitionDuration: const Duration(milliseconds: 400),
+          transitionsBuilder: (_, animation, __, child) => FadeTransition(
+            opacity: CurvedAnimation(
+              parent: animation,
+              curve: Curves.easeOut,
+            ),
+            child: SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0, 0.06),
+                end: Offset.zero,
+              ).animate(CurvedAnimation(
+                parent: animation,
+                curve: Curves.easeOutCubic,
+              )),
+              child: child,
+            ),
+          ),
+        ),
+      ),
+
+      // ── Auth — slide in from right ─────────────────────────────────────────
+      GoRoute(
+        path: AppRoutes.login,
+        pageBuilder: (_, state) => _slideRight(state, const RiderLoginScreen()),
+      ),
+      GoRoute(
+        path: AppRoutes.signup,
+        pageBuilder: (_, state) =>
+            _slideRight(state, const RiderSignupScreen()),
+      ),
+      GoRoute(
+        path: AppRoutes.otp,
+        pageBuilder: (_, state) => _slideRight(
+          state,
+          RiderOtpScreen(
+            credentials: (state.extra as Map<String, dynamic>?) ?? {},
+          ),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.forgotPassword,
+        pageBuilder: (_, state) =>
+            _slideRight(state, const RiderForgotPasswordScreen()),
+      ),
+
+      // ── Profile setup onboarding (stepper) — fade ─────────────────────────
+      GoRoute(
+        path: AppRoutes.onboarding,
+        pageBuilder: (_, state) => _fade(state, const RiderOnboardingScreen()),
+      ),
+
+      // ── Dashboard (shell with nested routes) ──────────────────────────────
       GoRoute(
         path: AppRoutes.dashboard,
-        builder: (_, __) => const RiderDashboardScreen(),
+        pageBuilder: (_, state) =>
+            _fade(state, const RiderDashboardScreen()),
         routes: [
           GoRoute(
             path: 'map',
-            builder: (_, __) => const RiderMapScreen(),
+            pageBuilder: (_, state) =>
+                _slideRight(state, const RiderMapScreen()),
           ),
           GoRoute(
             path: 'profile/edit',
-            builder: (_, __) =>
-                const _PlaceholderScreen(title: 'Edit Profile'),
+            pageBuilder: (_, state) =>
+                _slideRight(state, const RiderProfileEditScreen()),
+          ),
+          GoRoute(
+            path: 'profile/documents',
+            pageBuilder: (_, state) =>
+                _slideRight(state, const RiderDocumentUploadScreen()),
           ),
           GoRoute(
             path: 'notifications',
-            builder: (_, __) =>
-                const _PlaceholderScreen(title: 'Notifications'),
+            pageBuilder: (_, state) =>
+                _slideRight(state, const RiderNotificationsScreen()),
+          ),
+          GoRoute(
+            path: 'settings',
+            pageBuilder: (_, state) =>
+                _slideRight(state, const RiderSettingsScreen()),
           ),
         ],
       ),
@@ -94,59 +164,44 @@ GoRouter createAppRouter() {
   );
 }
 
-// ── Temporary splash widget ──────────────────────────────────────────────────
-// GoRouter redirect handles the actual navigation; this just shows a spinner.
-class _SplashScreen extends StatelessWidget {
-  const _SplashScreen();
+// ── Shared transition helpers ─────────────────────────────────────────────────
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: scaffoldBgColor,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Image.asset(
-              'assets/delivery_boy.jpg',
-              width: 200,
-              fit: BoxFit.fitWidth,
-            ),
-            const SizedBox(height: 40),
-            SpinKitPulse(color: primaryColor, size: 50),
-          ],
+/// Slide in from the right — used for all drill-down screens.
+CustomTransitionPage<void> _slideRight(GoRouterState state, Widget child) {
+  return CustomTransitionPage(
+    key: state.pageKey,
+    child: child,
+    transitionDuration: const Duration(milliseconds: 380),
+    reverseTransitionDuration: const Duration(milliseconds: 300),
+    transitionsBuilder: (_, animation, secondaryAnimation, child) {
+      return SlideTransition(
+        position: Tween<Offset>(
+          begin: const Offset(1.0, 0.0),
+          end: Offset.zero,
+        ).animate(
+          CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
         ),
-      ),
-    );
-  }
+        child: FadeTransition(
+          opacity: CurvedAnimation(
+            parent: animation,
+            curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
+          ),
+          child: child,
+        ),
+      );
+    },
+  );
 }
 
-// ── Temporary placeholder screen ─────────────────────────────────────────────
-// Used while a feature screen is not yet migrated.
-class _PlaceholderScreen extends StatelessWidget {
-  final String title;
-
-  const _PlaceholderScreen({required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.scaffold,
-      appBar: AppBar(
-        title: Text(title),
-        backgroundColor: AppColors.primary,
-        foregroundColor: AppColors.white,
-      ),
-      body: Center(
-        child: Text(
-          '$title — coming soon',
-          style: const TextStyle(
-            fontFamily: 'Roboto',
-            fontSize: 16,
-            color: AppColors.textSecondary,
-          ),
-        ),
-      ),
-    );
-  }
+/// Fade transition — used for top-level screens (dashboard, onboarding).
+CustomTransitionPage<void> _fade(GoRouterState state, Widget child) {
+  return CustomTransitionPage(
+    key: state.pageKey,
+    child: child,
+    transitionDuration: const Duration(milliseconds: 450),
+    transitionsBuilder: (_, animation, __, child) => FadeTransition(
+      opacity: CurvedAnimation(parent: animation, curve: Curves.easeOut),
+      child: child,
+    ),
+  );
 }

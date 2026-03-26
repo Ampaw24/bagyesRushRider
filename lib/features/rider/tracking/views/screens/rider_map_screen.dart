@@ -5,6 +5,7 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:delivery_boy/constant/asset_images.dart';
 import 'package:delivery_boy/constant/constant.dart';
 import 'package:delivery_boy/features/rider/orders/models/rider_order_model.dart';
 import 'package:delivery_boy/features/rider/orders/providers/rider_orders_providers.dart';
@@ -393,7 +394,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(50),
                             image: const DecorationImage(
-                              image: AssetImage('assets/delivery_boy.jpg'),
+                              image: AssetImage(AssetImages.deliveryBoy),
                               fit: BoxFit.cover,
                             ),
                           ),

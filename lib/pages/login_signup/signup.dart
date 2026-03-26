@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:delivery_boy/states/app.state.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:delivery_boy/constant/asset_images.dart';
 import 'package:delivery_boy/constant/constant.dart';
 import 'package:delivery_boy/pages/login_signup/otp_screen.dart';
 import 'package:provider/provider.dart';
@@ -71,7 +72,7 @@ class _LoginState extends State<Signup> {
                   heightSpace,
                   heightSpace,
                   Image.asset(
-                    'assets/delivery_boy.jpg',
+                    AssetImages.deliveryBoy,
                     width: 200.0,
                     fit: BoxFit.fitWidth,
                   ),

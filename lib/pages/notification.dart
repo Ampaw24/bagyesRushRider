@@ -32,7 +32,7 @@ class _NotificationsState extends State<Notifications> {
         loading = true;
       });
       var response = await getNotifications(user['_id'], token)
-          .then((value) => jsonDecode(value.body));
+          .then((value) => value.data);
       setState(() {
         loading = false;
       });

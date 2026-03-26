@@ -38,7 +38,7 @@ class _NewOrderState extends State<NewOrder> {
         loading = true;
       });
       var response = await getRequested(user['_id'],token)
-          .then((value) => IApiResponse(jsonDecode(value.body)));
+          .then((value) => IApiResponse(value.data));
       if (!response.success) {
         throw Exception(response.message);
       }
@@ -86,7 +86,7 @@ class _NewOrderState extends State<NewOrder> {
         "reason": reason
       };
       var response = await rejectOrder(data, token)
-          .then((value) => IApiResponse(jsonDecode(value.body)));
+          .then((value) => IApiResponse(value.data));
       setState(() {
         loading = false;
       });
@@ -132,7 +132,7 @@ class _NewOrderState extends State<NewOrder> {
       });
       var data = {"orderId": selectedOrder['_id'], "courier": user["_id"]};
       var response = await acceptOrder(data, token)
-          .then((value) => IApiResponse(jsonDecode(value.body)));
+          .then((value) => IApiResponse(value.data));
       setState(() {
         loading = false;
       });

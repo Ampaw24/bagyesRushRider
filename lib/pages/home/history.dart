@@ -34,7 +34,7 @@ class _HistoryState extends State<History> {
       setState(() {
         loading=true;
       });
-      var response=await getHistory(userId, token).then((value) => IApiResponse(jsonDecode(value.body)));
+      var response=await getHistory(userId, token).then((value) => IApiResponse(value.data));
       if(!response.success){
         throw Exception(
           response.message

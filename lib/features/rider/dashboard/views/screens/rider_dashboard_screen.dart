@@ -3,10 +3,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:go_router/go_router.dart';
-import 'package:delivery_boy/constant/constant.dart';
+import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/core/di/service_locator.dart';
 import 'package:delivery_boy/core/router/app_routes.dart';
 import 'package:delivery_boy/core/services/user_session_manager.dart';
+import 'package:delivery_boy/core/widgets/sos_floating_button.dart';
+import 'package:delivery_boy/features/rider/notifications/providers/rider_notifications_providers.dart';
+import 'package:delivery_boy/features/rider/orders/providers/rider_orders_providers.dart';
 import 'package:delivery_boy/features/rider/orders/views/screens/rider_new_orders_screen.dart';
 import 'package:delivery_boy/features/rider/orders/views/screens/rider_active_orders_screen.dart';
 import 'package:delivery_boy/features/rider/orders/views/screens/rider_order_history_screen.dart';
@@ -34,25 +37,9 @@ class _RiderDashboardScreenState extends ConsumerState<RiderDashboardScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _checkProfile());
-  }
-
-  void _checkProfile() {
-    final user = sl<UserSessionManager>().currentUser;
-    if (user == null) return;
-    final incomplete = user['name'] == null ||
-        user['email'] == null ||
-        user['licenceBack'] == null ||
-        user['licenceFront'] == null ||
-        user['motorIssurance'] == null ||
-        user['roadWorthy'] == null ||
-        user['numberPlate'] == null ||
-        user['selfie'] == null;
-    if (incomplete && mounted) {
-      Future.delayed(const Duration(seconds: 1), () {
-        if (mounted) context.go(AppRoutes.editProfile);
-      });
-    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(riderNotificationsProvider.notifier).load();
+    });
   }
 
   Future<void> _toggleQueue() async {
@@ -64,14 +51,9 @@ class _RiderDashboardScreenState extends ConsumerState<RiderDashboardScreen> {
       final currentQueue = ref.read(riderQueueProvider);
       final newQueue = !currentQueue;
 
-      // Optimistically update UI
       ref.read(riderQueueProvider.notifier).state = newQueue;
+      HapticFeedback.lightImpact();
 
-      // Update backend via DI — using the profile repository once available.
-      // For now, update via profile provider which has updateCourier.
-      // (Will be wired properly in Phase 6)
-
-      // Update local session cache to reflect queue change
       final updatedUser = Map<String, dynamic>.from(user)
         ..['queue'] = newQueue;
       await session.saveSession(
@@ -79,7 +61,6 @@ class _RiderDashboardScreenState extends ConsumerState<RiderDashboardScreen> {
         user: updatedUser,
       );
     } catch (_) {
-      // Revert on error
       ref.read(riderQueueProvider.notifier).state =
           !ref.read(riderQueueProvider);
     }
@@ -106,7 +87,7 @@ class _RiderDashboardScreenState extends ConsumerState<RiderDashboardScreen> {
           Fluttertoast.showToast(
             msg: 'Press Back Once Again to Exit.',
             backgroundColor: Colors.black,
-            textColor: whiteColor,
+            textColor: Colors.white,
           );
         } else {
           SystemNavigator.pop();
@@ -117,23 +98,26 @@ class _RiderDashboardScreenState extends ConsumerState<RiderDashboardScreen> {
           borderRadius:
               const BorderRadius.vertical(top: Radius.circular(16)),
           child: BottomNavigationBar(
-            backgroundColor: whiteColor,
+            backgroundColor: Colors.white,
             currentIndex: _currentIndex,
             onTap: (i) => setState(() => _currentIndex = i),
             elevation: 8,
-            selectedItemColor: primaryColor,
-            unselectedItemColor: greyColor,
+            selectedItemColor: AppColors.primary,
+            unselectedItemColor: Colors.grey.shade400,
             items: const [
               BottomNavigationBarItem(
-                icon: Icon(Icons.local_mall),
-                label: 'Order',
+                icon: Icon(Icons.local_mall_outlined),
+                activeIcon: Icon(Icons.local_mall),
+                label: 'Orders',
               ),
               BottomNavigationBarItem(
-                icon: Icon(Icons.account_balance_wallet),
+                icon: Icon(Icons.account_balance_wallet_outlined),
+                activeIcon: Icon(Icons.account_balance_wallet),
                 label: 'Wallet',
               ),
               BottomNavigationBarItem(
-                icon: Icon(Icons.person),
+                icon: Icon(Icons.person_outline),
+                activeIcon: Icon(Icons.person),
                 label: 'Profile',
               ),
             ],
@@ -148,35 +132,148 @@ class _RiderDashboardScreenState extends ConsumerState<RiderDashboardScreen> {
   }
 }
 
-/// Orders tab — wraps the 3-tab order view with the online toggle in the AppBar
-class _OrdersTab extends StatelessWidget {
+/// Orders tab — wraps the 3-tab order view with the online toggle + bell in AppBar
+class _OrdersTab extends ConsumerWidget {
   final bool isOnline;
   final VoidCallback onToggle;
 
   const _OrdersTab({required this.isOnline, required this.onToggle});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final unreadCount =
+        ref.watch(riderNotificationsProvider).unreadCount;
+    final hasActiveOrders =
+        ref.watch(activeOrdersProvider).orders.isNotEmpty;
+
     return DefaultTabController(
       length: 3,
       child: Scaffold(
-        backgroundColor: scaffoldBgColor,
+        backgroundColor: AppColors.scaffold,
+        floatingActionButton: hasActiveOrders
+            ? const SosFloatingButton()
+            : null,
         appBar: AppBar(
           automaticallyImplyLeading: false,
-          backgroundColor: whiteColor,
-          title: Text('Bagyes Rush', style: bigHeadingStyle),
+          backgroundColor: Colors.white,
+          elevation: 0,
+          titleSpacing: 20,
+          title: const Text(
+            'Bagyes Rush',
+            style: TextStyle(
+              fontFamily: 'Roboto',
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+            ),
+          ),
           actions: [
-            IconButton(
-              icon: isOnline
-                  ? const Icon(Icons.toggle_on, color: Colors.green)
-                  : Icon(Icons.toggle_off, color: blackColor),
-              onPressed: onToggle,
+            // Notifications bell with unread badge
+            Stack(
+              alignment: Alignment.topRight,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.notifications_outlined,
+                      color: AppColors.textPrimary, size: 26),
+                  onPressed: () =>
+                      context.push(AppRoutes.notifications),
+                ),
+                if (unreadCount > 0)
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: Container(
+                      width: 18,
+                      height: 18,
+                      decoration: const BoxDecoration(
+                        color: AppColors.error,
+                        shape: BoxShape.circle,
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        unreadCount > 9 ? '9+' : '$unreadCount',
+                        style: const TextStyle(
+                          fontFamily: 'Roboto',
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            // Animated online/offline pill
+            GestureDetector(
+              onTap: onToggle,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+                margin:
+                    const EdgeInsets.only(right: 16, top: 12, bottom: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                decoration: BoxDecoration(
+                  color: isOnline
+                      ? AppColors.success.withValues(alpha: 0.12)
+                      : Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: isOnline
+                        ? AppColors.success.withValues(alpha: 0.4)
+                        : Colors.grey.shade300,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _PulseAnimation(
+                      active: isOnline,
+                      child: Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color:
+                              isOnline ? AppColors.success : Colors.grey,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 5),
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 200),
+                      child: Text(
+                        isOnline ? 'Online' : 'Offline',
+                        key: ValueKey(isOnline),
+                        style: TextStyle(
+                          fontFamily: 'Roboto',
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: isOnline
+                              ? AppColors.success
+                              : Colors.grey.shade600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ],
           bottom: TabBar(
-            unselectedLabelColor: Colors.grey.withValues(alpha: 0.3),
-            labelColor: primaryColor,
-            indicatorColor: primaryColor,
+            unselectedLabelColor: Colors.grey.shade400,
+            labelColor: AppColors.primary,
+            indicatorColor: AppColors.primary,
+            indicatorWeight: 3,
+            labelStyle: const TextStyle(
+              fontFamily: 'Roboto',
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
+            ),
+            unselectedLabelStyle: const TextStyle(
+              fontFamily: 'Roboto',
+              fontWeight: FontWeight.w500,
+              fontSize: 13,
+            ),
             tabs: const [
               Tab(text: 'New'),
               Tab(text: 'Active'),
@@ -193,5 +290,59 @@ class _OrdersTab extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+/// Pulse animation widget — looping ScaleTransition 0.9 ↔ 1.1 when active
+class _PulseAnimation extends StatefulWidget {
+  final bool active;
+  final Widget child;
+
+  const _PulseAnimation({required this.active, required this.child});
+
+  @override
+  State<_PulseAnimation> createState() => _PulseAnimationState();
+}
+
+class _PulseAnimationState extends State<_PulseAnimation>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+  late final Animation<double> _scale;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+    _scale = Tween<double>(begin: 0.9, end: 1.1).animate(
+      CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut),
+    );
+    if (widget.active) _ctrl.repeat(reverse: true);
+  }
+
+  @override
+  void didUpdateWidget(_PulseAnimation old) {
+    super.didUpdateWidget(old);
+    if (widget.active != old.active) {
+      if (widget.active) {
+        _ctrl.repeat(reverse: true);
+      } else {
+        _ctrl.stop();
+        _ctrl.value = 0;
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ScaleTransition(scale: _scale, child: widget.child);
   }
 }

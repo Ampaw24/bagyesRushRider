@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:delivery_boy/components/orderDetails.component.dart';
+import 'package:delivery_boy/constant/asset_images.dart';
 import 'package:delivery_boy/constant/constant.dart';
 import 'package:delivery_boy/constant/models.dart';
 import 'package:delivery_boy/pages/home.dart';
@@ -171,7 +172,7 @@ class _MapState extends State<Map> {
         loading = true;
       });
       var response = await finishTrip(data, token)
-          .then((value) => IApiResponse(jsonDecode(value.body)));
+          .then((value) => IApiResponse(value.data));
       setState(() {
         loading = false;
       });
@@ -219,7 +220,7 @@ class _MapState extends State<Map> {
         }
       };
       await updateRiderLocation(data, token)
-          .then((value) => jsonDecode(value.body));
+          .then((value) => value.data);
     } catch (e) {
       print(e.toString());
     }
@@ -255,7 +256,7 @@ class _MapState extends State<Map> {
       });
       var data = {"orderId": order["_id"], "trip": _trip.name};
       var response = await setTrip(data, token)
-          .then((value) => IApiResponse(jsonDecode(value.body)));
+          .then((value) => IApiResponse(value.data));
       setState(() {
         loading = false;
       });
@@ -485,7 +486,7 @@ class _MapState extends State<Map> {
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(50.0),
                           image: DecorationImage(
-                            image: AssetImage('assets/delivery_boy.jpg'),
+                            image: AssetImage(AssetImages.deliveryBoy),
                             fit: BoxFit.cover,
                           ),
                         ),

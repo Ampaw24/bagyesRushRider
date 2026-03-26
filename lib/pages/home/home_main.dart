@@ -36,7 +36,7 @@ class _HomeMainState extends State<HomeMain> {
         "data": {"queue": !queue}
       };
       var response = await updateCourier(data, state.token ?? '')
-          .then((value) => IApiResponse(jsonDecode(value.body)));
+          .then((value) => IApiResponse(value.data));
       if (!response.success) {
         throw Exception(response.message);
       }

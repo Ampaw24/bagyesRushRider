@@ -38,7 +38,7 @@ class _EditProfileState extends State<EditProfile> {
       });
       var state = context.read<AppState>();
       var response = await loadUserProfile(state.user['_id'], state.token ?? '')
-          .then((value) => IApiResponse(jsonDecode(value.body)));
+          .then((value) => IApiResponse(value.data));
       if (!response.success) {
         throw Exception(response.message);
       }
@@ -65,11 +65,11 @@ class _EditProfileState extends State<EditProfile> {
         setState(() {
           loading = false;
         });
-        Map data;
+        Map<String, dynamic> data;
         String userId = user['_id'];
         data = {"courier": userId, "id": doc, "image": base64string};
         var response = await uploadDoc(data, token)
-            .then((res) => IApiResponse(jsonDecode(res.body)));
+            .then((res) => IApiResponse(Map<String, dynamic>.from(res.data as Map)));
         if (!response.success) {
           throw Exception(response.message);
         }
@@ -136,7 +136,7 @@ class _EditProfileState extends State<EditProfile> {
       });
       var d = {"id": user['_id'], "data": data};
       var response = await updateCourier(d, token)
-          .then((value) => IApiResponse(jsonDecode(value.body)));
+          .then((value) => IApiResponse(value.data));
       setState(() {
         loading = false;
       });

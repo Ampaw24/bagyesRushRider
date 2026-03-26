@@ -1,170 +1,93 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+/// Legacy service layer — used by lib/pages/ during migration to Clean Architecture.
+/// All calls use the shared Dio instance from GetIt so the auth interceptor
+/// handles token injection and 401 clearing automatically.
+/// This file will be deleted once all old pages are removed.
+import 'package:dio/dio.dart';
 import 'package:delivery_boy/constant/api.dart';
+import 'package:delivery_boy/core/di/service_locator.dart';
 
-Future<http.Response> loadUserProfile(String id, String token) {
-  Map<String, String> headers = {
-    'Content-Type': 'application/json',
-    'Authorization': 'Bearer ' + token
-  };
-  return http.get(
-    Uri.parse("$BASEURL/couriers/details/$id"),
-    headers: headers,
-  );
+Dio get _dio => sl<Dio>();
+
+// ── Auth ──────────────────────────────────────────────────────────────────────
+
+Future<Response<dynamic>> login(Map<String, dynamic> data) {
+  return _dio.post('$BASEURL/couriers/login', data: data);
 }
 
-Future<http.Response> login(data) {
-  const headers = {'Content-Type': 'application/json'};
-  return http.post(
-    Uri.parse("$BASEURL/couriers/login"),
-    headers: headers,
-    body: jsonEncode(data),
-  );
+Future<Response<dynamic>> userSignupLogin(Map<String, dynamic> data) {
+  return _dio.post('$BASEURL/couriers/signup', data: data);
 }
 
-Future<http.Response> userSignupLogin(data) {
-  const headers = {'Content-Type': 'application/json'};
-  return http.post(
-    Uri.parse("$BASEURL/couriers/signup"),
-    headers: headers,
-    body: jsonEncode(data),
-  );
+Future<Response<dynamic>> sendOtp(Map<String, dynamic> data) {
+  return _dio.post('$BASEURL/otp/send', data: data);
 }
 
-Future<http.Response> getNotifications(String id, String token) {
-  Map<String, String> headers = {
-    'Content-Type': 'application/json',
-    'Authorization': 'Bearer ' + token
-  };
-  return http.get(Uri.parse("$BASEURL/notifications/user/$id"),
-      headers: headers);
+// ── Couriers ──────────────────────────────────────────────────────────────────
+
+Future<Response<dynamic>> loadUserProfile(String id, String token) {
+  return _dio.get('$BASEURL/couriers/details/$id');
 }
 
-Future<http.Response> uploadDoc(dynamic data, String token) {
-  Map<String, String> headers = {
-    'Content-Type': 'application/json',
-    'Authorization': 'Bearer ' + token
-  };
-  return http.put(Uri.parse("$BASEURL/couriers/upload/doc"),
-      headers: headers, body: jsonEncode(data));
+Future<Response<dynamic>> updateCourier(Map<String, dynamic> data,
+    String token) {
+  return _dio.put('$BASEURL/couriers/update', data: data);
 }
 
-Future<http.Response> updateRiderLocation(dynamic data, String token) {
-  Map<String, String> headers = {
-    'Content-Type': 'application/json',
-    'Authorization': 'Bearer ' + token
-  };
-  return http.put(Uri.parse("$BASEURL/orders/location/update"),
-      headers: headers, body: jsonEncode(data));
+Future<Response<dynamic>> uploadDoc(Map<String, dynamic> data, String token) {
+  return _dio.put('$BASEURL/couriers/upload/doc', data: data);
 }
 
+// ── Orders ────────────────────────────────────────────────────────────────────
 
-Future<http.Response> getEarnings(String id, String token) {
-  Map<String, String> headers = {
-    'Content-Type': 'application/json',
-    'Authorization': 'Bearer ' + token
-  };
-  return http.get(Uri.parse("$BASEURL/earnings/user/$id"),
-      headers: headers);
+Future<Response<dynamic>> getOrders(String token) {
+  return _dio.get('$BASEURL/orders/get');
 }
 
-
-Future<http.Response> getHistory(String id, String token) {
-  Map<String, String> headers = {
-    'Content-Type': 'application/json',
-    'Authorization': 'Bearer ' + token
-  };
-  return http.get(Uri.parse("$BASEURL/orders/history/$id"),
-      headers: headers);
+Future<Response<dynamic>> getRequested(String id, String token) {
+  return _dio.get('$BASEURL/orders/requested/$id');
 }
 
-
-Future<http.Response> rejectOrder(dynamic data, String token) {
-  Map<String, String> headers = {
-    'Content-Type': 'application/json',
-    'Authorization': 'Bearer ' + token
-  };
-  return http.put(Uri.parse("$BASEURL/orders/reject"),
-      headers: headers, body: jsonEncode(data));
+Future<Response<dynamic>> getActiveOrders(String courierId, String token) {
+  return _dio.get('$BASEURL/orders/active/$courierId');
 }
 
-
-Future<http.Response> acceptOrder(dynamic data, String token) {
-  Map<String, String> headers = {
-    'Content-Type': 'application/json',
-    'Authorization': 'Bearer ' + token
-  };
-  return http.post(Uri.parse("$BASEURL/orders/accept"),
-      headers: headers, body: jsonEncode(data));
+Future<Response<dynamic>> getHistory(String id, String token) {
+  return _dio.get('$BASEURL/orders/history/$id');
 }
 
-Future<http.Response> finishTrip(dynamic data, String token) {
-  Map<String, String> headers = {
-    'Content-Type': 'application/json',
-    'Authorization': 'Bearer ' + token
-  };
-  return http.put(Uri.parse("$BASEURL/orders/trip/finish"),
-      headers: headers, body: jsonEncode(data));
+Future<Response<dynamic>> acceptOrder(Map<String, dynamic> data, String token) {
+  return _dio.post('$BASEURL/orders/accept', data: data);
 }
 
-Future<http.Response> setTrip(dynamic data, String token) {
-  Map<String, String> headers = {
-    'Content-Type': 'application/json',
-    'Authorization': 'Bearer ' + token
-  };
-  return http.put(Uri.parse("$BASEURL/orders/trip/set"),
-      headers: headers, body: jsonEncode(data));
+Future<Response<dynamic>> rejectOrder(Map<String, dynamic> data, String token) {
+  return _dio.put('$BASEURL/orders/reject', data: data);
 }
 
-Future<http.Response> getActiveOrders(String courierId, String token) {
-  Map<String, String> headers = {
-    'Content-Type': 'application/json',
-    'Authorization': 'Bearer ' + token
-  };
-  return http.get(Uri.parse("$BASEURL/orders/active/$courierId"),
-      headers: headers);
+Future<Response<dynamic>> updateOrder(Map<String, dynamic> data, String token) {
+  return _dio.put('$BASEURL/orders/update', data: data);
 }
 
-Future<http.Response> getOrders(String token) {
-  var headers = {
-    'Content-Type': 'application/json',
-    'Authorization': 'Bearer ' + token
-  };
-  return http.get(Uri.parse("$BASEURL/orders/get"),
-      headers: headers);
+Future<Response<dynamic>> setTrip(Map<String, dynamic> data, String token) {
+  return _dio.put('$BASEURL/orders/trip/set', data: data);
 }
 
-
-
-Future<http.Response> getRequested(String id, String token) {
-  var headers = {
-    'Content-Type': 'application/json',
-    'Authorization': 'Bearer ' + token
-  };
-  return http.get(Uri.parse("$BASEURL/orders/requested/$id"),
-      headers: headers);
+Future<Response<dynamic>> finishTrip(Map<String, dynamic> data, String token) {
+  return _dio.put('$BASEURL/orders/trip/finish', data: data);
 }
 
-Future<http.Response> updateCourier(data, String token) {
-  Map<String, String> headers = {
-    'Content-Type': 'application/json',
-    'Authorization': 'Bearer ' + token
-  };
-  return http.put(Uri.parse("$BASEURL/couriers/update"),
-      headers: headers, body: jsonEncode(data));
+Future<Response<dynamic>> updateRiderLocation(
+    Map<String, dynamic> data, String token) {
+  return _dio.put('$BASEURL/orders/location/update', data: data);
 }
 
-Future<http.Response> updateOrder(data, String token) {
-  Map<String, String> headers = {
-    'Content-Type': 'application/json',
-    'Authorization': 'Bearer ' + token
-  };
-  return http.put(Uri.parse("$BASEURL/orders/update"),
-      headers: headers, body: jsonEncode(data));
+// ── Earnings ──────────────────────────────────────────────────────────────────
+
+Future<Response<dynamic>> getEarnings(String id, String token) {
+  return _dio.get('$BASEURL/earnings/user/$id');
 }
 
-Future<http.Response> sendOtp(data) {
-  const headers = {'Content-Type': 'application/json'};
-  return http.post(Uri.parse("$BASEURL/otp/send"),
-      headers: headers, body: jsonEncode(data));
+// ── Notifications ─────────────────────────────────────────────────────────────
+
+Future<Response<dynamic>> getNotifications(String id, String token) {
+  return _dio.get('$BASEURL/notifications/user/$id');
 }

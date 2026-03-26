@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:go_router/go_router.dart';
+import 'package:delivery_boy/constant/asset_images.dart';
 import 'package:delivery_boy/constant/constant.dart';
 import 'package:delivery_boy/core/router/app_routes.dart';
 import 'package:delivery_boy/features/rider/auth/viewmodels/rider_auth_viewmodel.dart';
@@ -247,7 +248,7 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(24),
                           child: Image.asset(
-                            'assets/delivery_boy.jpg',
+                            AssetImages.deliveryBoy,
                             fit: BoxFit.cover,
                           ),
                         ),
@@ -334,7 +335,7 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
                     Align(
                       alignment: Alignment.centerRight,
                       child: TextButton(
-                        onPressed: () {},
+                        onPressed: () => context.push(AppRoutes.forgotPassword),
                         style: TextButton.styleFrom(
                             padding:
                                 const EdgeInsets.symmetric(vertical: 8)),
@@ -350,6 +351,7 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
                     ),
 
                     const SizedBox(height: 8),
+
 
                     SizedBox(
                       width: double.infinity,

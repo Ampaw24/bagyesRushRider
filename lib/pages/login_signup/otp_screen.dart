@@ -36,7 +36,7 @@ class _OTPScreenState extends State<OTPScreen> {
         loading = true;
       });
       var response = await sendOtp(data)
-          .then((value) => IApiResponse(jsonDecode(value.body)));
+          .then((value) => IApiResponse(value.data));
       if (!response.success) {
         throw Exception(response.message);
       }
@@ -95,7 +95,7 @@ class _OTPScreenState extends State<OTPScreen> {
         loading = true;
       });
       var response = await userSignupLogin(data)
-          .then((value) => IApiResponse(jsonDecode(value.body)));
+          .then((value) => IApiResponse(value.data));
       setState(() {
         loading = false;
       });

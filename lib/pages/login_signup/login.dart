@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:delivery_boy/constant/asset_images.dart';
 import 'dart:io';
 import 'package:delivery_boy/constant/models.dart';
 import 'package:delivery_boy/pages/home.dart';
@@ -66,7 +67,7 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
       var data = {"phone": '$_selectedCountryCode$phone', "password": password};
       setState(() => loading = true);
       var response = await login(data)
-          .then((value) => IApiResponse(jsonDecode(value.body)));
+          .then((value) => IApiResponse(value.data));
       if (!response.success) throw Exception(response.message);
       context.read<AppState>().setToken(response.token);
       context.read<AppState>().setUser(response.data);
@@ -240,7 +241,7 @@ class _LoginState extends State<Login> with SingleTickerProviderStateMixin {
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(24),
                           child: Image.asset(
-                            'assets/delivery_boy.jpg',
+                            AssetImages.deliveryBoy,
                             fit: BoxFit.cover,
                           ),
                         ),

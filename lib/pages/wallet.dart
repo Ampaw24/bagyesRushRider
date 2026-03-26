@@ -39,7 +39,7 @@ class _WalletState extends State<Wallet> {
       });
       var state = context.read<AppState>();
       var response = await getEarnings(state.user['_id'], state.token ?? '')
-          .then((value) => IApiResponse(jsonDecode(value.body)));
+          .then((value) => IApiResponse(value.data));
       if (!response.success) {
         throw Exception(response.message);
       }

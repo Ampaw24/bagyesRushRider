@@ -41,7 +41,7 @@ class _ActiveOrderState extends State<ActiveOrder> {
         "data": {"status": "started"}
       };
       var response = await updateOrder(data, token)
-          .then((value) => IApiResponse(jsonDecode(value.body)));
+          .then((value) => IApiResponse(value.data));
       if (!response.success) {
         throw Exception(response.message);
       }
@@ -73,7 +73,7 @@ class _ActiveOrderState extends State<ActiveOrder> {
       });
       var user = context.read<AppState>().user;
       var response = await getActiveOrders(user['_id'], token)
-          .then((value) => IApiResponse(jsonDecode(value.body)));
+          .then((value) => IApiResponse(value.data));
       setState(() {
         loading = false;
       });
