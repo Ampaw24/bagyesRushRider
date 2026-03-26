@@ -25,21 +25,19 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
   String _selectedCountryCode = '+233';
   DateTime? _lastBackPress;
 
+  late TextEditingController _phoneController;
+  late FocusNode _phoneFocusNode;
+
   late AnimationController _animController;
   late Animation<double> _fadeAnim;
   late Animation<Offset> _slideAnim;
 
-  final List<Map<String, String>> _countryCodes = [
-    {'code': '+233', 'flag': '🇬🇭'},
-    {'code': '+234', 'flag': '🇳🇬'},
-    {'code': '+1', 'flag': '🇺🇸'},
-    {'code': '+44', 'flag': '🇬🇧'},
-    {'code': '+27', 'flag': '🇿🇦'},
-  ];
-
   @override
   void initState() {
     super.initState();
+    _phoneController = TextEditingController();
+    _phoneFocusNode = FocusNode();
+
     _animController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 800),
@@ -54,6 +52,8 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
 
   @override
   void dispose() {
+    _phoneController.dispose();
+    _phoneFocusNode.dispose();
     _animController.dispose();
     super.dispose();
   }
@@ -68,87 +68,6 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
     if (success && mounted) {
       context.go(AppRoutes.dashboard);
     }
-  }
-
-  void _showCountryPicker() {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 40,
-            height: 4,
-            margin: const EdgeInsets.symmetric(vertical: 12),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade300,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          const Padding(
-            padding: EdgeInsets.only(bottom: 8),
-            child: Text('Select Country Code',
-                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
-          ),
-          ..._countryCodes.map((c) => ListTile(
-                leading: Text(c['flag']!, style: const TextStyle(fontSize: 22)),
-                title: Text(c['code']!,
-                    style: const TextStyle(fontWeight: FontWeight.w600)),
-                trailing: _selectedCountryCode == c['code']
-                    ? Icon(Icons.check_circle_rounded, color: primaryColor)
-                    : null,
-                onTap: () {
-                  setState(() => _selectedCountryCode = c['code']!);
-                  Navigator.pop(ctx);
-                },
-              )),
-          const SizedBox(height: 12),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCountryCodePicker() {
-    final size = MediaQuery.of(context).size;
-    final width = size.width;
-    final height = size.height;
-
-    return GestureDetector(
-      onTap: _showCountryPicker,
-      child: Container(
-        padding: EdgeInsets.symmetric(
-            horizontal: width * 0.032, vertical: height * 0.02),
-        decoration: BoxDecoration(
-          border: Border(
-              right: BorderSide(
-                  color: Colors.grey.shade200, width: width * 0.004)),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              _countryCodes.firstWhere(
-                  (c) => c['code'] == _selectedCountryCode)['flag']!,
-              style: TextStyle(fontSize: width * 0.048),
-            ),
-            SizedBox(width: width * 0.01),
-            Text(
-              _selectedCountryCode,
-              style: TextStyle(
-                fontSize: width * 0.038,
-                fontWeight: FontWeight.w600,
-                color: Colors.grey.shade700,
-              ),
-            ),
-            Icon(Icons.keyboard_arrow_down_rounded,
-                size: width * 0.04, color: Colors.grey.shade500),
-          ],
-        ),
-      ),
-    );
   }
 
   Widget _buildInputField({
@@ -298,18 +217,21 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
 
                     SizedBox(height: spaceM),
                     buildPhoneInputSection(
-                        sw: null,
-                        phoneController: null,
-                        phoneFocusNode: null,
-                        proceed: (BuildContext p1) {},
-                        context: null),
+                      loading: isLoading,
+                      sw: width,
+                      phoneController: _phoneController,
+                      phoneFocusNode: _phoneFocusNode,
+                      proceed: (_) =>
+                          setState(() => _phone = _phoneController.text.trim()),
+                      context: context,
+                    ),
 
-                    const SizedBox(height: 20),
+                    SizedBox(height: spaceS),
 
                     Text(
                       'Password',
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: width * 0.034,
                         fontWeight: FontWeight.w600,
                         color: Colors.grey.shade700,
                         letterSpacing: 0.2,
