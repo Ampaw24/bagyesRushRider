@@ -48,78 +48,102 @@ class AppTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TextFormField(
-      controller: controller,
-      focusNode: focusNode,
-      initialValue: initialValue,
-      keyboardType: keyboardType,
-      textInputAction: textInputAction,
-      textCapitalization: textCapitalization,
-      maxLines: maxLines,
-      maxLength: maxLength,
-      enabled: enabled,
-      readOnly: readOnly,
-      inputFormatters: inputFormatters,
-      onChanged: onChanged,
-      onTap: onTap,
-      validator: validator,
-      style: const TextStyle(
-        fontFamily: 'Roboto',
-        fontSize: 15,
-        fontWeight: FontWeight.w500,
-        color: AppColors.textPrimary,
-      ),
-      decoration: InputDecoration(
-        labelText: label,
-        hintText: hint,
-        helperText: helperText,
-        prefixIcon: prefixIcon != null
-            ? Icon(prefixIcon, size: 20, color: Colors.grey.shade400)
-            : null,
-        suffix: suffix,
-        labelStyle: TextStyle(
-          fontFamily: 'Roboto',
-          fontSize: 14,
-          color: Colors.grey.shade500,
+    final w = MediaQuery.of(context).size.width;
+    final h = MediaQuery.of(context).size.height;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // ── External label ──────────────────────────────────────
+        Text(
+          label,
+          style: TextStyle(
+            fontFamily: 'Mukta',
+            fontSize: (w * 0.033).clamp(11.0, 14.0),
+            fontWeight: FontWeight.w600,
+            color: AppColors.textSecondary,
+            letterSpacing: 0.1,
+          ),
         ),
-        hintStyle: TextStyle(
-          fontFamily: 'Roboto',
-          fontSize: 14,
-          color: Colors.grey.shade400,
+        SizedBox(height: h * 0.010),
+
+        // ── Input field ─────────────────────────────────────────
+        TextFormField(
+          controller: controller,
+          focusNode: focusNode,
+          initialValue: initialValue,
+          keyboardType: keyboardType,
+          textInputAction: textInputAction,
+          textCapitalization: textCapitalization,
+          maxLines: maxLines,
+          maxLength: maxLength,
+          enabled: enabled,
+          readOnly: readOnly,
+          inputFormatters: inputFormatters,
+          onChanged: onChanged,
+          onTap: onTap,
+          validator: validator,
+          style: TextStyle(
+            fontFamily: 'Mukta',
+            fontSize: (w * 0.038).clamp(13.0, 16.0),
+            fontWeight: FontWeight.w500,
+            color: AppColors.textPrimary,
+          ),
+          decoration: InputDecoration(
+            hintText: hint,
+            helperText: helperText,
+            prefixIcon: prefixIcon != null
+                ? Icon(prefixIcon, size: 22, color: Colors.grey.shade400)
+                : null,
+            suffix: suffix,
+            hintStyle: TextStyle(
+              fontFamily: 'Mukta',
+              fontSize: (w * 0.036).clamp(12.0, 15.0),
+              color: AppColors.textHint,
+            ),
+            helperStyle: TextStyle(
+              fontFamily: 'Mukta',
+              fontSize: (w * 0.030).clamp(10.0, 13.0),
+              color: AppColors.textSecondary,
+            ),
+            filled: true,
+            fillColor: enabled
+                ? const Color(0xFFF8F9FB)
+                : Colors.grey.shade100,
+            contentPadding: EdgeInsets.only(
+              left: 0,
+              right: w * 0.04,
+              top: h * 0.022,
+              bottom: h * 0.022,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(color: AppColors.border),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(color: AppColors.border, width: 1.5),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(color: AppColors.primary, width: 2),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(color: AppColors.error, width: 1.5),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(color: AppColors.error, width: 2),
+            ),
+            disabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(color: AppColors.border),
+            ),
+          ),
         ),
-        helperStyle: TextStyle(
-          fontFamily: 'Roboto',
-          fontSize: 12,
-          color: Colors.grey.shade500,
-        ),
-        filled: true,
-        fillColor: enabled ? Colors.grey.shade50 : Colors.grey.shade100,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade200),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade200, width: 1.5),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.primary, width: 2),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.error, width: 1.5),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.error, width: 2),
-        ),
-        disabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade200),
-        ),
-      ),
+      ],
     );
   }
 }

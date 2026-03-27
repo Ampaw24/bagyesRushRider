@@ -6,7 +6,10 @@
       "Bash(wc -l /Users/safo/Documents/projects/BagyesRushApp/bagyes-rush-rider-master/lib/**/*.dart /Users/safo/Documents/projects/BagyesRushApp/bagyes-rush-rider-master/lib/*.dart)",
       "Bash(find lib/pages -name \"*.dart\" -exec sed -i '' 's/jsonDecode\\(value\\\\.body\\)/value.data/g; s/jsonDecode\\(res\\\\.body\\)/res.data/g; s/jsonDecode\\(response\\\\.body\\)/response.data/g' {} +)",
       "Bash(dart analyze:*)",
-      "Bash(ls -la /Users/safo/Documents/projects/BagyesRushApp/bagyes-rush-rider-master/lib/*.dart)"
+      "Bash(ls -la /Users/safo/Documents/projects/BagyesRushApp/bagyes-rush-rider-master/lib/*.dart)",
+      "Bash(grep -E \"\\\\.\\(dart|config\\)$\")",
+      "Bash(grep -r \"hugeicons\\\\|HugeIcon\\\\|HugeIcons\" /Users/safo/Documents/projects/BagyesRushApp/bagyes-rush-rider-master/lib --include=*.dart -l)",
+      "Bash(find /Users/safo/Documents/projects/BagyesRushApp/bagyes-rush-rider-master/lib/features/rider/auth -type f -name *.dart)"
     ]
   }
 }

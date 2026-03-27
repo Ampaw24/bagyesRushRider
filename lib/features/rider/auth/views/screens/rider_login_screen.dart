@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:delivery_boy/constant/asset_images.dart';
 import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/constant/constant.dart';
@@ -113,12 +114,16 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
       },
       child: Scaffold(
         backgroundColor: AppColors.scaffold,
-        body: SafeArea(
-          child: FadeTransition(
-            opacity: _fadeAnim,
-            child: SlideTransition(
-              position: _slideAnim,
-              child: Form(
+        body: MediaQuery(
+          data: MediaQuery.of(context).copyWith(
+            textScaler: TextScaler.noScaling,
+          ),
+          child: SafeArea(
+            child: FadeTransition(
+              opacity: _fadeAnim,
+              child: SlideTransition(
+                position: _slideAnim,
+                child: Form(
                 key: _formKey,
                 child: CustomScrollView(
                   slivers: [
@@ -217,7 +222,7 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
                                 height: 1.1,
                               ),
                             ),
-                            const SizedBox(height: 6),
+                            SizedBox(height: h * 0.006),
                             Text(
                               'Sign in to continue delivering',
                               style: TextStyle(
@@ -229,6 +234,19 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
                             ),
 
                             SizedBox(height: h * 0.036),
+
+                            // ── Phone Label ────────────────────────────────
+                            Text(
+                              'Phone Number',
+                              style: TextStyle(
+                                fontFamily: 'Mukta',
+                                fontSize: (w * 0.033).clamp(11.0, 14.0),
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textSecondary,
+                                letterSpacing: 0.1,
+                              ),
+                            ),
+                            SizedBox(height: h * 0.010),
 
                             // ── Phone Field ────────────────────────────────
                             AppPhoneField(
@@ -242,7 +260,20 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
                               },
                             ),
 
-                            SizedBox(height: h * 0.02),
+                            SizedBox(height: h * 0.025),
+
+                            // ── Password Label ─────────────────────────────
+                            Text(
+                              'Password',
+                              style: TextStyle(
+                                fontFamily: 'Mukta',
+                                fontSize: (w * 0.033).clamp(11.0, 14.0),
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textSecondary,
+                                letterSpacing: 0.1,
+                              ),
+                            ),
+                            SizedBox(height: h * 0.010),
 
                             // ── Password Field ─────────────────────────────
                             TextFormField(
@@ -264,81 +295,77 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
                                 }
                                 return null;
                               },
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontFamily: 'Mukta',
-                                fontSize: 15,
+                                fontSize: (w * 0.038).clamp(13.0, 16.0),
                                 fontWeight: FontWeight.w500,
                                 color: AppColors.textPrimary,
                               ),
                               decoration: InputDecoration(
-                                labelText: 'Password',
                                 hintText: 'Enter your password',
                                 prefixIcon: Icon(
-                                  Icons.lock_outline_rounded,
-                                  size: 28,
+                                  HugeIcons.strokeRoundedLock,
+                                  size: 22,
                                   color: Colors.grey.shade400,
                                 ),
                                 suffixIcon: GestureDetector(
                                   onTap: () => setState(() =>
                                       _obscurePassword = !_obscurePassword),
                                   child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 12),
+                                    padding: EdgeInsets.symmetric(
+                                        horizontal: w * 0.03),
                                     child: Icon(
                                       _obscurePassword
-                                          ? Icons.visibility_off_outlined
-                                          : Icons.visibility_outlined,
-                                      size: 28,
+                                          ? HugeIcons.strokeRoundedViewOff
+                                          : HugeIcons.strokeRoundedEye,
+                                      size: 22,
                                       color: Colors.grey.shade400,
                                     ),
                                   ),
                                 ),
-                                labelStyle: TextStyle(
-                                  fontFamily: 'Mukta',
-                                  fontSize: 14,
-                                  color: Colors.grey.shade500,
-                                ),
                                 hintStyle: TextStyle(
                                   fontFamily: 'Mukta',
-                                  fontSize: 14,
-                                  color: Colors.grey.shade400,
+                                  fontSize: (w * 0.036).clamp(12.0, 15.0),
+                                  color: AppColors.textHint,
                                 ),
                                 filled: true,
                                 fillColor: isLoading
                                     ? Colors.grey.shade100
-                                    : Colors.grey.shade50,
-                                contentPadding: const EdgeInsets.only(
-                                    left: 0, right: 16, top: 18, bottom: 18),
+                                    : const Color(0xFFF8F9FB),
+                                contentPadding: EdgeInsets.only(
+                                    left: 0,
+                                    right: w * 0.04,
+                                    top: h * 0.022,
+                                    bottom: h * 0.022),
                                 border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(
-                                      color: Colors.grey.shade200),
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: const BorderSide(
+                                      color: AppColors.border),
                                 ),
                                 enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(
-                                      color: Colors.grey.shade200,
-                                      width: 1.5),
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: const BorderSide(
+                                      color: AppColors.border, width: 1.5),
                                 ),
                                 focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
+                                  borderRadius: BorderRadius.circular(16),
                                   borderSide: const BorderSide(
                                       color: AppColors.primary, width: 2),
                                 ),
                                 errorBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
+                                  borderRadius: BorderRadius.circular(16),
                                   borderSide: const BorderSide(
                                       color: AppColors.error, width: 1.5),
                                 ),
                                 focusedErrorBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
+                                  borderRadius: BorderRadius.circular(16),
                                   borderSide: const BorderSide(
                                       color: AppColors.error, width: 2),
                                 ),
                                 disabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(
-                                      color: Colors.grey.shade200),
+                                  borderRadius: BorderRadius.circular(16),
+                                  borderSide: const BorderSide(
+                                      color: AppColors.border),
                                 ),
                               ),
                             ),
@@ -352,15 +379,15 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
                                     : () => context
                                         .push(AppRoutes.forgotPassword),
                                 style: TextButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(
-                                      vertical: 8, horizontal: 0),
+                                  padding: EdgeInsets.symmetric(
+                                      vertical: h * 0.010, horizontal: 0),
                                 ),
-                                child: const Text(
+                                child: Text(
                                   'Forgot Password?',
                                   style: TextStyle(
                                     fontFamily: 'Mukta',
                                     color: AppColors.primary,
-                                    fontSize: 13,
+                                    fontSize: (w * 0.033).clamp(11.0, 14.0),
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
@@ -391,12 +418,12 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
                                         lineWidth: 2.5,
                                         size: 26,
                                       )
-                                    : const Text(
+                                    : Text(
                                         'Sign In',
                                         style: TextStyle(
                                           fontFamily: 'Mukta',
                                           color: Colors.white,
-                                          fontSize: 16,
+                                          fontSize: (w * 0.04).clamp(14.0, 17.0),
                                           fontWeight: FontWeight.w700,
                                           letterSpacing: 0.4,
                                         ),
@@ -408,7 +435,7 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
 
                             // ── Sign Up link ───────────────────────────────
                             Padding(
-                              padding: const EdgeInsets.only(bottom: 28),
+                              padding: EdgeInsets.only(bottom: h * 0.035),
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
@@ -417,7 +444,7 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
                                     style: TextStyle(
                                       fontFamily: 'Mukta',
                                       color: AppColors.textSecondary,
-                                      fontSize: 14,
+                                      fontSize: (w * 0.036).clamp(12.0, 15.0),
                                     ),
                                   ),
                                   GestureDetector(
@@ -425,12 +452,12 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
                                         ? null
                                         : () =>
                                             context.go(AppRoutes.signup),
-                                    child: const Text(
+                                    child: Text(
                                       'Sign Up',
                                       style: TextStyle(
                                         fontFamily: 'Mukta',
                                         color: AppColors.primary,
-                                        fontSize: 14,
+                                        fontSize: (w * 0.036).clamp(12.0, 15.0),
                                         fontWeight: FontWeight.w700,
                                       ),
                                     ),
@@ -449,6 +476,7 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
           ),
         ),
       ),
-    );
+    ),
+  );
   }
 }

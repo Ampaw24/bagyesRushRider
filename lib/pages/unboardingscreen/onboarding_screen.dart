@@ -150,11 +150,11 @@ class _OnboardingIntroScreenState extends State<OnboardingIntroScreen>
         curve: Curves.easeInOutCubic,
       );
     } else {
-      context.go(AppRoutes.signup);
+      context.go(AppRoutes.login);
     }
   }
 
-  void _skip() => context.go(AppRoutes.signup);
+  void _skip() => context.go(AppRoutes.login);
 
   @override
   Widget build(BuildContext context) {

@@ -13,6 +13,7 @@ import 'package:delivery_boy/features/rider/auth/views/screens/rider_signup_scre
 import 'package:delivery_boy/features/rider/auth/views/screens/rider_otp_screen.dart';
 import 'package:delivery_boy/features/rider/auth/views/screens/rider_forgot_password_screen.dart';
 import 'package:delivery_boy/features/rider/auth/views/screens/rider_vehicle_info_screen.dart';
+import 'package:delivery_boy/features/rider/auth/views/screens/rider_vehicle_details_screen.dart';
 // ── Dashboard ─────────────────────────────────────────────────────────────────
 import 'package:delivery_boy/features/rider/dashboard/views/screens/rider_dashboard_screen.dart';
 // ── Profile ───────────────────────────────────────────────────────────────────
@@ -39,14 +40,16 @@ GoRouter createAppRouter() {
       final isLoggedIn = session.isLoggedIn;
       final location = state.matchedLocation;
 
-      // Public routes — no auth required
-      final isPublicRoute = location == AppRoutes.splash ||
-          location == AppRoutes.intro ||
-          location == AppRoutes.login ||
-          location == AppRoutes.signup ||
-          location == AppRoutes.otp ||
-          location == AppRoutes.vehicleInfo ||
-          location == AppRoutes.forgotPassword;
+      // TODO: Re-enable public route check + auth guard once API is integrated.
+      // final isPublicRoute = location == AppRoutes.splash ||
+      //     location == AppRoutes.intro ||
+      //     location == AppRoutes.login ||
+      //     location == AppRoutes.signup ||
+      //     location == AppRoutes.otp ||
+      //     location == AppRoutes.vehicleInfo ||
+      //     location == AppRoutes.vehicleDetails ||
+      //     location == AppRoutes.forgotPassword;
+      // if (!isLoggedIn && !isPublicRoute) return AppRoutes.login;
 
       // Authenticated user landing on intro (e.g. back-press) → skip to app
       if (isLoggedIn && location == AppRoutes.intro) {
@@ -59,7 +62,8 @@ GoRouter createAppRouter() {
       }
 
       // Unauthenticated user trying to reach a protected screen
-      if (!isLoggedIn && !isPublicRoute) return AppRoutes.login;
+      // TODO: Re-enable auth guard once API is integrated.
+      // if (!isLoggedIn && !isPublicRoute) return AppRoutes.login;
 
       // Splash is always allowed — SplashScreen itself drives navigation
       return null;
@@ -124,6 +128,15 @@ GoRouter createAppRouter() {
         pageBuilder: (_, state) => _slideRight(
           state,
           RiderVehicleInfoScreen(
+            credentials: (state.extra as Map<String, dynamic>?) ?? {},
+          ),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.vehicleDetails,
+        pageBuilder: (_, state) => _slideRight(
+          state,
+          RiderVehicleDetailsScreen(
             credentials: (state.extra as Map<String, dynamic>?) ?? {},
           ),
         ),

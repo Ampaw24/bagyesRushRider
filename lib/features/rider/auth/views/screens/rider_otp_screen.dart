@@ -1,15 +1,15 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/core/router/app_routes.dart';
 import 'package:delivery_boy/core/widgets/app_gradient_button.dart';
-import 'package:delivery_boy/features/rider/auth/viewmodels/rider_auth_viewmodel.dart';
 import 'package:delivery_boy/features/rider/shared_widgets/otp_input_field.dart';
 
-class RiderOtpScreen extends ConsumerStatefulWidget {
+// TODO: Re-integrate API calls (sendOtp, signup) once backend is ready.
+
+class RiderOtpScreen extends StatefulWidget {
   /// Passed via GoRouter extra:
   /// {'name': String, 'phone': String, 'email': String?, 'password': String}
   final Map<String, dynamic> credentials;
@@ -17,10 +17,10 @@ class RiderOtpScreen extends ConsumerStatefulWidget {
   const RiderOtpScreen({super.key, required this.credentials});
 
   @override
-  ConsumerState<RiderOtpScreen> createState() => _RiderOtpScreenState();
+  State<RiderOtpScreen> createState() => _RiderOtpScreenState();
 }
 
-class _RiderOtpScreenState extends ConsumerState<RiderOtpScreen>
+class _RiderOtpScreenState extends State<RiderOtpScreen>
     with SingleTickerProviderStateMixin {
   final _otpKey = GlobalKey<OtpInputFieldState>();
 
@@ -33,9 +33,6 @@ class _RiderOtpScreenState extends ConsumerState<RiderOtpScreen>
   String _otp = '';
 
   String get _phone => widget.credentials['phone'] as String? ?? '';
-  String get _name => widget.credentials['name'] as String? ?? '';
-  String get _email => widget.credentials['email'] as String? ?? '';
-  String get _password => widget.credentials['password'] as String? ?? '';
 
   bool get _isComplete => _otp.length == 6;
 
@@ -53,7 +50,7 @@ class _RiderOtpScreenState extends ConsumerState<RiderOtpScreen>
       CurvedAnimation(parent: _animController, curve: Curves.easeOut),
     );
     _animController.forward();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _sendOtp());
+    WidgetsBinding.instance.addPostFrameCallback((_) => _startCountdown());
   }
 
   @override
@@ -81,53 +78,14 @@ class _RiderOtpScreenState extends ConsumerState<RiderOtpScreen>
     });
   }
 
-  Future<void> _sendOtp() async {
-    if (_phone.isEmpty) {
-      context.go(AppRoutes.signup);
-      return;
-    }
-    await ref.read(riderAuthProvider.notifier).sendOtp(phone: _phone);
-    _startCountdown();
-  }
-
-  Future<void> _submit() async {
+  void _submit() {
     if (!_isComplete) return;
-    HapticFeedback.lightImpact();
-
-    final success = await ref.read(riderAuthProvider.notifier).signup(
-          phone: _phone,
-          password: _password,
-          otp: _otp,
-          name: _name,
-          email: _email.isNotEmpty ? _email : null,
-        );
-
-    if (!mounted) return;
-    if (success) {
-      HapticFeedback.mediumImpact();
-      ref.read(pendingVehicleProvider.notifier).state = null;
-      if (!mounted) return;
-      context.go(AppRoutes.dashboard);
-    }
+    HapticFeedback.mediumImpact();
+    context.go(AppRoutes.dashboard);
   }
 
   @override
   Widget build(BuildContext context) {
-    final authState = ref.watch(riderAuthProvider);
-    final isLoading = authState.status == AuthStatus.loading;
-
-    ref.listen<RiderAuthState>(riderAuthProvider, (_, next) {
-      if (next.errorMessage != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(next.errorMessage!),
-            backgroundColor: AppColors.error,
-          ),
-        );
-        ref.read(riderAuthProvider.notifier).clearError();
-      }
-    });
-
     return Scaffold(
       backgroundColor: AppColors.scaffold,
       appBar: AppBar(
@@ -136,7 +94,10 @@ class _RiderOtpScreenState extends ConsumerState<RiderOtpScreen>
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded,
               color: AppColors.textPrimary, size: 20),
-          onPressed: () => context.go(AppRoutes.signup),
+          onPressed: () => context.go(
+            AppRoutes.vehicleDetails,
+            extra: widget.credentials,
+          ),
         ),
       ),
       body: FadeTransition(
@@ -169,8 +130,7 @@ class _RiderOtpScreenState extends ConsumerState<RiderOtpScreen>
                       color: Colors.grey.shade500,
                     ),
                     children: [
-                      const TextSpan(
-                          text: 'Enter the 6-digit code sent to '),
+                      const TextSpan(text: 'Enter the 6-digit code sent to '),
                       TextSpan(
                         text: _phone,
                         style: const TextStyle(
@@ -184,11 +144,10 @@ class _RiderOtpScreenState extends ConsumerState<RiderOtpScreen>
 
                 const SizedBox(height: 44),
 
-                // 6-digit OTP input
                 OtpInputField(
                   key: _otpKey,
                   digitCount: 6,
-                  enabled: !isLoading,
+                  enabled: true,
                   onCompleted: (otp) {
                     setState(() => _otp = otp);
                     _submit();
@@ -220,7 +179,7 @@ class _RiderOtpScreenState extends ConsumerState<RiderOtpScreen>
                             ),
                           )
                         : GestureDetector(
-                            onTap: isLoading ? null : _sendOtp,
+                            onTap: _startCountdown,
                             child: const Text(
                               'Resend',
                               style: TextStyle(
@@ -238,8 +197,7 @@ class _RiderOtpScreenState extends ConsumerState<RiderOtpScreen>
 
                 AppGradientButton(
                   label: 'Verify & Continue',
-                  isLoading: isLoading,
-                  onPressed: (_isComplete && !isLoading) ? _submit : null,
+                  onPressed: _isComplete ? _submit : null,
                 ),
 
                 const SizedBox(height: 32),
