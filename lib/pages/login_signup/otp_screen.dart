@@ -8,6 +8,7 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:delivery_boy/constant/constant.dart';
 import 'package:delivery_boy/pages/home.dart';
 import 'package:provider/provider.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 class OTPScreen extends StatefulWidget {
   @override
@@ -151,7 +152,7 @@ class _OTPScreenState extends State<OTPScreen> {
         elevation: 0.0,
         leading: IconButton(
           icon: Icon(
-            Icons.arrow_back,
+            HugeIcons.strokeRoundedArrowLeft01,
             color: Colors.black,
           ),
           onPressed: () {

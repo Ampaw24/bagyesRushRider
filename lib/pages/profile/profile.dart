@@ -6,6 +6,7 @@ import 'package:page_transition/page_transition.dart';
 import 'package:delivery_boy/pages/profile/edit_profile.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 class Profile extends StatefulWidget {
   @override
@@ -180,7 +181,7 @@ class _ProfileState extends State<Profile> {
                     ],
                   ),
                   Icon(
-                    Icons.arrow_forward_ios,
+                    HugeIcons.strokeRoundedArrowRight01,
                     size: 16.0,
                     color: Colors.grey.withOpacity(0.6),
                   ),
@@ -209,14 +210,14 @@ class _ProfileState extends State<Profile> {
                     _inviteFriends();
                   },
                   child: getTile(
-                      Icon(Icons.group_add,
+                      Icon(HugeIcons.strokeRoundedUserAdd01,
                           color: Colors.grey.withOpacity(0.6)),
                       'Invite Friends'),
                 ),
                 InkWell(
                   onTap: () {},
                   child: getTile(
-                      Icon(Icons.headset_mic,
+                      Icon(HugeIcons.strokeRoundedHeadphones,
                           color: Colors.grey.withOpacity(0.6)),
                       'Support'),
                 ),
@@ -242,7 +243,7 @@ class _ProfileState extends State<Profile> {
                 InkWell(
                   onTap: logoutDialogue,
                   child: getTile(
-                      Icon(Icons.exit_to_app,
+                      Icon(HugeIcons.strokeRoundedLogout01,
                           color: Colors.grey.withOpacity(0.6)),
                       'Logout'),
                 ),
@@ -277,7 +278,7 @@ class _ProfileState extends State<Profile> {
           ],
         ),
         Icon(
-          Icons.arrow_forward_ios,
+          HugeIcons.strokeRoundedArrowRight01,
           size: 16.0,
           color: Colors.grey.withOpacity(0.6),
         ),

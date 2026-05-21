@@ -8,6 +8,7 @@ import 'package:delivery_boy/features/rider/orders/models/rider_order_model.dart
 import 'package:delivery_boy/features/rider/orders/providers/rider_orders_providers.dart';
 import 'package:delivery_boy/features/rider/orders/views/widgets/rider_order_card.dart';
 import 'package:delivery_boy/features/rider/orders/views/widgets/rider_order_detail_sheet.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 class RiderOrderHistoryScreen extends ConsumerStatefulWidget {
   const RiderOrderHistoryScreen({super.key});
@@ -63,7 +64,7 @@ class _RiderOrderHistoryScreenState
                 color: AppColors.primary.withValues(alpha: 0.08),
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.history_outlined,
+              child: Icon(HugeIcons.strokeRoundedClock01,
                   color: AppColors.primary.withValues(alpha: 0.6), size: 44),
             ),
             const SizedBox(height: 20),

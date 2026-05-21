@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/core/di/service_locator.dart';
 import 'package:delivery_boy/core/router/app_routes.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 class RiderSettingsScreen extends ConsumerStatefulWidget {
   const RiderSettingsScreen({super.key});
@@ -59,13 +60,13 @@ class _RiderSettingsScreenState extends ConsumerState<RiderSettingsScreen> {
         children: [
           _sectionHeader('Account'),
           _tile(
-            icon: Icons.lock_reset_outlined,
+            icon: HugeIcons.strokeRoundedLockPassword,
             iconColor: AppColors.primary,
             title: 'Change Password',
             onTap: () => context.push(AppRoutes.forgotPassword),
           ),
           _switchTile(
-            icon: Icons.notifications_outlined,
+            icon: HugeIcons.strokeRoundedNotification01,
             iconColor: Colors.orange,
             title: 'Push Notifications',
             subtitle: 'Receive order and delivery alerts',
@@ -75,7 +76,7 @@ class _RiderSettingsScreenState extends ConsumerState<RiderSettingsScreen> {
 
           _sectionHeader('About'),
           _tile(
-            icon: Icons.info_outline,
+            icon: HugeIcons.strokeRoundedInformationCircle,
             iconColor: Colors.blue,
             title: 'App Version',
             trailing: Text(
@@ -88,13 +89,13 @@ class _RiderSettingsScreenState extends ConsumerState<RiderSettingsScreen> {
             ),
           ),
           _tile(
-            icon: Icons.description_outlined,
+            icon: HugeIcons.strokeRoundedFileEdit,
             iconColor: Colors.teal,
             title: 'Terms of Service',
             onTap: () => _launch('https://bagyesrush.com/terms'),
           ),
           _tile(
-            icon: Icons.privacy_tip_outlined,
+            icon: HugeIcons.strokeRoundedShield01,
             iconColor: Colors.indigo,
             title: 'Privacy Policy',
             onTap: () => _launch('https://bagyesrush.com/privacy'),
@@ -102,7 +103,7 @@ class _RiderSettingsScreenState extends ConsumerState<RiderSettingsScreen> {
 
           _sectionHeader('Danger Zone'),
           _tile(
-            icon: Icons.delete_forever_outlined,
+            icon: HugeIcons.strokeRoundedDelete01,
             iconColor: AppColors.error,
             title: 'Delete Account',
             titleColor: AppColors.error,
@@ -172,7 +173,7 @@ class _RiderSettingsScreenState extends ConsumerState<RiderSettingsScreen> {
         ),
         trailing: trailing ??
             (onTap != null
-                ? Icon(Icons.arrow_forward_ios_rounded,
+                ? Icon(HugeIcons.strokeRoundedArrowRight01,
                     size: 14, color: Colors.grey.shade400)
                 : null),
         onTap: onTap,

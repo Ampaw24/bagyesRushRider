@@ -7,10 +7,10 @@ import 'package:flutter/services.dart';
 /// Secondary: Charcoal Slate (#2D3748) — modern complement to red
 /// Accent: Warm Amber (#F59E0B) — for highlights, badges, ratings
 abstract final class AppColors {
-  // Primary palette — matched to logo red
-  static const Color primary = Color(0xFFEE1C25);
-  static const Color primaryLight = Color(0xFFF4565D);
-  static const Color primaryDark = Color(0xFFC4161F);
+  // Primary palette
+  static const Color primary = Color(0xFFD32F2F);
+  static const Color primaryLight = Color(0xFFEF5350);
+  static const Color primaryDark = Color(0xFFB71C1C);
   static const Color onPrimary = Colors.white;
 
   // Secondary palette — charcoal slate
@@ -275,7 +275,7 @@ abstract final class AppTheme {
       // Text selection
       textSelectionTheme: const TextSelectionThemeData(
         cursorColor: AppColors.primary,
-        selectionColor: Color(0x40EE1C25),
+        selectionColor: Color(0x40D32F2F),
         selectionHandleColor: AppColors.primary,
       ),
 

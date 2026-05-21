@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:delivery_boy/constant/app_theme.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 class AppDropdownField<T> extends StatelessWidget {
   final String label;
@@ -34,7 +35,7 @@ class AppDropdownField<T> extends StatelessWidget {
         fontWeight: FontWeight.w500,
         color: AppColors.textPrimary,
       ),
-      icon: Icon(Icons.keyboard_arrow_down_rounded,
+      icon: Icon(HugeIcons.strokeRoundedArrowDown01,
           color: Colors.grey.shade400, size: 20),
       decoration: InputDecoration(
         labelText: label,

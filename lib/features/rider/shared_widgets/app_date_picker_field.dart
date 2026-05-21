@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:delivery_boy/constant/app_theme.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 class AppDatePickerField extends StatefulWidget {
   final String label;
@@ -91,11 +92,11 @@ class _AppDatePickerFieldState extends State<AppDatePickerField> {
         labelText: widget.label,
         hintText: 'DD MMM YYYY',
         prefixIcon: Icon(
-          widget.prefixIcon ?? Icons.calendar_today_outlined,
+          widget.prefixIcon ?? HugeIcons.strokeRoundedCalendar01,
           size: 20,
           color: Colors.grey.shade400,
         ),
-        suffixIcon: Icon(Icons.keyboard_arrow_down_rounded,
+        suffixIcon: Icon(HugeIcons.strokeRoundedArrowDown01,
             size: 20, color: Colors.grey.shade400),
         labelStyle: TextStyle(
           fontFamily: 'Roboto',

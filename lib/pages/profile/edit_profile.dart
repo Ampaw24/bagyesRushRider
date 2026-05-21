@@ -10,6 +10,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 class EditProfile extends StatefulWidget {
   @override
@@ -451,7 +452,7 @@ class _EditProfileState extends State<EditProfile> {
         backgroundColor: Colors.transparent,
         elevation: 0.0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: blackColor),
+          icon: Icon(HugeIcons.strokeRoundedArrowLeft01, color: blackColor),
           onPressed: () {
             Navigator.pop(context);
           },
@@ -519,11 +520,11 @@ class _EditProfileState extends State<EditProfile> {
                             height: 45,
                             child: user['selfie'] != null
                                 ? Icon(
-                                    Icons.check_circle,
+                                    HugeIcons.strokeRoundedCheckmarkCircle01,
                                     color: Colors.green,
                                   )
                                 : Icon(
-                                    Icons.upload_file,
+                                    HugeIcons.strokeRoundedFileUpload,
                                     color: Colors.red,
                                   ),
                           ),
@@ -577,11 +578,11 @@ class _EditProfileState extends State<EditProfile> {
                             height: 45,
                             child: user['licenceFront'] != null
                                 ? Icon(
-                                    Icons.check_circle,
+                                    HugeIcons.strokeRoundedCheckmarkCircle01,
                                     color: Colors.green,
                                   )
                                 : Icon(
-                                    Icons.upload_file,
+                                    HugeIcons.strokeRoundedFileUpload,
                                     color: Colors.red,
                                   ),
                           ),
@@ -635,11 +636,11 @@ class _EditProfileState extends State<EditProfile> {
                             height: 45,
                             child: user['licenceBack'] != null
                                 ? Icon(
-                                    Icons.check_circle,
+                                    HugeIcons.strokeRoundedCheckmarkCircle01,
                                     color: Colors.green,
                                   )
                                 : Icon(
-                                    Icons.upload_file,
+                                    HugeIcons.strokeRoundedFileUpload,
                                     color: Colors.red,
                                   ),
                           ),
@@ -694,11 +695,11 @@ class _EditProfileState extends State<EditProfile> {
                             height: 45,
                             child: user['motorIssurance'] != null
                                 ? Icon(
-                                    Icons.check_circle,
+                                    HugeIcons.strokeRoundedCheckmarkCircle01,
                                     color: Colors.green,
                                   )
                                 : Icon(
-                                    Icons.upload_file,
+                                    HugeIcons.strokeRoundedFileUpload,
                                     color: Colors.red,
                                   ),
                           ),
@@ -753,11 +754,11 @@ class _EditProfileState extends State<EditProfile> {
                             height: 45,
                             child: user['roadWorthy'] != null
                                 ? Icon(
-                                    Icons.check_circle,
+                                    HugeIcons.strokeRoundedCheckmarkCircle01,
                                     color: Colors.green,
                                   )
                                 : Icon(
-                                    Icons.upload_file,
+                                    HugeIcons.strokeRoundedFileUpload,
                                     color: Colors.red,
                                   ),
                           ),
@@ -811,11 +812,11 @@ class _EditProfileState extends State<EditProfile> {
                             height: 45,
                             child: user['numberPlate'] != null
                                 ? Icon(
-                                    Icons.check_circle,
+                                    HugeIcons.strokeRoundedCheckmarkCircle01,
                                     color: Colors.green,
                                   )
                                 : Icon(
-                                    Icons.upload_file,
+                                    HugeIcons.strokeRoundedFileUpload,
                                     color: Colors.red,
                                   ),
                           ),
@@ -900,7 +901,7 @@ class _EditProfileState extends State<EditProfile> {
             ),
           ),
           Icon(
-            Icons.arrow_forward_ios,
+            HugeIcons.strokeRoundedArrowRight01,
             size: 16.0,
             color: Colors.grey.withOpacity(0.6),
           ),
@@ -946,7 +947,7 @@ class _EditProfileState extends State<EditProfile> {
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: <Widget>[
                                 Icon(
-                                  Icons.camera_alt,
+                                  HugeIcons.strokeRoundedCamera01,
                                   color: Colors.black.withOpacity(0.7),
                                   size: 18.0,
                                 ),
@@ -974,7 +975,7 @@ class _EditProfileState extends State<EditProfile> {
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: <Widget>[
                                 Icon(
-                                  Icons.photo_album,
+                                  HugeIcons.strokeRoundedImage01,
                                   color: Colors.black.withOpacity(0.7),
                                   size: 18.0,
                                 ),

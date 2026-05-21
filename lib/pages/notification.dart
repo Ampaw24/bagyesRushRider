@@ -4,9 +4,9 @@ import 'dart:convert';
 import 'package:delivery_boy/services/app.services.dart';
 import 'package:delivery_boy/states/app.state.dart';
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:delivery_boy/constant/constant.dart';
 import 'package:provider/provider.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 class Notifications extends StatefulWidget {
   @override
@@ -61,7 +61,7 @@ class _NotificationsState extends State<Notifications> {
         elevation: 0.0,
         leading: IconButton(
           icon: Icon(
-            Icons.arrow_back,
+            HugeIcons.strokeRoundedArrowLeft01,
             color: Colors.black,
           ),
           onPressed: () {
@@ -77,7 +77,7 @@ class _NotificationsState extends State<Notifications> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: <Widget>[
                   Icon(
-                    FontAwesomeIcons.bellSlash,
+                    HugeIcons.strokeRoundedNotificationOff01,
                     color: Colors.grey,
                     size: 60.0,
                   ),
@@ -124,7 +124,7 @@ class _NotificationsState extends State<Notifications> {
                               padding: EdgeInsets.all(10.0),
                               child: CircleAvatar(
                                 child: Icon(
-                                  FontAwesomeIcons.bell,
+                                  HugeIcons.strokeRoundedNotification01,
                                   size: 30.0,
                                 ),
                                 radius: 40.0,

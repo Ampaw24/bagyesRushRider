@@ -9,6 +9,7 @@ import 'kyc_step2_licence_view.dart';
 import 'kyc_step3_vehicle_view.dart';
 import 'kyc_step4_documents_view.dart';
 import 'kyc_step5_review_view.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 class KycScreen extends ConsumerWidget {
   const KycScreen({super.key});
@@ -32,7 +33,7 @@ class KycScreen extends ConsumerWidget {
         elevation: 0,
         surfaceTintColor: Colors.white,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded,
+          icon: const Icon(HugeIcons.strokeRoundedArrowLeft01,
               color: AppColors.textPrimary, size: 20),
           onPressed: () {
             if (state.currentStep > 0) {

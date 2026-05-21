@@ -7,6 +7,7 @@ import 'package:delivery_boy/core/router/app_routes.dart';
 import 'package:delivery_boy/core/widgets/app_gradient_button.dart';
 import 'package:delivery_boy/features/rider/kyc/models/kyc_form_data.dart';
 import 'package:delivery_boy/features/rider/kyc/viewmodels/kyc_viewmodel.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 class KycStep5ReviewView extends ConsumerWidget {
   const KycStep5ReviewView({super.key});
@@ -60,7 +61,7 @@ class KycStep5ReviewView extends ConsumerWidget {
                     color: AppColors.primary.withValues(alpha: 0.12),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.fact_check_outlined,
+                  child: const Icon(HugeIcons.strokeRoundedClipboard,
                       color: AppColors.primary, size: 22),
                 ),
                 const SizedBox(width: 12),
@@ -96,7 +97,7 @@ class KycStep5ReviewView extends ConsumerWidget {
           // Identity section
           _ReviewCard(
             title: 'Identity',
-            icon: Icons.badge_outlined,
+            icon: HugeIcons.strokeRoundedIdentityCard,
             onEdit: () => ref.read(kycProvider.notifier).goToStep(0),
             children: [
               _ReviewRow(
@@ -131,7 +132,7 @@ class KycStep5ReviewView extends ConsumerWidget {
           // Licence section
           _ReviewCard(
             title: 'Driver Licence',
-            icon: Icons.drive_eta_outlined,
+            icon: HugeIcons.strokeRoundedCar01,
             onEdit: () => ref.read(kycProvider.notifier).goToStep(1),
             children: [
               _ReviewRow(
@@ -157,7 +158,7 @@ class KycStep5ReviewView extends ConsumerWidget {
           // Vehicle section
           _ReviewCard(
             title: 'Vehicle',
-            icon: Icons.two_wheeler_outlined,
+            icon: HugeIcons.strokeRoundedMotorbike01,
             onEdit: () => ref.read(kycProvider.notifier).goToStep(2),
             children: [
               _ReviewRow(
@@ -198,7 +199,7 @@ class KycStep5ReviewView extends ConsumerWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.info_outline_rounded,
+                Icon(HugeIcons.strokeRoundedInformationCircle,
                     size: 16, color: Colors.amber.shade700),
                 const SizedBox(width: 8),
                 Expanded(
@@ -277,7 +278,7 @@ class KycStep5ReviewView extends ConsumerWidget {
                 color: AppColors.success,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.check_rounded,
+              child: const Icon(HugeIcons.strokeRoundedCheckmarkCircle01,
                   color: Colors.white, size: 36),
             ),
             const SizedBox(height: 16),
@@ -483,8 +484,8 @@ class _DocStatusRow extends StatelessWidget {
           ),
           Icon(
             uploaded
-                ? Icons.check_circle_rounded
-                : Icons.radio_button_unchecked_rounded,
+                ? HugeIcons.strokeRoundedCheckmarkCircle01
+                : HugeIcons.strokeRoundedCircle,
             size: 16,
             color: uploaded ? AppColors.success : Colors.orange.shade400,
           ),

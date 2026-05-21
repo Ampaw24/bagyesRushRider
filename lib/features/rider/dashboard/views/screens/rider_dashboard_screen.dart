@@ -1,3 +1,4 @@
+import 'dart:ui' show ImageFilter;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,11 +13,13 @@ import 'package:delivery_boy/features/rider/auth/models/rider_user_model.dart';
 import 'package:delivery_boy/core/widgets/sos_floating_button.dart';
 import 'package:delivery_boy/features/rider/notifications/providers/rider_notifications_providers.dart';
 import 'package:delivery_boy/features/rider/orders/providers/rider_orders_providers.dart';
+import 'package:delivery_boy/features/rider/home/views/screens/rider_home_screen.dart';
 import 'package:delivery_boy/features/rider/orders/views/screens/rider_new_orders_screen.dart';
 import 'package:delivery_boy/features/rider/orders/views/screens/rider_active_orders_screen.dart';
 import 'package:delivery_boy/features/rider/orders/views/screens/rider_order_history_screen.dart';
 import 'package:delivery_boy/features/rider/wallet/views/screens/rider_wallet_screen.dart';
 import 'package:delivery_boy/features/rider/profile/views/screens/rider_profile_screen.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 /// Provider for online/offline queue toggle state
 final riderQueueProvider = StateProvider<bool>((ref) {
@@ -101,11 +104,27 @@ class _RiderDashboardScreenState extends ConsumerState<RiderDashboardScreen> {
     }
   }
 
+  void _goToOrders() => setState(() => _currentIndex = 1);
+  void _goToWallet() => setState(() => _currentIndex = 2);
+
   @override
   Widget build(BuildContext context) {
     final isOnline = ref.watch(riderQueueProvider);
+    final mq = MediaQuery.of(context);
+    final w = mq.size.width;
+    // Content bottom padding = inner bar height + its bottom margin
+    // inner: vertical padding w*0.03*2 + icon w*0.06 + gap w*0.015 + dot w*0.013
+    final viewPadding = MediaQuery.viewPaddingOf(context);
+    final navInnerHeight = w * 0.03 * 2 + w * 0.06 + w * 0.015 + w * 0.013;
+    final navBottomMargin = viewPadding.bottom + w * 0.04;
+    final contentPadBottom = navInnerHeight + navBottomMargin;
 
     final tabs = [
+      RiderHomeScreen(
+        onToggleQueue: _toggleQueue,
+        onViewAllOrders: _goToOrders,
+        onViewWallet: _goToWallet,
+      ),
       _OrdersTab(isOnline: isOnline, onToggle: _toggleQueue),
       const RiderWalletScreen(),
       const RiderProfileScreen(),
@@ -129,38 +148,153 @@ class _RiderDashboardScreenState extends ConsumerState<RiderDashboardScreen> {
         }
       },
       child: Scaffold(
-        bottomNavigationBar: ClipRRect(
-          borderRadius:
-              const BorderRadius.vertical(top: Radius.circular(16)),
-          child: BottomNavigationBar(
-            backgroundColor: Colors.white,
-            currentIndex: _currentIndex,
-            onTap: (i) => setState(() => _currentIndex = i),
-            elevation: 8,
-            selectedItemColor: AppColors.primary,
-            unselectedItemColor: Colors.grey.shade400,
-            items: const [
-              BottomNavigationBarItem(
-                icon: Icon(Icons.local_mall_outlined),
-                activeIcon: Icon(Icons.local_mall),
-                label: 'Orders',
+        backgroundColor: AppColors.scaffold,
+        body: Stack(
+          children: [
+            // ── Tab content — pad bottom so nothing hides under the bar ──
+            MediaQuery(
+              data: mq.copyWith(
+                padding: mq.padding.copyWith(bottom: contentPadBottom),
               ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.account_balance_wallet_outlined),
-                activeIcon: Icon(Icons.account_balance_wallet),
-                label: 'Wallet',
+              child: IndexedStack(
+                index: _currentIndex,
+                children: tabs,
               ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.person_outline),
-                activeIcon: Icon(Icons.person),
-                label: 'Profile',
+            ),
+
+            // ── Floating nav bar ───────────────────────────────────────
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: _FloatingNavBar(
+                currentIndex: _currentIndex,
+                onTap: (i) => setState(() => _currentIndex = i),
+                items: _navItems,
               ),
-            ],
-          ),
+            ),
+          ],
         ),
-        body: IndexedStack(
-          index: _currentIndex,
-          children: tabs,
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// NavItem model
+// ─────────────────────────────────────────────────────────────────────────────
+
+class NavItem {
+  final IconData icon;
+  final String label;
+  const NavItem({required this.icon, required this.label});
+}
+
+const _navItems = [
+  NavItem(icon: HugeIcons.strokeRoundedHome01,        label: 'Home'),
+  NavItem(icon: HugeIcons.strokeRoundedDeliveryBox01, label: 'Orders'),
+  NavItem(icon: HugeIcons.strokeRoundedWallet01,      label: 'Wallet'),
+  NavItem(icon: HugeIcons.strokeRoundedUser,          label: 'Profile'),
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Floating frosted-glass navigation bar
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _FloatingNavBar extends StatelessWidget {
+  final int currentIndex;
+  final ValueChanged<int> onTap;
+  final List<NavItem> items;
+
+  const _FloatingNavBar({
+    required this.currentIndex,
+    required this.onTap,
+    required this.items,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final w = MediaQuery.sizeOf(context).width;
+    final bottomPad = MediaQuery.viewPaddingOf(context).bottom;
+
+    return Container(
+      margin: EdgeInsets.only(
+        left: w * 0.06,
+        right: w * 0.06,
+        bottom: bottomPad + w * 0.04,
+      ),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(w * 0.08),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x26000000), // black @ 15%
+            blurRadius: 20,
+            spreadRadius: 0,
+            offset: Offset(0, 8),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(w * 0.08),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+          child: Container(
+            padding: EdgeInsets.symmetric(
+              horizontal: w * 0.02,
+              vertical: w * 0.03,
+            ),
+            decoration: BoxDecoration(
+              color: AppColors.secondary.withValues(alpha: 0.85),
+              borderRadius: BorderRadius.circular(w * 0.08),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.12),
+                width: 1,
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: List.generate(items.length, (i) {
+                final selected = i == currentIndex;
+                return GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => onTap(i),
+                  child: SizedBox(
+                    width: w * 0.14,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Icon with animated scale
+                        AnimatedScale(
+                          scale: selected ? 1.15 : 1.0,
+                          duration: const Duration(milliseconds: 200),
+                          curve: Curves.easeOutCubic,
+                          child: HugeIcon(
+                            icon: items[i].icon,
+                            size: w * 0.06,
+                            color: selected
+                                ? Colors.white
+                                : Colors.white.withValues(alpha: 0.45),
+                          ),
+                        ),
+                        SizedBox(height: w * 0.015),
+                        // Dot indicator
+                        AnimatedContainer(
+                          duration: const Duration(milliseconds: 250),
+                          curve: Curves.easeOutCubic,
+                          height: w * 0.013,
+                          width: selected ? w * 0.013 : 0,
+                          decoration: const BoxDecoration(
+                            color: AppColors.accent,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }),
+            ),
+          ),
         ),
       ),
     );
@@ -208,7 +342,7 @@ class _OrdersTab extends ConsumerWidget {
               alignment: Alignment.topRight,
               children: [
                 IconButton(
-                  icon: const Icon(Icons.notifications_outlined,
+                  icon: const Icon(HugeIcons.strokeRoundedNotification01,
                       color: AppColors.textPrimary, size: 26),
                   onPressed: () =>
                       context.push(AppRoutes.notifications),
@@ -428,8 +562,8 @@ class _KycBanner extends ConsumerWidget {
           children: [
             Icon(
               isPending
-                  ? Icons.hourglass_top_rounded
-                  : Icons.verified_user_outlined,
+                  ? HugeIcons.strokeRoundedHourglass
+                  : HugeIcons.strokeRoundedUserCheck01,
               size: 18,
               color: isPending
                   ? Colors.blue.shade600

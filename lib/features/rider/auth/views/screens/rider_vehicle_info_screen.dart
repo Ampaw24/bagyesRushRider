@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/core/router/app_routes.dart';
 import 'package:delivery_boy/core/widgets/app_gradient_button.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 // ── Vehicle Type Enum ─────────────────────────────────────────────────────────
 
@@ -47,15 +48,15 @@ enum VehicleType {
   IconData get icon {
     switch (this) {
       case VehicleType.tricycle:
-        return Icons.airport_shuttle_outlined;
+        return HugeIcons.strokeRoundedDeliveryTruck01;
       case VehicleType.bicycle:
-        return Icons.directions_bike_outlined;
+        return HugeIcons.strokeRoundedBicycle;
       case VehicleType.electricBicycle:
-        return Icons.electric_bike_outlined;
+        return HugeIcons.strokeRoundedMotorbike01;
       case VehicleType.motorcycle:
-        return Icons.two_wheeler_outlined;
+        return HugeIcons.strokeRoundedMotorbike01;
       case VehicleType.electricMotorcycle:
-        return Icons.electric_moped_outlined;
+        return HugeIcons.strokeRoundedMotorbike01;
     }
   }
 
@@ -149,7 +150,7 @@ class _RiderVehicleInfoScreenState extends State<RiderVehicleInfoScreen>
         elevation: 0,
         leading: IconButton(
           icon: const Icon(
-            Icons.arrow_back_ios_new_rounded,
+            HugeIcons.strokeRoundedArrowLeft01,
             color: AppColors.textPrimary,
             size: 20,
           ),
@@ -448,7 +449,7 @@ class _VehicleTileState extends State<_VehicleTile>
                 ),
                 child: isSelected
                     ? Icon(
-                        Icons.check_rounded,
+                        HugeIcons.strokeRoundedCheckmarkCircle01,
                         color: Colors.white,
                         size: w * 0.034,
                       )
@@ -500,7 +501,7 @@ class RegistrationStepper extends StatelessWidget {
                 child: Center(
                   child: i < currentIndex
                       ? Icon(
-                          Icons.check_rounded,
+                          HugeIcons.strokeRoundedCheckmarkCircle01,
                           color: Colors.white,
                           size: (w * 0.038).clamp(14.0, 20.0),
                         )

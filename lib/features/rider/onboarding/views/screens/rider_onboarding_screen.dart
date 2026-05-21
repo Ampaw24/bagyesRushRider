@@ -6,6 +6,7 @@ import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/core/router/app_routes.dart';
 import 'package:delivery_boy/core/widgets/app_gradient_button.dart';
 import 'package:delivery_boy/features/rider/profile/providers/rider_profile_providers.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 class RiderOnboardingScreen extends ConsumerStatefulWidget {
   const RiderOnboardingScreen({super.key});
@@ -71,7 +72,7 @@ class _RiderOnboardingScreenState extends ConsumerState<RiderOnboardingScreen>
                       ),
                     ],
                   ),
-                  child: const Icon(Icons.delivery_dining,
+                  child: const Icon(HugeIcons.strokeRoundedMotorbike01,
                       color: Colors.white, size: 42),
                 ),
                 const SizedBox(height: 20),
@@ -124,7 +125,7 @@ class _RiderOnboardingScreenState extends ConsumerState<RiderOnboardingScreen>
                               ? StepState.complete
                               : StepState.indexed,
                           content: _buildStepContent(
-                            icon: Icons.person_outline,
+                            icon: HugeIcons.strokeRoundedUser,
                             description:
                                 'Add your name, email address and vehicle number plate.',
                             buttonLabel: 'Edit Profile',
@@ -147,7 +148,7 @@ class _RiderOnboardingScreenState extends ConsumerState<RiderOnboardingScreen>
                               ? StepState.complete
                               : StepState.indexed,
                           content: _buildStepContent(
-                            icon: Icons.upload_file_outlined,
+                            icon: HugeIcons.strokeRoundedFileUpload,
                             description:
                                 'Upload your selfie, driver\'s licence, motor insurance and roadworthy certificate.',
                             buttonLabel: 'Upload Documents',
@@ -240,7 +241,7 @@ class _RiderOnboardingScreenState extends ConsumerState<RiderOnboardingScreen>
                     ),
                   ),
                   const SizedBox(width: 6),
-                  const Icon(Icons.arrow_forward_ios_rounded,
+                  const Icon(HugeIcons.strokeRoundedArrowRight01,
                       color: AppColors.primary, size: 13),
                 ],
               ),

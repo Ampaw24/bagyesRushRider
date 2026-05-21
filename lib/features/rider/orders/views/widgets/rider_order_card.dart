@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/features/rider/orders/models/rider_order_model.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 class RiderOrderCard extends StatelessWidget {
   final RiderOrderModel order;
@@ -55,7 +56,7 @@ class RiderOrderCard extends StatelessWidget {
                     color: _statusColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(Icons.fastfood_outlined,
+                  child: Icon(HugeIcons.strokeRoundedDeliveryBox01,
                       color: _statusColor, size: 20),
                 ),
                 const SizedBox(width: 10),
@@ -130,7 +131,7 @@ class RiderOrderCard extends StatelessWidget {
                 Expanded(
                   child: Row(
                     children: [
-                      Icon(Icons.radio_button_checked,
+                      Icon(HugeIcons.strokeRoundedCheckmarkCircle01,
                           color: Colors.green, size: 14),
                       const SizedBox(width: 4),
                       Expanded(
@@ -150,13 +151,13 @@ class RiderOrderCard extends StatelessWidget {
                 ),
                 const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 8),
-                  child: Icon(Icons.arrow_forward_rounded,
+                  child: Icon(HugeIcons.strokeRoundedArrowRight01,
                       size: 14, color: AppColors.primary),
                 ),
                 Expanded(
                   child: Row(
                     children: [
-                      const Icon(Icons.location_on,
+                      const Icon(HugeIcons.strokeRoundedLocation01,
                           color: AppColors.primary, size: 14),
                       const SizedBox(width: 4),
                       Expanded(

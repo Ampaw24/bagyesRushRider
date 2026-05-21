@@ -6,6 +6,7 @@ import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/core/router/app_routes.dart';
 import 'package:delivery_boy/core/widgets/app_gradient_button.dart';
 import 'package:delivery_boy/features/rider/shared_widgets/otp_input_field.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 // TODO: Re-integrate API calls (sendOtp, signup) once backend is ready.
 
@@ -92,7 +93,7 @@ class _RiderOtpScreenState extends State<RiderOtpScreen>
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded,
+          icon: const Icon(HugeIcons.strokeRoundedArrowLeft01,
               color: AppColors.textPrimary, size: 20),
           onPressed: () => context.go(
             AppRoutes.vehicleDetails,

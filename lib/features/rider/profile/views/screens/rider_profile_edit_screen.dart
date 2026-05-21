@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/core/widgets/app_gradient_button.dart';
 import 'package:delivery_boy/features/rider/profile/providers/rider_profile_providers.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 class RiderProfileEditScreen extends ConsumerStatefulWidget {
   const RiderProfileEditScreen({super.key});
@@ -112,7 +113,7 @@ class _RiderProfileEditScreenState
                       child: (_pickedImage == null &&
                               (profileState.user?.selfie == null ||
                                   profileState.user!.selfie!.isEmpty))
-                          ? Icon(Icons.person,
+                          ? Icon(HugeIcons.strokeRoundedUser,
                               size: 48, color: Colors.grey.shade400)
                           : null,
                     ),
@@ -133,7 +134,7 @@ class _RiderProfileEditScreenState
                           border:
                               Border.all(color: Colors.white, width: 2),
                         ),
-                        child: const Icon(Icons.camera_alt,
+                        child: const Icon(HugeIcons.strokeRoundedCamera01,
                             color: Colors.white, size: 18),
                       ),
                     ),
@@ -148,14 +149,14 @@ class _RiderProfileEditScreenState
               controller: _nameCtrl,
               label: 'Full Name',
               hint: 'Enter your name',
-              icon: Icons.person_outline,
+              icon: HugeIcons.strokeRoundedUser,
             ),
             const SizedBox(height: 16),
             _buildField(
               controller: _emailCtrl,
               label: 'Email Address',
               hint: 'Enter your email',
-              icon: Icons.email_outlined,
+              icon: HugeIcons.strokeRoundedMail01,
               keyboardType: TextInputType.emailAddress,
             ),
             const SizedBox(height: 16),
@@ -163,7 +164,7 @@ class _RiderProfileEditScreenState
               controller: _plateCtrl,
               label: 'Number Plate',
               hint: 'e.g. GR-1234-21',
-              icon: Icons.directions_car_outlined,
+              icon: HugeIcons.strokeRoundedCar01,
               textCapitalization: TextCapitalization.characters,
             ),
             const SizedBox(height: 36),

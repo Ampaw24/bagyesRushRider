@@ -10,6 +10,7 @@ import 'package:delivery_boy/core/widgets/app_gradient_button.dart';
 import 'package:delivery_boy/features/rider/auth/viewmodels/rider_auth_viewmodel.dart';
 import 'package:delivery_boy/features/rider/auth/views/screens/rider_vehicle_info_screen.dart';
 import 'package:delivery_boy/features/rider/shared_widgets/app_text_field.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 class RiderVehicleDetailsScreen extends ConsumerStatefulWidget {
   final Map<String, dynamic> credentials;
@@ -142,7 +143,7 @@ class _RiderVehicleDetailsScreenState
         elevation: 0,
         leading: IconButton(
           icon: const Icon(
-            Icons.arrow_back_ios_new_rounded,
+            HugeIcons.strokeRoundedArrowLeft01,
             color: AppColors.textPrimary,
             size: 20,
           ),
@@ -224,7 +225,7 @@ class _RiderVehicleDetailsScreenState
                                   hint: _vehicleType.requiresPlate
                                       ? 'e.g. GR-1234-22'
                                       : 'Leave blank if none',
-                                  prefixIcon: Icons.badge_outlined,
+                                  prefixIcon: HugeIcons.strokeRoundedIdentityCard,
                                   controller: _regNumCtrl,
                                   textCapitalization:
                                       TextCapitalization.characters,
@@ -248,7 +249,7 @@ class _RiderVehicleDetailsScreenState
                                         label: 'Year',
                                         hint: 'e.g. 2020',
                                         prefixIcon:
-                                            Icons.calendar_today_outlined,
+                                            HugeIcons.strokeRoundedCalendar01,
                                         controller: _yearCtrl,
                                         keyboardType: TextInputType.number,
                                         inputFormatters: [
@@ -276,7 +277,7 @@ class _RiderVehicleDetailsScreenState
                                         label: 'Make',
                                         hint: 'e.g. Honda',
                                         prefixIcon:
-                                            Icons.directions_car_outlined,
+                                            HugeIcons.strokeRoundedCar01,
                                         controller: _makeCtrl,
                                         textCapitalization:
                                             TextCapitalization.words,
@@ -295,7 +296,7 @@ class _RiderVehicleDetailsScreenState
                                 AppTextField(
                                   label: 'Model',
                                   hint: 'e.g. CB150R',
-                                  prefixIcon: Icons.two_wheeler_outlined,
+                                  prefixIcon: HugeIcons.strokeRoundedMotorbike01,
                                   controller: _modelCtrl,
                                   textCapitalization: TextCapitalization.words,
                                   validator: (v) =>
@@ -310,7 +311,7 @@ class _RiderVehicleDetailsScreenState
                                 AppTextField(
                                   label: 'Color',
                                   hint: 'e.g. Red',
-                                  prefixIcon: Icons.palette_outlined,
+                                  prefixIcon: HugeIcons.strokeRoundedPaintBoard,
                                   controller: _colorCtrl,
                                   textCapitalization: TextCapitalization.words,
                                   validator: (v) =>
@@ -562,7 +563,7 @@ class _ElectricNote extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.bolt_rounded, color: Color(0xFF0EA5E9), size: 20),
+          const Icon(HugeIcons.strokeRoundedFlash, color: Color(0xFF0EA5E9), size: 20),
           SizedBox(width: w * 0.02),
           const Expanded(
             child: Text(

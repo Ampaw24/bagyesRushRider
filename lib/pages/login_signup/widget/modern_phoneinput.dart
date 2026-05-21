@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:delivery_boy/constant/app_theme.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 /// A styled phone number input that visually matches [AppPhoneField].
 /// Uses a fixed Ghana (+233) country prefix.
@@ -57,7 +58,7 @@ class ModernPhoneInput extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 2),
-              Icon(Icons.keyboard_arrow_down_rounded,
+              Icon(HugeIcons.strokeRoundedArrowDown01,
                   size: 16, color: Colors.grey.shade400),
             ],
           ),

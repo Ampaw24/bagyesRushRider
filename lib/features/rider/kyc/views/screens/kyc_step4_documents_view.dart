@@ -7,6 +7,7 @@ import 'package:delivery_boy/features/rider/kyc/models/kyc_form_data.dart';
 import 'package:delivery_boy/features/rider/kyc/viewmodels/kyc_viewmodel.dart';
 import 'package:delivery_boy/features/rider/shared_widgets/document_upload_card.dart';
 import 'kyc_shared_widgets.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 class KycStep4DocumentsView extends ConsumerWidget {
   const KycStep4DocumentsView({super.key});
@@ -99,30 +100,30 @@ class KycStep4DocumentsView extends ConsumerWidget {
           _GroupTitle(title: 'Identity Documents'),
           const SizedBox(height: 10),
           _DocCard(docKey: KycDocKey.idFront, label: 'National ID (Front)',
-              icon: Icons.credit_card_outlined),
+              icon: HugeIcons.strokeRoundedCreditCard),
           const SizedBox(height: 10),
           _DocCard(docKey: KycDocKey.idBack, label: 'National ID (Back)',
-              icon: Icons.credit_card_outlined),
+              icon: HugeIcons.strokeRoundedCreditCard),
           const SizedBox(height: 10),
           _DocCard(docKey: KycDocKey.selfie, label: 'Selfie Photo',
-              icon: Icons.face_outlined),
+              icon: HugeIcons.strokeRoundedFaceId),
 
           const SizedBox(height: 20),
 
           _GroupTitle(title: 'Licence'),
           const SizedBox(height: 10),
           _DocCard(docKey: KycDocKey.licensePhoto, label: 'Driver Licence Photo',
-              icon: Icons.drive_eta_outlined),
+              icon: HugeIcons.strokeRoundedCar01),
 
           const SizedBox(height: 20),
 
           _GroupTitle(title: 'Vehicle Documents'),
           const SizedBox(height: 10),
           _DocCard(docKey: KycDocKey.vehicleRegDoc, label: 'Vehicle Registration',
-              icon: Icons.article_outlined),
+              icon: HugeIcons.strokeRoundedFile01),
           const SizedBox(height: 10),
           _DocCard(docKey: KycDocKey.vehicleInsurance, label: 'Insurance Certificate',
-              icon: Icons.security_outlined),
+              icon: HugeIcons.strokeRoundedShield01),
 
           const SizedBox(height: 32),
 

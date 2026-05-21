@@ -4,6 +4,7 @@ import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/core/widgets/shimmer_list_placeholder.dart';
 import 'package:delivery_boy/features/rider/notifications/models/rider_notification_model.dart';
 import 'package:delivery_boy/features/rider/notifications/providers/rider_notifications_providers.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 class RiderNotificationsScreen extends ConsumerStatefulWidget {
   const RiderNotificationsScreen({super.key});
@@ -83,7 +84,7 @@ class _RiderNotificationsScreenState
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.error_outline, size: 56, color: Colors.grey.shade400),
+              Icon(HugeIcons.strokeRoundedAlert01, size: 56, color: Colors.grey.shade400),
               const SizedBox(height: 12),
               Text(
                 state.errorMessage ?? 'Something went wrong',
@@ -127,7 +128,7 @@ class _RiderNotificationsScreenState
               shape: BoxShape.circle,
             ),
             child: Icon(
-              Icons.notifications_off_outlined,
+              HugeIcons.strokeRoundedNotificationOff01,
               size: 44,
               color: AppColors.primary.withValues(alpha: 0.6),
             ),
@@ -166,7 +167,7 @@ class _RiderNotificationsScreenState
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
         color: Colors.red.shade400,
-        child: const Icon(Icons.delete_outline, color: Colors.white, size: 26),
+        child: const Icon(HugeIcons.strokeRoundedDelete01, color: Colors.white, size: 26),
       ),
       onDismissed: (_) {
         ref.read(riderNotificationsProvider.notifier).dismiss(notification.id);
@@ -198,7 +199,7 @@ class _RiderNotificationsScreenState
             radius: 22,
             backgroundColor: AppColors.primary.withValues(alpha: 0.12),
             child: Icon(
-              Icons.notifications_outlined,
+              HugeIcons.strokeRoundedNotification01,
               color: AppColors.primary,
               size: 20,
             ),

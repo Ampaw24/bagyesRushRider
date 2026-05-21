@@ -11,6 +11,7 @@ import 'package:delivery_boy/features/rider/orders/models/rider_order_model.dart
 import 'package:delivery_boy/features/rider/orders/providers/rider_orders_providers.dart';
 import 'package:delivery_boy/features/rider/orders/views/widgets/rider_order_detail_sheet.dart';
 import 'package:delivery_boy/features/rider/tracking/providers/rider_tracking_providers.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 // Google Maps API key — move to env/config before production
 const _kGoogleMapsApiKey = 'AIzaSyA6QwaWqE4gtpQq4tTXGVIxLmeEeVKhYUc';
@@ -263,7 +264,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
                           const Text('Pickup',
                               style: TextStyle(color: Colors.black)),
                           Icon(
-                            Icons.check_circle_outline,
+                            HugeIcons.strokeRoundedCheckmarkCircle01,
                             color: _tripType == _TripType.pickup
                                 ? Colors.green
                                 : Colors.grey,
@@ -292,7 +293,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
                           const Text('Destination',
                               style: TextStyle(color: Colors.black)),
                           Icon(
-                            Icons.check_circle_outline,
+                            HugeIcons.strokeRoundedCheckmarkCircle01,
                             color: _tripType == _TripType.dropoff
                                 ? Colors.green
                                 : Colors.grey,
@@ -351,7 +352,7 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
           centerTitle: true,
           title: Text('Map', style: headingStyle),
           leading: IconButton(
-            icon: Icon(Icons.arrow_back, color: blackColor),
+            icon: Icon(HugeIcons.strokeRoundedArrowLeft01, color: blackColor),
             onPressed: () => context.pop(),
           ),
         ),
@@ -364,14 +365,14 @@ class _RiderMapScreenState extends ConsumerState<RiderMapScreen> {
                 heroTag: 'order_detail',
                 onPressed: _showOrderDetail,
                 backgroundColor: whiteColor,
-                child: Icon(Icons.assignment, color: primaryColor),
+                child: Icon(HugeIcons.strokeRoundedClipboard, color: primaryColor),
               ),
               heightSpace,
               FloatingActionButton(
                 heroTag: 'call',
                 onPressed: _openPhone,
                 backgroundColor: whiteColor,
-                child: Icon(Icons.call, color: primaryColor),
+                child: Icon(HugeIcons.strokeRoundedCall, color: primaryColor),
               ),
             ],
           ),

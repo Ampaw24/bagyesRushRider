@@ -4,6 +4,7 @@ import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/core/widgets/drag_handle.dart';
 import 'package:delivery_boy/core/widgets/status_badge.dart';
 import 'package:delivery_boy/features/rider/orders/models/rider_order_model.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 /// Trip status chain — order matters.
 const _statusChain = [
@@ -174,7 +175,7 @@ class RiderOrderDetailSheet extends StatelessWidget {
                   child: Column(
                     children: [
                       _locationRow(
-                        icon: Icons.radio_button_checked,
+                        icon: HugeIcons.strokeRoundedCheckmarkCircle01,
                         iconColor: Colors.green,
                         label: 'Pickup',
                         value: order.pickUpLocation,
@@ -194,7 +195,7 @@ class RiderOrderDetailSheet extends StatelessWidget {
                         ),
                       ),
                       _locationRow(
-                        icon: Icons.location_on,
+                        icon: HugeIcons.strokeRoundedLocation01,
                         iconColor: AppColors.primary,
                         label: 'Delivery',
                         value: order.deliveryLocation,
@@ -241,7 +242,7 @@ class RiderOrderDetailSheet extends StatelessWidget {
                                   ),
                                 ),
                                 const SizedBox(width: 6),
-                                const Icon(Icons.call_outlined,
+                                const Icon(HugeIcons.strokeRoundedCall,
                                     size: 16, color: AppColors.primary),
                               ],
                             ),
@@ -525,7 +526,7 @@ class _StepCircleState extends State<_StepCircle>
           color: AppColors.success,
           shape: BoxShape.circle,
         ),
-        child: const Icon(Icons.check, color: Colors.white, size: 13),
+        child: const Icon(HugeIcons.strokeRoundedCheckmarkCircle01, color: Colors.white, size: 13),
       );
     }
     if (widget.isCurrent) {

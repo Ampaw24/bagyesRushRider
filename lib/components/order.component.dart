@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:delivery_boy/constant/constant.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 class OrderComponent extends StatelessWidget {
 
@@ -36,7 +37,7 @@ class OrderComponent extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    Icon(Icons.fastfood, color: primaryColor, size: 25.0),
+                    Icon(HugeIcons.strokeRoundedDeliveryBox01, color: primaryColor, size: 25.0),
                     widthSpace,
                     Column(
                       mainAxisAlignment: MainAxisAlignment.start,
@@ -91,7 +92,7 @@ class OrderComponent extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: <Widget>[
                     Icon(
-                      Icons.location_on,
+                      HugeIcons.strokeRoundedLocation01,
                       color: primaryColor,
                       size: 20.0,
                     ),
@@ -101,7 +102,7 @@ class OrderComponent extends StatelessWidget {
                     getDot(),
                     getDot(),
                     Icon(
-                      Icons.navigation,
+                      HugeIcons.strokeRoundedNavigation01,
                       color: primaryColor,
                       size: 20.0,
                     ),

@@ -8,6 +8,7 @@ import 'package:delivery_boy/features/rider/shared_widgets/app_text_field.dart';
 import 'package:delivery_boy/features/rider/shared_widgets/app_date_picker_field.dart';
 import 'package:delivery_boy/features/rider/shared_widgets/document_upload_card.dart';
 import 'kyc_shared_widgets.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 class KycStep1IdentityView extends ConsumerStatefulWidget {
   const KycStep1IdentityView({super.key});
@@ -85,7 +86,7 @@ class _KycStep1IdentityViewState extends ConsumerState<KycStep1IdentityView> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const KycSectionHeader(
-              icon: Icons.badge_outlined,
+              icon: HugeIcons.strokeRoundedIdentityCard,
               title: 'Identity Verification',
               subtitle: 'Provide your personal information and ID documents',
             ),
@@ -94,7 +95,7 @@ class _KycStep1IdentityViewState extends ConsumerState<KycStep1IdentityView> {
             AppTextField(
               label: 'National ID Number',
               hint: 'e.g. GHA-000000000-0',
-              prefixIcon: Icons.credit_card_outlined,
+              prefixIcon: HugeIcons.strokeRoundedCreditCard,
               controller: _nationalIdCtrl,
               textCapitalization: TextCapitalization.characters,
               validator: (v) {
@@ -125,7 +126,7 @@ class _KycStep1IdentityViewState extends ConsumerState<KycStep1IdentityView> {
             AppTextField(
               label: 'Residential Address',
               hint: 'e.g. 12 High Street, Accra',
-              prefixIcon: Icons.location_on_outlined,
+              prefixIcon: HugeIcons.strokeRoundedLocation01,
               controller: _addressCtrl,
               maxLines: 2,
               validator: (v) {
@@ -142,7 +143,7 @@ class _KycStep1IdentityViewState extends ConsumerState<KycStep1IdentityView> {
 
             DocumentUploadCard(
               label: 'National ID (Front)',
-              icon: Icons.credit_card_outlined,
+              icon: HugeIcons.strokeRoundedCreditCard,
               uploadState:
                   uploadStates[KycDocKey.idFront] ?? const UploadState(),
               onTap: () => _pickDoc(KycDocKey.idFront),
@@ -154,7 +155,7 @@ class _KycStep1IdentityViewState extends ConsumerState<KycStep1IdentityView> {
 
             DocumentUploadCard(
               label: 'National ID (Back)',
-              icon: Icons.credit_card_outlined,
+              icon: HugeIcons.strokeRoundedCreditCard,
               uploadState:
                   uploadStates[KycDocKey.idBack] ?? const UploadState(),
               onTap: () => _pickDoc(KycDocKey.idBack),
@@ -166,7 +167,7 @@ class _KycStep1IdentityViewState extends ConsumerState<KycStep1IdentityView> {
 
             DocumentUploadCard(
               label: 'Selfie Photo',
-              icon: Icons.face_outlined,
+              icon: HugeIcons.strokeRoundedFaceId,
               uploadState:
                   uploadStates[KycDocKey.selfie] ?? const UploadState(),
               onTap: () => _pickDoc(KycDocKey.selfie),

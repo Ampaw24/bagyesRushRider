@@ -9,6 +9,7 @@ import 'package:delivery_boy/features/rider/shared_widgets/app_text_field.dart';
 import 'package:delivery_boy/features/rider/shared_widgets/app_dropdown_field.dart';
 import 'package:delivery_boy/features/rider/shared_widgets/document_upload_card.dart';
 import 'kyc_shared_widgets.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 const _vehicleTypes = [
   'Motorcycle',
@@ -103,7 +104,7 @@ class _KycStep3VehicleViewState extends ConsumerState<KycStep3VehicleView> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const KycSectionHeader(
-              icon: Icons.two_wheeler_outlined,
+              icon: HugeIcons.strokeRoundedMotorbike01,
               title: 'Vehicle Information',
               subtitle: 'Tell us about the vehicle you deliver with',
             ),
@@ -112,7 +113,7 @@ class _KycStep3VehicleViewState extends ConsumerState<KycStep3VehicleView> {
             AppDropdownField<String>(
               label: 'Vehicle Type',
               hint: 'Select vehicle type',
-              prefixIcon: Icons.directions_car_outlined,
+              prefixIcon: HugeIcons.strokeRoundedCar01,
               value: _vehicleType,
               items: _vehicleTypes
                   .map((t) => DropdownMenuItem(value: t, child: Text(t)))
@@ -126,7 +127,7 @@ class _KycStep3VehicleViewState extends ConsumerState<KycStep3VehicleView> {
             AppTextField(
               label: 'Vehicle Brand',
               hint: 'e.g. Honda, Yamaha',
-              prefixIcon: Icons.branding_watermark_outlined,
+              prefixIcon: HugeIcons.strokeRoundedIdentityCard,
               controller: _brandCtrl,
               textCapitalization: TextCapitalization.words,
               validator: (v) => (v == null || v.trim().isEmpty)
@@ -138,7 +139,7 @@ class _KycStep3VehicleViewState extends ConsumerState<KycStep3VehicleView> {
             AppTextField(
               label: 'Vehicle Model',
               hint: 'e.g. CB125F, NMAX',
-              prefixIcon: Icons.model_training_outlined,
+              prefixIcon: HugeIcons.strokeRoundedChart01,
               controller: _modelCtrl,
               textCapitalization: TextCapitalization.words,
               validator: (v) => (v == null || v.trim().isEmpty)
@@ -150,7 +151,7 @@ class _KycStep3VehicleViewState extends ConsumerState<KycStep3VehicleView> {
             AppTextField(
               label: 'Plate Number',
               hint: 'e.g. GR-1234-22',
-              prefixIcon: Icons.confirmation_number_outlined,
+              prefixIcon: HugeIcons.strokeRoundedTicket01,
               controller: _plateCtrl,
               textCapitalization: TextCapitalization.characters,
               validator: (v) => (v == null || v.trim().isEmpty)
@@ -162,7 +163,7 @@ class _KycStep3VehicleViewState extends ConsumerState<KycStep3VehicleView> {
             AppTextField(
               label: 'Vehicle Color',
               hint: 'e.g. Red, Black',
-              prefixIcon: Icons.color_lens_outlined,
+              prefixIcon: HugeIcons.strokeRoundedColors,
               controller: _colorCtrl,
               textCapitalization: TextCapitalization.words,
               validator: (v) => (v == null || v.trim().isEmpty)
@@ -176,7 +177,7 @@ class _KycStep3VehicleViewState extends ConsumerState<KycStep3VehicleView> {
 
             DocumentUploadCard(
               label: 'Vehicle Registration Document',
-              icon: Icons.article_outlined,
+              icon: HugeIcons.strokeRoundedFile01,
               uploadState: uploadStates[KycDocKey.vehicleRegDoc] ??
                   const UploadState(),
               onTap: () => _pickDoc(KycDocKey.vehicleRegDoc),
@@ -188,7 +189,7 @@ class _KycStep3VehicleViewState extends ConsumerState<KycStep3VehicleView> {
 
             DocumentUploadCard(
               label: 'Motor Insurance Certificate',
-              icon: Icons.security_outlined,
+              icon: HugeIcons.strokeRoundedShield01,
               uploadState: uploadStates[KycDocKey.vehicleInsurance] ??
                   const UploadState(),
               onTap: () => _pickDoc(KycDocKey.vehicleInsurance),

@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/core/router/app_routes.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 // ── Data model ────────────────────────────────────────────────────────────────
 
@@ -32,41 +33,41 @@ const _pages = [
     title: 'Welcome to\nbagyesRUSH',
     subtitle:
         'Join thousands of riders delivering happiness across Ghana. Fast, reliable, and rewarding.',
-    mainIcon: Icons.delivery_dining_rounded,
+    mainIcon: HugeIcons.strokeRoundedMotorbike01,
     color: AppColors.primary,
     accentLight: Color(0xFFFFEBEE),
     badge: 'Rider Network',
-    badgeIcon: Icons.people_alt_rounded,
+    badgeIcon: HugeIcons.strokeRoundedUserGroup,
   ),
   _PageData(
     title: 'Accept Orders\nInstantly',
     subtitle:
         'Get real-time delivery requests straight to your phone. One tap to accept and start earning.',
-    mainIcon: Icons.notifications_active_rounded,
+    mainIcon: HugeIcons.strokeRoundedNotification02,
     color: Color(0xFFFF7043),
     accentLight: Color(0xFFFFE0B2),
     badge: 'Real-Time Alerts',
-    badgeIcon: Icons.bolt_rounded,
+    badgeIcon: HugeIcons.strokeRoundedFlash,
   ),
   _PageData(
     title: 'Track Your\nEarnings',
     subtitle:
         'Monitor daily earnings, weekly bonuses, and withdraw instantly to your mobile money wallet.',
-    mainIcon: Icons.account_balance_wallet_rounded,
+    mainIcon: HugeIcons.strokeRoundedWallet01,
     color: Color(0xFF00897B),
     accentLight: Color(0xFFB2DFDB),
     badge: 'Instant Payout',
-    badgeIcon: Icons.trending_up_rounded,
+    badgeIcon: HugeIcons.strokeRoundedChartUp,
   ),
   _PageData(
     title: 'Safe &\nAlways Supported',
     subtitle:
         'Verified customers, full coverage and a dedicated team available 24/7 for every ride you make.',
-    mainIcon: Icons.verified_user_rounded,
+    mainIcon: HugeIcons.strokeRoundedUserCheck01,
     color: Color(0xFF5C6BC0),
     accentLight: Color(0xFFC5CAE9),
     badge: '24/7 Support',
-    badgeIcon: Icons.headset_mic_rounded,
+    badgeIcon: HugeIcons.strokeRoundedHeadphones,
   ),
 ];
 
@@ -303,7 +304,7 @@ class _OnboardingIntroScreenState extends State<OnboardingIntroScreen>
                                     ),
                                   )
                                 : const Icon(
-                                    Icons.arrow_forward_rounded,
+                                    HugeIcons.strokeRoundedArrowRight01,
                                     key: ValueKey('arrow'),
                                     color: Colors.white,
                                     size: 24,

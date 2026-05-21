@@ -12,6 +12,7 @@ import 'package:delivery_boy/features/rider/orders/models/rider_order_model.dart
 import 'package:delivery_boy/features/rider/orders/providers/rider_orders_providers.dart';
 import 'package:delivery_boy/features/rider/orders/views/widgets/rider_order_card.dart';
 import 'package:delivery_boy/features/rider/orders/views/widgets/rider_order_detail_sheet.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 class RiderNewOrdersScreen extends ConsumerStatefulWidget {
   const RiderNewOrdersScreen({super.key});
@@ -177,7 +178,7 @@ class _RiderNewOrdersScreenState extends ConsumerState<RiderNewOrdersScreen> {
                 color: AppColors.primary.withValues(alpha: 0.08),
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.local_mall_outlined,
+              child: Icon(HugeIcons.strokeRoundedShoppingCart01,
                   color: AppColors.primary.withValues(alpha: 0.6), size: 44),
             ),
             const SizedBox(height: 20),
@@ -227,7 +228,7 @@ class _RiderNewOrdersScreenState extends ConsumerState<RiderNewOrdersScreen> {
                       onPressed: (_) => _quickAccept(order),
                       backgroundColor: AppColors.success,
                       foregroundColor: Colors.white,
-                      icon: Icons.check_rounded,
+                      icon: HugeIcons.strokeRoundedCheckmarkCircle01,
                       label: 'Accept',
                       borderRadius: const BorderRadius.horizontal(
                           left: Radius.circular(12)),
@@ -236,7 +237,7 @@ class _RiderNewOrdersScreenState extends ConsumerState<RiderNewOrdersScreen> {
                       onPressed: (_) => _showRejectDialog(order),
                       backgroundColor: AppColors.error,
                       foregroundColor: Colors.white,
-                      icon: Icons.close_rounded,
+                      icon: HugeIcons.strokeRoundedCancelCircle,
                       label: 'Reject',
                       borderRadius: const BorderRadius.horizontal(
                           right: Radius.circular(12)),

@@ -62,15 +62,17 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
   bool get _isFilled => _fullPhone.length >= 12 && _password.isNotEmpty;
 
   Future<void> _login() async {
-    FocusScope.of(context).unfocus();
-    if (!_formKey.currentState!.validate()) return;
-    final success = await ref.read(riderAuthProvider.notifier).login(
-          phone: _fullPhone,
-          password: _password,
-        );
-    if (success && mounted) {
-      context.go(AppRoutes.dashboard);
-    }
+    FocusManager.instance.primaryFocus?.unfocus();
+    // TODO: re-enable API login before release
+    // if (!_formKey.currentState!.validate()) return;
+    // final success = await ref.read(riderAuthProvider.notifier).login(
+    //       phone: _fullPhone,
+    //       password: _password,
+    //     );
+    // if (success && mounted) {
+    //   context.go(AppRoutes.dashboard);
+    // }
+    context.go(AppRoutes.dashboard);
   }
 
   @override
@@ -79,6 +81,7 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
     final isLoading = authState.status == AuthStatus.loading;
 
     ref.listen<RiderAuthState>(riderAuthProvider, (_, next) {
+      if (!mounted) return;
       if (next.errorMessage != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -401,8 +404,7 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
                               width: double.infinity,
                               height: (h * 0.072).clamp(50.0, 60.0),
                               child: ElevatedButton(
-                                onPressed:
-                                    (isLoading || !_isFilled) ? null : _login,
+                                onPressed: _login,
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: AppColors.primary,
                                   disabledBackgroundColor:

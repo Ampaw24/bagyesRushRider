@@ -9,6 +9,7 @@ import 'package:delivery_boy/services/app.services.dart';
 import 'package:delivery_boy/states/app.state.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 class NewOrder extends StatefulWidget {
   @override
@@ -363,7 +364,7 @@ class _NewOrderState extends State<NewOrder> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: <Widget>[
                 Icon(
-                  Icons.local_mall,
+                  HugeIcons.strokeRoundedShoppingCart01,
                   color: Colors.grey,
                   size: 60.0,
                 ),

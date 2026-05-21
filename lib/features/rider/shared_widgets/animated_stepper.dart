@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:delivery_boy/constant/app_theme.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 /// Horizontal animated step indicator for multi-step flows.
 /// Completed steps show a green checkmark, active step shows a red pulsing
@@ -140,7 +141,7 @@ class _StepCircleState extends State<_StepCircle>
                 duration: const Duration(milliseconds: 200),
                 child: isCompleted
                     ? const Icon(
-                        Icons.check_rounded,
+                        HugeIcons.strokeRoundedCheckmarkCircle01,
                         key: ValueKey('check'),
                         size: 16,
                         color: Colors.white,

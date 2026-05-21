@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:delivery_boy/constant/app_theme.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 /// Step header with icon + title + subtitle row.
 class KycSectionHeader extends StatelessWidget {
@@ -122,7 +123,7 @@ class KycSourcePicker extends StatelessWidget {
                   color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(Icons.camera_alt_outlined,
+                child: const Icon(HugeIcons.strokeRoundedCamera01,
                     color: AppColors.primary),
               ),
               title: const Text('Take a photo',
@@ -136,7 +137,7 @@ class KycSourcePicker extends StatelessWidget {
                   color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(Icons.photo_library_outlined,
+                child: const Icon(HugeIcons.strokeRoundedImage01,
                     color: AppColors.primary),
               ),
               title: const Text('Choose from gallery',

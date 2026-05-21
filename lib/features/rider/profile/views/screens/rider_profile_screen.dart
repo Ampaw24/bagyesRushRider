@@ -3,7 +3,25 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/core/router/app_routes.dart';
+import 'package:delivery_boy/features/rider/auth/models/rider_user_model.dart';
 import 'package:delivery_boy/features/rider/profile/providers/rider_profile_providers.dart';
+import 'package:hugeicons/hugeicons.dart';
+
+// iOS-style grouped background, used by Grab / DoorDash Dasher
+const _kBg = Color(0xFFF2F2F7);
+
+List<Color> _kycRingColors(KycStatus? status) {
+  switch (status) {
+    case KycStatus.approved:
+      return [AppColors.success, Color(0xFF66BB6A), AppColors.success];
+    case KycStatus.pendingReview:
+      return [Colors.orange, Colors.amber, Colors.orange];
+    case KycStatus.rejected:
+      return [AppColors.error, Colors.redAccent, AppColors.error];
+    default:
+      return [Color(0xFFE0E0E0), Color(0xFFBDBDBD), Color(0xFFE0E0E0)];
+  }
+}
 
 class RiderProfileScreen extends ConsumerWidget {
   const RiderProfileScreen({super.key});
@@ -32,27 +50,13 @@ class RiderProfileScreen extends ConsumerWidget {
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           title: const Text(
             'Log Out',
-            style: TextStyle(
-              fontFamily: 'Roboto',
-              fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
-            ),
+            style: TextStyle(fontWeight: FontWeight.w700),
           ),
-          content: const Text(
-            'Are you sure you want to log out?',
-            style: TextStyle(
-              fontFamily: 'Roboto',
-              color: AppColors.textSecondary,
-            ),
-          ),
+          content: const Text('Are you sure you want to log out?'),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text(
-                'Cancel',
-                style: TextStyle(
-                    fontFamily: 'Roboto', color: AppColors.textSecondary),
-              ),
+              child: const Text('Cancel'),
             ),
             TextButton(
               onPressed: () async {
@@ -64,9 +68,7 @@ class RiderProfileScreen extends ConsumerWidget {
               child: const Text(
                 'Log Out',
                 style: TextStyle(
-                    fontFamily: 'Roboto',
-                    color: AppColors.error,
-                    fontWeight: FontWeight.w700),
+                    color: AppColors.error, fontWeight: FontWeight.w700),
               ),
             ),
           ],
@@ -74,314 +76,242 @@ class RiderProfileScreen extends ConsumerWidget {
       );
     }
 
+    final bottomPad = MediaQuery.paddingOf(context).bottom;
+
     return Scaffold(
-      backgroundColor: AppColors.scaffold,
+      backgroundColor: _kBg,
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [
-          // ── Gradient header card ────────────────────────────────────────────
-          SliverToBoxAdapter(
-            child: Container(
-              margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [AppColors.primary, Color(0xFFCA445D)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primary.withValues(alpha: 0.35),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
-              padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      // Avatar with camera overlay
-                      GestureDetector(
-                        onTap: () => context.push(AppRoutes.editProfile),
-                        child: Stack(
-                          children: [
-                            Container(
-                              width: 80,
-                              height: 80,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                    color: Colors.white, width: 3),
-                                color: Colors.white.withValues(alpha: 0.2),
-                              ),
-                              child: ClipOval(
-                                child: user?.selfie != null &&
-                                        user!.selfie!.isNotEmpty
-                                    ? Image.network(
-                                        user.selfie!,
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (_, __, ___) =>
-                                            const Icon(Icons.person,
-                                                size: 40,
-                                                color: Colors.white),
-                                      )
-                                    : const Icon(Icons.person,
-                                        size: 40, color: Colors.white),
-                              ),
-                            ),
-                            Positioned(
-                              right: 0,
-                              bottom: 0,
-                              child: Container(
-                                width: 26,
-                                height: 26,
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                      color: AppColors.primary, width: 1.5),
-                                ),
-                                child: const Icon(Icons.camera_alt,
-                                    size: 14, color: AppColors.primary),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              user?.name ?? 'Rider',
-                              style: const TextStyle(
-                                fontFamily: 'Roboto',
-                                fontSize: 20,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              user?.phone ?? '',
-                              style: const TextStyle(
-                                fontFamily: 'Roboto',
-                                fontSize: 13,
-                                color: Colors.white70,
-                              ),
-                            ),
-                            if (user?.email != null &&
-                                user!.email!.isNotEmpty) ...[
-                              const SizedBox(height: 2),
-                              Text(
-                                user.email!,
-                                style: const TextStyle(
-                                  fontFamily: 'Roboto',
-                                  fontSize: 12,
-                                  color: Colors.white60,
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                      GestureDetector(
-                        onTap: () => context.push(AppRoutes.editProfile),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: const Text(
-                            'Edit',
-                            style: TextStyle(
-                              fontFamily: 'Roboto',
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  // Profile completeness bar
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        isComplete
-                            ? 'Profile Complete'
-                            : 'Profile ${(completePct * 100).toInt()}% complete',
-                        style: const TextStyle(
-                          fontFamily: 'Roboto',
-                          fontSize: 12,
-                          color: Colors.white70,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      if (!isComplete)
-                        GestureDetector(
-                          onTap: () =>
-                              context.push(AppRoutes.documentUpload),
-                          child: const Text(
-                            'Upload docs →',
-                            style: TextStyle(
-                              fontFamily: 'Roboto',
-                              fontSize: 12,
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: LinearProgressIndicator(
-                      value: completePct,
-                      minHeight: 6,
-                      backgroundColor: Colors.white.withValues(alpha: 0.25),
-                      valueColor:
-                          const AlwaysStoppedAnimation<Color>(Colors.white),
-                    ),
-                  ),
-                ],
+          // ── App bar ──────────────────────────────────────────────────────
+          SliverAppBar(
+            automaticallyImplyLeading: false,
+            backgroundColor: _kBg,
+            surfaceTintColor: Colors.transparent,
+            elevation: 0,
+            pinned: true,
+            title: const Text(
+              'Profile',
+              style: TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
               ),
             ),
           ),
 
-          // ── Menu section ────────────────────────────────────────────────────
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Padding(
-                    padding: EdgeInsets.only(left: 4, bottom: 10),
-                    child: Text(
-                      'Account',
-                      style: TextStyle(
-                        fontFamily: 'Roboto',
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textSecondary,
-                        letterSpacing: 0.8,
-                      ),
-                    ),
-                  ),
-                  _MenuCard(
-                    children: [
-                      _MenuTile(
-                        icon: Icons.edit_outlined,
-                        iconColor: AppColors.primary,
-                        title: 'Edit Profile',
-                        onTap: () => context.push(AppRoutes.editProfile),
-                      ),
-                      _MenuTile(
-                        icon: Icons.upload_file_outlined,
-                        iconColor: Colors.orange,
-                        title: 'Documents',
-                        trailing: isComplete
-                            ? Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 8, vertical: 3),
+          SliverPadding(
+            padding: EdgeInsets.fromLTRB(16, 0, 16, bottomPad + 24),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
+                // ── Identity card ───────────────────────────────────────
+                _SectionCard(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
+                    child: Column(
+                      children: [
+                        // Avatar with KYC-status ring + online dot
+                        GestureDetector(
+                          onTap: () => context.push(AppRoutes.editProfile),
+                          child: Stack(
+                            alignment: Alignment.bottomRight,
+                            children: [
+                              // Outer KYC status ring
+                              Container(
+                                width: 96,
+                                height: 96,
                                 decoration: BoxDecoration(
-                                  color: AppColors.success
-                                      .withValues(alpha: 0.12),
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: const Text(
-                                  'Complete',
-                                  style: TextStyle(
-                                    fontFamily: 'Roboto',
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.success,
+                                  shape: BoxShape.circle,
+                                  gradient: SweepGradient(
+                                    colors: _kycRingColors(user?.kycStatus),
                                   ),
                                 ),
-                              )
-                            : Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 8, vertical: 3),
-                                decoration: BoxDecoration(
-                                  color: Colors.orange.withValues(alpha: 0.12),
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: const Text(
-                                  'Pending',
-                                  style: TextStyle(
-                                    fontFamily: 'Roboto',
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.orange,
+                                child: Padding(
+                                  padding: const EdgeInsets.all(3),
+                                  child: Container(
+                                    decoration: const BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: Colors.white,
+                                    ),
+                                    child: ClipOval(
+                                      child: user?.selfie != null &&
+                                              user!.selfie!.isNotEmpty
+                                          ? Image.network(
+                                              user.selfie!,
+                                              fit: BoxFit.cover,
+                                              errorBuilder: (_, __, ___) => Icon(
+                                                  HugeIcons.strokeRoundedUser,
+                                                  size: 42,
+                                                  color: Colors.grey.shade400),
+                                            )
+                                          : Icon(HugeIcons.strokeRoundedUser,
+                                              size: 42,
+                                              color: Colors.grey.shade400),
+                                    ),
                                   ),
                                 ),
                               ),
-                        onTap: () =>
-                            context.push(AppRoutes.documentUpload),
+                              // Online / offline dot
+                              Container(
+                                width: 22,
+                                height: 22,
+                                decoration: BoxDecoration(
+                                  color: (user?.queue ?? false)
+                                      ? AppColors.success
+                                      : Colors.grey.shade400,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                      color: Colors.white, width: 2.5),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        // Name
+                        Text(
+                          user?.name ?? 'Rider',
+                          style: const TextStyle(
+                            fontSize: 19,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        // Phone
+                        Text(
+                          user?.phone ?? '',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                        if (user?.email != null &&
+                            user!.email!.isNotEmpty) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            user.email!,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: 14),
+                        // KYC badge + edit button
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            _KycBadge(status: user?.kycStatus),
+                            const SizedBox(width: 10),
+                            GestureDetector(
+                              onTap: () =>
+                                  context.push(AppRoutes.editProfile),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 14, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: _kBg,
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: const Text(
+                                  'Edit Profile',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.primary,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                // ── Info strip ──────────────────────────────────────────
+                const SizedBox(height: 12),
+                _InfoStrip(
+                  docCount: docCount,
+                  isOnline: user?.queue ?? false,
+                  numberPlate: user?.numberPlate,
+                ),
+
+                // ── Completion nudge ────────────────────────────────────
+                if (!isComplete) ...[
+                  const SizedBox(height: 12),
+                  _CompletionBanner(
+                    docCount: docCount,
+                    completePct: completePct,
+                    onTap: () => context.push(AppRoutes.documentUpload),
+                  ),
+                ],
+
+                // ── Account section ─────────────────────────────────────
+                const SizedBox(height: 24),
+                _SectionHeader(label: 'Account'),
+                const SizedBox(height: 8),
+                _SectionCard(
+                  child: Column(
+                    children: [
+                      _Tile(
+                        icon: HugeIcons.strokeRoundedEdit01,
+                        color: AppColors.primary,
+                        title: 'Edit Profile',
+                        onTap: () => context.push(AppRoutes.editProfile),
                       ),
-                      _MenuTile(
-                        icon: Icons.notifications_outlined,
-                        iconColor: Colors.blue,
+                      _Tile(
+                        icon: HugeIcons.strokeRoundedFileUpload,
+                        color: Colors.orange,
+                        title: 'Documents',
+                        trailing: _DocsBadge(isComplete: isComplete),
+                        onTap: () => context.push(AppRoutes.documentUpload),
+                      ),
+                      _Tile(
+                        icon: HugeIcons.strokeRoundedNotification01,
+                        color: Colors.blue,
                         title: 'Notifications',
                         onTap: () =>
                             context.push(AppRoutes.notifications),
                       ),
-                      _MenuTile(
-                        icon: Icons.settings_outlined,
-                        iconColor: Colors.grey.shade600,
+                      _Tile(
+                        icon: HugeIcons.strokeRoundedSettings01,
+                        color: Colors.grey.shade600,
                         title: 'Settings',
                         onTap: () => context.push(AppRoutes.settings),
-                        divider: false,
+                        last: true,
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
-                  const Padding(
-                    padding: EdgeInsets.only(left: 4, bottom: 10),
-                    child: Text(
-                      'More',
-                      style: TextStyle(
-                        fontFamily: 'Roboto',
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textSecondary,
-                        letterSpacing: 0.8,
-                      ),
-                    ),
-                  ),
-                  _MenuCard(
+                ),
+
+                // ── More section ────────────────────────────────────────
+                const SizedBox(height: 24),
+                _SectionHeader(label: 'More'),
+                const SizedBox(height: 8),
+                _SectionCard(
+                  child: Column(
                     children: [
-                      _MenuTile(
-                        icon: Icons.headset_mic_outlined,
-                        iconColor: Colors.teal,
+                      _Tile(
+                        icon: HugeIcons.strokeRoundedHeadphones,
+                        color: Colors.teal,
                         title: 'Support',
                         onTap: () {},
                       ),
-                      _MenuTile(
-                        icon: Icons.exit_to_app_rounded,
-                        iconColor: AppColors.error,
+                      _Tile(
+                        icon: HugeIcons.strokeRoundedLogout01,
+                        color: AppColors.error,
                         title: 'Log Out',
                         titleColor: AppColors.error,
                         onTap: showLogoutDialog,
-                        divider: false,
+                        last: true,
                       ),
                     ],
                   ),
-                  const SizedBox(height: 32),
-                ],
-              ),
+                ),
+              ]),
             ),
           ),
         ],
@@ -390,9 +320,11 @@ class RiderProfileScreen extends ConsumerWidget {
   }
 }
 
-class _MenuCard extends StatelessWidget {
-  final List<Widget> children;
-  const _MenuCard({required this.children});
+// ── Shared widgets ─────────────────────────────────────────────────────────
+
+class _SectionCard extends StatelessWidget {
+  final Widget child;
+  const _SectionCard({required this.child});
 
   @override
   Widget build(BuildContext context) {
@@ -400,65 +332,320 @@ class _MenuCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
       ),
-      child: Column(children: children),
+      child: child,
     );
   }
 }
 
-class _MenuTile extends StatelessWidget {
+class _SectionHeader extends StatelessWidget {
+  final String label;
+  const _SectionHeader({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 6),
+      child: Text(
+        label,
+        style: const TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+          color: AppColors.textSecondary,
+        ),
+      ),
+    );
+  }
+}
+
+class _KycBadge extends StatelessWidget {
+  final KycStatus? status;
+  const _KycBadge({this.status});
+
+  @override
+  Widget build(BuildContext context) {
+    final (label, bg, fg) = switch (status) {
+      KycStatus.approved => ('Verified', const Color(0xFFE6F4EA), AppColors.success),
+      KycStatus.pendingReview => ('Under Review', const Color(0xFFFFF8E1), Colors.orange),
+      KycStatus.rejected => ('Rejected', const Color(0xFFFFEBEE), AppColors.error),
+      _ => ('Not Verified', const Color(0xFFF5F5F5), AppColors.textSecondary),
+    };
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            status == KycStatus.approved
+                ? HugeIcons.strokeRoundedCheckmarkCircle02
+                : HugeIcons.strokeRoundedAlert02,
+            size: 12,
+            color: fg,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: fg,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InfoStrip extends StatelessWidget {
+  final int docCount;
+  final bool isOnline;
+  final String? numberPlate;
+
+  const _InfoStrip({
+    required this.docCount,
+    required this.isOnline,
+    this.numberPlate,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return IntrinsicHeight(
+      child: Row(
+        children: [
+          Expanded(
+            child: _InfoTile(
+              icon: HugeIcons.strokeRoundedFile01,
+              value: '$docCount/5',
+              label: 'Documents',
+            ),
+          ),
+          const VerticalDivider(width: 1, color: Color(0xFFE5E5EA)),
+          Expanded(
+            child: _InfoTile(
+              icon: HugeIcons.strokeRoundedCircle,
+              value: isOnline ? 'Online' : 'Offline',
+              label: 'Status',
+              valueColor:
+                  isOnline ? AppColors.success : AppColors.textSecondary,
+            ),
+          ),
+          if (numberPlate != null && numberPlate!.isNotEmpty) ...[
+            const VerticalDivider(width: 1, color: Color(0xFFE5E5EA)),
+            Expanded(
+              child: _InfoTile(
+                icon: HugeIcons.strokeRoundedCar01,
+                value: numberPlate!,
+                label: 'Plate',
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _InfoTile extends StatelessWidget {
   final IconData icon;
-  final Color iconColor;
+  final String value;
+  final String label;
+  final Color? valueColor;
+
+  const _InfoTile({
+    required this.icon,
+    required this.value,
+    required this.label,
+    this.valueColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Colors.white,
+      padding: const EdgeInsets.symmetric(vertical: 14),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 20, color: AppColors.textSecondary),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: valueColor ?? AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 11,
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CompletionBanner extends StatelessWidget {
+  final int docCount;
+  final double completePct;
+  final VoidCallback onTap;
+
+  const _CompletionBanner({
+    required this.docCount,
+    required this.completePct,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.orange.shade100),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: Colors.orange.shade50,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(HugeIcons.strokeRoundedAlert02,
+                  size: 20, color: Colors.orange.shade700),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Complete your profile',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: LinearProgressIndicator(
+                      value: completePct,
+                      minHeight: 4,
+                      backgroundColor: Colors.grey.shade100,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                          Colors.orange.shade600),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '$docCount of 5 documents uploaded',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 10),
+            Icon(HugeIcons.strokeRoundedArrowRight01,
+                size: 18, color: Colors.grey.shade400),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DocsBadge extends StatelessWidget {
+  final bool isComplete;
+  const _DocsBadge({required this.isComplete});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: isComplete
+            ? const Color(0xFFE6F4EA)
+            : Colors.orange.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        isComplete ? 'Complete' : 'Pending',
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: isComplete ? AppColors.success : Colors.orange,
+        ),
+      ),
+    );
+  }
+}
+
+class _Tile extends StatelessWidget {
+  final IconData icon;
+  final Color color;
   final String title;
   final Color? titleColor;
   final Widget? trailing;
   final VoidCallback onTap;
-  final bool divider;
+  final bool last;
 
-  const _MenuTile({
+  const _Tile({
     required this.icon,
-    required this.iconColor,
+    required this.color,
     required this.title,
     required this.onTap,
     this.titleColor,
     this.trailing,
-    this.divider = true,
+    this.last = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
         InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(16),
           child: Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
             child: Row(
               children: [
                 Container(
-                  width: 38,
-                  height: 38,
+                  width: 36,
+                  height: 36,
                   decoration: BoxDecoration(
-                    color: iconColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(10),
+                    color: color.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(9),
                   ),
-                  child: Icon(icon, color: iconColor, size: 20),
+                  child: Icon(icon, color: color, size: 19),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
                   child: Text(
                     title,
                     style: TextStyle(
-                      fontFamily: 'Roboto',
                       fontSize: 15,
                       fontWeight: FontWeight.w500,
                       color: titleColor ?? AppColors.textPrimary,
@@ -467,20 +654,16 @@ class _MenuTile extends StatelessWidget {
                 ),
                 trailing ??
                     Icon(
-                      Icons.chevron_right_rounded,
-                      size: 20,
+                      HugeIcons.strokeRoundedArrowRight01,
+                      size: 18,
                       color: Colors.grey.shade400,
                     ),
               ],
             ),
           ),
         ),
-        if (divider)
-          Divider(
-            height: 1,
-            indent: 68,
-            color: Colors.grey.shade100,
-          ),
+        if (!last)
+          Divider(height: 1, indent: 66, color: const Color(0xFFF2F2F7)),
       ],
     );
   }

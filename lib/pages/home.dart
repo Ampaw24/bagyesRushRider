@@ -10,6 +10,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:delivery_boy/pages/home/home_main.dart';
 import 'package:delivery_boy/pages/wallet.dart';
 import 'package:provider/provider.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 class Home extends StatefulWidget {
   @override
@@ -66,15 +67,15 @@ class _HomeState extends State<Home> {
           unselectedItemColor: greyColor,
           items: <BottomNavigationBarItem>[
             BottomNavigationBarItem(
-              icon: Icon(Icons.local_mall),
+              icon: Icon(HugeIcons.strokeRoundedShoppingCart01),
               label: 'Order',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.account_balance_wallet),
+              icon: Icon(HugeIcons.strokeRoundedWallet01),
               label: 'Wallet',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.person),
+              icon: Icon(HugeIcons.strokeRoundedUser),
               label: 'Profile',
             ),
           ],

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:delivery_boy/constant/app_theme.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 enum PasswordStrength { weak, medium, strong }
 
@@ -149,7 +150,7 @@ class _CheckItem extends StatelessWidget {
             transitionBuilder: (child, anim) =>
                 ScaleTransition(scale: anim, child: child),
             child: Icon(
-              met ? Icons.check_circle_rounded : Icons.circle_outlined,
+              met ? HugeIcons.strokeRoundedCheckmarkCircle01 : HugeIcons.strokeRoundedCircle,
               key: ValueKey(met),
               size: 16,
               color: met ? AppColors.success : Colors.grey.shade400,

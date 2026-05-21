@@ -9,6 +9,7 @@ import 'package:delivery_boy/features/rider/shared_widgets/app_text_field.dart';
 import 'package:delivery_boy/features/rider/shared_widgets/app_date_picker_field.dart';
 import 'package:delivery_boy/features/rider/shared_widgets/document_upload_card.dart';
 import 'kyc_shared_widgets.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 class KycStep2LicenceView extends ConsumerStatefulWidget {
   const KycStep2LicenceView({super.key});
@@ -82,7 +83,7 @@ class _KycStep2LicenceViewState extends ConsumerState<KycStep2LicenceView> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const KycSectionHeader(
-              icon: Icons.drive_eta_outlined,
+              icon: HugeIcons.strokeRoundedCar01,
               title: 'Driver Licence',
               subtitle: 'Provide your driver licence details',
             ),
@@ -91,7 +92,7 @@ class _KycStep2LicenceViewState extends ConsumerState<KycStep2LicenceView> {
             AppTextField(
               label: 'Driver Licence Number',
               hint: 'e.g. DL-000000',
-              prefixIcon: Icons.badge_outlined,
+              prefixIcon: HugeIcons.strokeRoundedIdentityCard,
               controller: _licenceNoCtrl,
               textCapitalization: TextCapitalization.characters,
               validator: (v) {
@@ -123,7 +124,7 @@ class _KycStep2LicenceViewState extends ConsumerState<KycStep2LicenceView> {
 
             DocumentUploadCard(
               label: 'Driver Licence Photo',
-              icon: Icons.drive_eta_outlined,
+              icon: HugeIcons.strokeRoundedCar01,
               uploadState:
                   uploadStates[KycDocKey.licensePhoto] ?? const UploadState(),
               onTap: () => _pickDoc(KycDocKey.licensePhoto),

@@ -7,6 +7,7 @@ import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/core/router/app_routes.dart';
 import 'package:delivery_boy/core/widgets/app_gradient_button.dart';
 import 'package:delivery_boy/features/rider/auth/viewmodels/rider_auth_viewmodel.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 enum _ForgotStep { enterPhone, enterOtpAndPassword }
 
@@ -88,7 +89,7 @@ class _RiderForgotPasswordScreenState
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded,
+          icon: const Icon(HugeIcons.strokeRoundedArrowLeft01,
               color: AppColors.textPrimary, size: 20),
           onPressed: () => context.go(AppRoutes.login),
         ),
@@ -122,7 +123,7 @@ class _RiderForgotPasswordScreenState
             color: AppColors.primary.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
-          child: const Icon(Icons.lock_reset_rounded,
+          child: const Icon(HugeIcons.strokeRoundedLockPassword,
               color: AppColors.primary, size: 30),
         ),
         const SizedBox(height: 24),
@@ -151,7 +152,7 @@ class _RiderForgotPasswordScreenState
           label: 'Phone Number',
           hint: 'e.g. 0241234567',
           keyboardType: TextInputType.phone,
-          prefixIcon: Icons.phone_outlined,
+          prefixIcon: HugeIcons.strokeRoundedCall,
         ),
         const SizedBox(height: 28),
         AppGradientButton(
@@ -175,7 +176,7 @@ class _RiderForgotPasswordScreenState
             color: Colors.green.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
-          child: const Icon(Icons.verified_outlined,
+          child: const Icon(HugeIcons.strokeRoundedCheckmarkBadge01,
               color: Colors.green, size: 30),
         ),
         const SizedBox(height: 24),
@@ -204,7 +205,7 @@ class _RiderForgotPasswordScreenState
           label: 'OTP Code',
           hint: 'Enter OTP',
           keyboardType: TextInputType.number,
-          prefixIcon: Icons.pin_outlined,
+          prefixIcon: HugeIcons.strokeRoundedLockKey,
         ),
         const SizedBox(height: 16),
         _buildField(
@@ -212,10 +213,10 @@ class _RiderForgotPasswordScreenState
           label: 'New Password',
           hint: 'Enter new password',
           obscure: _obscurePassword,
-          prefixIcon: Icons.lock_outline,
+          prefixIcon: HugeIcons.strokeRoundedLock,
           suffixIcon: IconButton(
             icon: Icon(
-              _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+              _obscurePassword ? HugeIcons.strokeRoundedViewOff : HugeIcons.strokeRoundedEye,
               color: Colors.grey.shade500,
               size: 20,
             ),
@@ -228,10 +229,10 @@ class _RiderForgotPasswordScreenState
           label: 'Confirm Password',
           hint: 'Confirm new password',
           obscure: _obscureConfirm,
-          prefixIcon: Icons.lock_outline,
+          prefixIcon: HugeIcons.strokeRoundedLock,
           suffixIcon: IconButton(
             icon: Icon(
-              _obscureConfirm ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+              _obscureConfirm ? HugeIcons.strokeRoundedViewOff : HugeIcons.strokeRoundedEye,
               color: Colors.grey.shade500,
               size: 20,
             ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 /// A persistent SOS floating button shown during active deliveries.
 class SosFloatingButton extends StatelessWidget {
@@ -12,7 +13,7 @@ class SosFloatingButton extends StatelessWidget {
       backgroundColor: Colors.red.shade600,
       foregroundColor: Colors.white,
       tooltip: 'SOS Emergency',
-      child: const Icon(Icons.sos_rounded, size: 28),
+      child: const Icon(HugeIcons.strokeRoundedAlert02, size: 28),
     );
   }
 

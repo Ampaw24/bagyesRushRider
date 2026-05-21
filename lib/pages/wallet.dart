@@ -6,6 +6,7 @@ import 'package:delivery_boy/services/app.services.dart';
 import 'package:delivery_boy/states/app.state.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 class Wallet extends StatefulWidget {
   @override
@@ -148,7 +149,7 @@ class _WalletState extends State<Wallet> {
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: <Widget>[
                               Icon(
-                                Icons.fastfood,
+                                HugeIcons.strokeRoundedDeliveryBox01,
                                 size: 25.0,
                                 color: primaryColor,
                               ),

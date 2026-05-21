@@ -11,6 +11,7 @@ import 'package:delivery_boy/core/router/app_routes.dart';
 import 'package:delivery_boy/core/widgets/app_gradient_button.dart';
 import 'package:delivery_boy/core/widgets/status_badge.dart';
 import 'package:delivery_boy/features/rider/profile/providers/rider_profile_providers.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 enum _DocStatus { pending, uploading, uploaded, failed }
 
@@ -22,11 +23,11 @@ class _DocConfig {
 }
 
 const _docs = [
-  _DocConfig('selfie', 'Profile Selfie', Icons.face),
-  _DocConfig('licenceFront', "Driver's Licence — Front", Icons.credit_card),
-  _DocConfig('licenceBack', "Driver's Licence — Back", Icons.credit_card_off),
-  _DocConfig('motorIssurance', 'Motor Insurance', Icons.security),
-  _DocConfig('roadWorthy', 'Roadworthy Certificate', Icons.verified),
+  _DocConfig('selfie', 'Profile Selfie', HugeIcons.strokeRoundedFaceId),
+  _DocConfig('licenceFront', "Driver's Licence — Front", HugeIcons.strokeRoundedCreditCard),
+  _DocConfig('licenceBack', "Driver's Licence — Back", HugeIcons.strokeRoundedCreditCardNotAccept),
+  _DocConfig('motorIssurance', 'Motor Insurance', HugeIcons.strokeRoundedShield01),
+  _DocConfig('roadWorthy', 'Roadworthy Certificate', HugeIcons.strokeRoundedCheckmarkBadge01),
 ];
 
 class RiderDocumentUploadScreen extends ConsumerStatefulWidget {
@@ -255,7 +256,7 @@ class _RiderDocumentUploadScreenState
                                   height: 44,
                                   color: AppColors.success
                                       .withValues(alpha: 0.1),
-                                  child: const Icon(Icons.check,
+                                  child: const Icon(HugeIcons.strokeRoundedCheckmarkCircle01,
                                       color: AppColors.success),
                                 ),
                         )
@@ -269,7 +270,7 @@ class _RiderDocumentUploadScreenState
                             width: 44,
                             height: 44,
                             alignment: Alignment.center,
-                            child: Icon(Icons.add_a_photo_outlined,
+                            child: Icon(HugeIcons.strokeRoundedCameraAdd01,
                                 color: Colors.grey.shade500, size: 20),
                           ),
                         ),

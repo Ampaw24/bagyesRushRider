@@ -9,6 +9,7 @@ import 'package:delivery_boy/pages/home/new_order.dart';
 import 'package:delivery_boy/pages/home/active_order.dart';
 import 'package:delivery_boy/pages/home/history.dart';
 import 'package:provider/provider.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 class HomeMain extends StatefulWidget {
   @override
@@ -67,8 +68,8 @@ class _HomeMainState extends State<HomeMain> {
           actions: <Widget>[
             IconButton(
               icon: queue
-                  ? Icon(Icons.toggle_on, color: Colors.green)
-                  : Icon(Icons.toggle_off, color: blackColor),
+                  ? Icon(HugeIcons.strokeRoundedToggleOn, color: Colors.green)
+                  : Icon(HugeIcons.strokeRoundedToggleOff, color: blackColor),
               onPressed: () {
                 go_online();
               },

@@ -15,6 +15,7 @@ import 'package:location/location.dart' as loc;
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 enum Trip { PICKUP, DROPOFF }
 
@@ -381,7 +382,7 @@ class _MapState extends State<Map> {
                               'Pickup',
                               style: TextStyle(color: Colors.black),
                             ),
-                            Icon(Icons.check_circle_outline,
+                            Icon(HugeIcons.strokeRoundedCheckmarkCircle01,
                                 color: trip?.index == Trip.PICKUP.index
                                     ? Colors.green
                                     : Colors.grey)
@@ -411,7 +412,7 @@ class _MapState extends State<Map> {
                               'Destination',
                               style: TextStyle(color: Colors.black),
                             ),
-                            Icon(Icons.check_circle_outline,
+                            Icon(HugeIcons.strokeRoundedCheckmarkCircle01,
                                 color: trip?.index == Trip.DROPOFF.index
                                     ? Colors.green
                                     : Colors.grey)
@@ -458,7 +459,7 @@ class _MapState extends State<Map> {
         centerTitle: true,
         leading: IconButton(
           icon: Icon(
-            Icons.arrow_back,
+            HugeIcons.strokeRoundedArrowLeft01,
             color: blackColor,
           ),
           onPressed: () {
@@ -546,7 +547,7 @@ class _MapState extends State<Map> {
               },
               backgroundColor: whiteColor,
               child: Icon(
-                Icons.assignment,
+                HugeIcons.strokeRoundedClipboard,
                 color: primaryColor,
               ),
             ),
@@ -557,7 +558,7 @@ class _MapState extends State<Map> {
               },
               backgroundColor: whiteColor,
               child: Icon(
-                Icons.call,
+                HugeIcons.strokeRoundedCall,
                 color: primaryColor,
               ),
             ),

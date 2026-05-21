@@ -11,6 +11,7 @@ import 'package:delivery_boy/features/rider/orders/models/rider_order_model.dart
 import 'package:delivery_boy/features/rider/orders/providers/rider_orders_providers.dart';
 import 'package:delivery_boy/features/rider/orders/views/widgets/rider_order_card.dart';
 import 'package:delivery_boy/features/rider/orders/views/widgets/rider_order_detail_sheet.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 /// Ordered status transition chain for the trip flow.
 const _statusChain = [
@@ -126,7 +127,7 @@ class _RiderActiveOrdersScreenState
               color: AppColors.primary.withValues(alpha: 0.08),
               shape: BoxShape.circle,
             ),
-            child: Icon(Icons.directions_bike_outlined,
+            child: Icon(HugeIcons.strokeRoundedBicycle,
                 color: AppColors.primary.withValues(alpha: 0.6), size: 44),
           ),
           const SizedBox(height: 20),
@@ -336,7 +337,7 @@ class _RatingSheetState extends State<_RatingSheet> {
               color: Color(0xFFE8F5E9),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.check_circle_outline,
+            child: const Icon(HugeIcons.strokeRoundedCheckmarkCircle01,
                 color: Colors.green, size: 32),
           ),
           const SizedBox(height: 12),
@@ -369,7 +370,7 @@ class _RatingSheetState extends State<_RatingSheet> {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 4),
                   child: Icon(
-                    i < _rating ? Icons.star_rounded : Icons.star_outline_rounded,
+                    i < _rating ? Icons.star_rounded : HugeIcons.strokeRoundedStar,
                     color: i < _rating ? Colors.amber : Colors.grey.shade300,
                     size: 40,
                   ),

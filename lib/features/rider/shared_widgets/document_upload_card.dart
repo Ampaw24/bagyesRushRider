@@ -3,6 +3,7 @@ import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/features/rider/kyc/viewmodels/kyc_viewmodel.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 /// A reusable card for uploading a single KYC document.
 /// Shows different states: idle, uploading, done, failed.
@@ -202,7 +203,7 @@ class _DoneCard extends StatelessWidget {
               height: 90,
               child: localPath != null
                   ? _SafeFileImage(path: localPath!)
-                  : const Icon(Icons.image_outlined,
+                  : const Icon(HugeIcons.strokeRoundedImage01,
                       color: AppColors.success),
             ),
           ),
@@ -214,7 +215,7 @@ class _DoneCard extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.check_circle_rounded,
+                    const Icon(HugeIcons.strokeRoundedCheckmarkCircle01,
                         color: AppColors.success, size: 16),
                     const SizedBox(width: 4),
                     Expanded(
@@ -316,7 +317,7 @@ class _FailedCard extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline_rounded,
+            const Icon(HugeIcons.strokeRoundedAlert01,
                 color: AppColors.error, size: 24),
             const SizedBox(height: 4),
             Text(
@@ -389,7 +390,7 @@ class _SafeFileImage extends StatelessWidget {
     if (!file.existsSync()) {
       return Container(
         color: Colors.grey.shade200,
-        child: const Icon(Icons.image_outlined, color: Colors.grey),
+        child: const Icon(HugeIcons.strokeRoundedImage01, color: Colors.grey),
       );
     }
     return Image.file(file, fit: BoxFit.cover);
