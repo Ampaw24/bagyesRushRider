@@ -8,21 +8,17 @@ import 'package:hugeicons/hugeicons.dart';
 
 // ── Vehicle Type Enum ─────────────────────────────────────────────────────────
 
+/// Vehicle types offered at signup.
+///
+/// Deliberately limited to the two the backend can store: `PUT /rider/me`
+/// validates `vehicle_type` as `in:"motorbike"`, so offering bicycles or
+/// tricycles here would promise a choice the API silently discards.
 enum VehicleType {
-  tricycle,
-  bicycle,
-  electricBicycle,
   motorcycle,
   electricMotorcycle;
 
   String get label {
     switch (this) {
-      case VehicleType.tricycle:
-        return 'Tricycle (Aboboyaa)';
-      case VehicleType.bicycle:
-        return 'Bicycle';
-      case VehicleType.electricBicycle:
-        return 'Electric Bicycle';
       case VehicleType.motorcycle:
         return 'Motorcycle';
       case VehicleType.electricMotorcycle:
@@ -32,12 +28,6 @@ enum VehicleType {
 
   String get description {
     switch (this) {
-      case VehicleType.tricycle:
-        return 'Three-wheeled cargo vehicle, ideal for bulk deliveries';
-      case VehicleType.bicycle:
-        return 'Pedal-powered, perfect for short local routes';
-      case VehicleType.electricBicycle:
-        return 'Battery-assisted cycling for faster local deliveries';
       case VehicleType.motorcycle:
         return 'Fast and agile for city-wide deliveries';
       case VehicleType.electricMotorcycle:
@@ -45,27 +35,20 @@ enum VehicleType {
     }
   }
 
-  IconData get icon {
-    switch (this) {
-      case VehicleType.tricycle:
-        return HugeIcons.strokeRoundedDeliveryTruck01;
-      case VehicleType.bicycle:
-        return HugeIcons.strokeRoundedBicycle;
-      case VehicleType.electricBicycle:
-        return HugeIcons.strokeRoundedMotorbike01;
-      case VehicleType.motorcycle:
-        return HugeIcons.strokeRoundedMotorbike01;
-      case VehicleType.electricMotorcycle:
-        return HugeIcons.strokeRoundedMotorbike01;
-    }
-  }
+  IconData get icon => HugeIcons.strokeRoundedMotorbike01;
 
-  bool get isElectric =>
-      this == VehicleType.electricBicycle ||
-      this == VehicleType.electricMotorcycle;
+  bool get isElectric => this == VehicleType.electricMotorcycle;
 
-  bool get requiresPlate =>
-      this != VehicleType.bicycle && this != VehicleType.electricBicycle;
+  /// Value sent as `vehicle_type` to `POST /register` (and later
+  /// `PUT /rider/me`).
+  ///
+  /// `VehicleType::selectable()` currently returns only `motorbike`, so both
+  /// tiles map to it — the electric distinction is a UI affordance the
+  /// backend cannot yet store. The server-side enum does have a `Bicycle`
+  /// case (which is why `plate_number` has a bicycle exemption), but it is
+  /// not selectable, so in practice every rider needs a plate.
+  // TODO(backend): widen when VehicleType::selectable() gains more cases.
+  String get apiValue => 'motorbike';
 }
 
 // ── Main Screen ───────────────────────────────────────────────────────────────
@@ -132,7 +115,10 @@ class _RiderVehicleInfoScreenState extends State<RiderVehicleInfoScreen>
     HapticFeedback.mediumImpact();
     context.go(AppRoutes.vehicleDetails, extra: {
       ...widget.credentials,
+      // `vehicleType` is the UI enum (the next screen reads it back for
+      // requiresPlate); `vehicle_type` is what PUT /rider/me receives.
       'vehicleType': _selectedType!.name,
+      'vehicle_type': _selectedType!.apiValue,
     });
   }
 

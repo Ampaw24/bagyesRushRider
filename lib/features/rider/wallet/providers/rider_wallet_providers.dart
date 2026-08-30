@@ -88,7 +88,7 @@ class RiderWalletNotifier extends Notifier<RiderWalletState> {
 
   Future<void> load() async {
     final userId =
-        sl<UserSessionManager>().currentUser?['_id'] as String? ?? '';
+        sl<UserSessionManager>().userId ?? '';
     state = state.copyWith(status: WalletStatus.loading, clearError: true);
     final result = await _repo.getEarnings(userId);
     result.fold(

@@ -235,13 +235,10 @@ class KycNotifier extends Notifier<KycState> {
   }
 
   Future<void> _persistKycStatus(KycStatus newStatus) async {
-    final userData = _session.currentUser;
-    if (userData == null) return;
-    final token = _session.token;
-    if (token == null) return;
-    final updatedUser = Map<String, dynamic>.from(userData);
-    updatedUser['kycStatus'] = newStatus.name;
-    await _session.saveSession(token: token, user: updatedUser);
+    // Optimistic local echo so the UI reflects a just-submitted KYC before
+    // the next GET /rider/me. The authoritative value is that endpoint's
+    // `verification_status` — see _kycStatusFrom in the dashboard.
+    await _session.updateUser({'kycStatus': newStatus.name});
   }
 }
 

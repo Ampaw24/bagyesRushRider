@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:delivery_boy/core/di/service_locator.dart';
 import 'package:delivery_boy/core/services/user_session_manager.dart';
 import 'package:delivery_boy/core/router/app_routes.dart';
+import 'package:delivery_boy/core/utils/network_utility.dart' show sessionRevision;
 
 // ── Splash / Intro ─────────────────────────────────────────────────────────────
 import 'package:delivery_boy/pages/unboardingscreen/splashscreen.dart';
@@ -29,43 +30,48 @@ import 'package:delivery_boy/features/rider/onboarding/views/screens/rider_onboa
 import 'package:delivery_boy/features/rider/kyc/views/screens/kyc_screen.dart';
 // ── Tracking ──────────────────────────────────────────────────────────────────
 import 'package:delivery_boy/features/rider/tracking/views/screens/rider_map_screen.dart';
-// ── Auth model ────────────────────────────────────────────────────────────────
-import 'package:delivery_boy/features/rider/auth/models/rider_user_model.dart';
+
+/// Routes reachable while signed out.
+///
+/// The whole signup flow is public: registration only fires on the vehicle
+/// details screen (the first point at which `POST /register` has every field
+/// it requires for a rider), so screens 1-3 always run unauthenticated, and
+/// `/otp` may run either side of a token depending on whether registration
+/// returned one.
+const _publicRoutes = {
+  AppRoutes.splash,
+  AppRoutes.intro,
+  AppRoutes.login,
+  AppRoutes.signup,
+  AppRoutes.otp,
+  AppRoutes.vehicleInfo,
+  AppRoutes.vehicleDetails,
+  AppRoutes.forgotPassword,
+};
 
 GoRouter createAppRouter() {
   return GoRouter(
-    initialLocation: AppRoutes.splash,
+    initialLocation: AppRoutes.intro,
+    // Re-evaluates the guard when a 401 clears the session mid-session.
+    refreshListenable: sessionRevision,
     redirect: (context, state) {
-      final session = sl<UserSessionManager>();
-      final isLoggedIn = session.isLoggedIn;
+      final isLoggedIn = sl<UserSessionManager>().isLoggedIn;
       final location = state.matchedLocation;
 
-      // TODO: Re-enable public route check + auth guard once API is integrated.
-      // final isPublicRoute = location == AppRoutes.splash ||
-      //     location == AppRoutes.intro ||
-      //     location == AppRoutes.login ||
-      //     location == AppRoutes.signup ||
-      //     location == AppRoutes.otp ||
-      //     location == AppRoutes.vehicleInfo ||
-      //     location == AppRoutes.vehicleDetails ||
-      //     location == AppRoutes.forgotPassword;
-      // if (!isLoggedIn && !isPublicRoute) return AppRoutes.login;
-
-      // Authenticated user landing on intro (e.g. back-press) → skip to app
-      if (isLoggedIn && location == AppRoutes.intro) {
-        final userData = session.currentUser;
-        if (userData != null) {
-          final user = RiderUserModel.fromJson(userData);
-          if (!user.isProfileComplete) return AppRoutes.onboarding;
-        }
+      // Signed in and back on the entry screens → straight into the app.
+      // Profile-completeness is no longer gated here: it now depends on
+      // GET /rider/me, which this synchronous callback cannot await.
+      // The dashboard drives that prompt instead.
+      if (isLoggedIn &&
+          (location == AppRoutes.intro || location == AppRoutes.splash)) {
         return AppRoutes.dashboard;
       }
 
-      // Unauthenticated user trying to reach a protected screen
-      // TODO: Re-enable auth guard once API is integrated.
-      // if (!isLoggedIn && !isPublicRoute) return AppRoutes.login;
+      // Signed out and heading somewhere protected.
+      if (!isLoggedIn && !_publicRoutes.contains(location)) {
+        return AppRoutes.login;
+      }
 
-      // Splash is always allowed — SplashScreen itself drives navigation
       return null;
     },
     routes: [
@@ -111,8 +117,14 @@ GoRouter createAppRouter() {
       ),
       GoRoute(
         path: AppRoutes.signup,
-        pageBuilder: (_, state) =>
-            _slideRight(state, const RiderSignupScreen()),
+        pageBuilder: (_, state) => _slideRight(
+          state,
+          // `extra` carries the form back when registration fails on a later
+          // screen for a field typed here, so the rider isn't retyping it.
+          RiderSignupScreen(
+            prefill: (state.extra as Map<String, dynamic>?) ?? const {},
+          ),
+        ),
       ),
       GoRoute(
         path: AppRoutes.otp,

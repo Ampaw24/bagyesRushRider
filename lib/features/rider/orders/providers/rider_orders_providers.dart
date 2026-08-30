@@ -10,7 +10,7 @@ import 'package:delivery_boy/features/rider/orders/repositories/rider_orders_rep
 enum OrdersStatus { initial, loading, loaded, error }
 
 String _userId() =>
-    sl<UserSessionManager>().currentUser?['_id'] as String? ?? '';
+    sl<UserSessionManager>().userId ?? '';
 
 // ── New Orders ────────────────────────────────────────────────────────────────
 

@@ -57,7 +57,10 @@ class RiderUserModel extends Equatable {
 
   factory RiderUserModel.fromJson(Map<String, dynamic> json) {
     return RiderUserModel(
-      id: json['_id'] as String,
+      // Tolerant of both the legacy `_id` and the Laravel `id`, and never
+      // throws on a missing key — this is parsed inside GoRouter's redirect,
+      // where an exception is unrecoverable.
+      id: (json['_id'] ?? json['id'])?.toString() ?? '',
       name: json['name'] as String?,
       phone: json['phone'] as String?,
       email: json['email'] as String?,

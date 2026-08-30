@@ -7,6 +7,7 @@ import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/core/router/app_routes.dart';
 import 'package:delivery_boy/core/widgets/app_gradient_button.dart';
 import 'package:delivery_boy/features/rider/auth/viewmodels/rider_auth_viewmodel.dart';
+import 'package:delivery_boy/features/rider/shared_widgets/app_phone_field.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 enum _ForgotStep { enterPhone, enterOtpAndPassword }
@@ -71,7 +72,7 @@ class _RiderForgotPasswordScreenState
         );
       }
       // Step 1 success: OTP was sent
-      if (_step == _ForgotStep.enterPhone && next.otpSent) {
+      if (_step == _ForgotStep.enterPhone && next.codeSent) {
         setState(() {
           _step = _ForgotStep.enterOtpAndPassword;
           _animCtrl.reset();
@@ -147,12 +148,22 @@ class _RiderForgotPasswordScreenState
           ),
         ),
         const SizedBox(height: 32),
-        _buildField(
-          controller: _phoneCtrl,
-          label: 'Phone Number',
-          hint: 'e.g. 0241234567',
-          keyboardType: TextInputType.phone,
-          prefixIcon: HugeIcons.strokeRoundedCall,
+        Text(
+          'Phone Number',
+          style: TextStyle(
+            fontFamily: 'Roboto',
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: Colors.grey.shade700,
+          ),
+        ),
+        const SizedBox(height: 8),
+        // Same widget as login/signup so the number is submitted in the
+        // identical E.164 form — a local-format number would silently
+        // target a non-existent account.
+        AppPhoneField(
+          digitController: _phoneCtrl,
+          onChanged: (full) => _phone = full,
         ),
         const SizedBox(height: 28),
         AppGradientButton(
@@ -248,11 +259,15 @@ class _RiderForgotPasswordScreenState
         const SizedBox(height: 16),
         Center(
           child: TextButton(
-            onPressed: () => setState(() {
-              _step = _ForgotStep.enterPhone;
-              _animCtrl.reset();
-              _animCtrl.forward();
-            }),
+            onPressed: () {
+              // Clear the sent flag, or the listener immediately re-advances.
+              ref.read(riderAuthProvider.notifier).clearCodeSent();
+              setState(() {
+                _step = _ForgotStep.enterPhone;
+                _animCtrl.reset();
+                _animCtrl.forward();
+              });
+            },
             child: const Text(
               'Change phone number',
               style: TextStyle(color: AppColors.primary),
@@ -331,13 +346,12 @@ class _RiderForgotPasswordScreenState
   }
 
   Future<void> _sendOtp() async {
-    final phone = _phoneCtrl.text.trim();
-    if (phone.length < 10) {
+    if (_phoneCtrl.text.trim().length < 9) {
       Fluttertoast.showToast(msg: 'Enter a valid phone number');
       return;
     }
-    _phone = phone;
-    await ref.read(riderAuthProvider.notifier).sendOtp(phone: phone);
+    // Dedicated forgot-password endpoint — not the phone-verification one.
+    await ref.read(riderAuthProvider.notifier).sendForgotPasswordCode(_phone);
   }
 
   Future<void> _resetPassword() async {
@@ -358,9 +372,14 @@ class _RiderForgotPasswordScreenState
       return;
     }
 
-    final ok = await ref
-        .read(riderAuthProvider.notifier)
-        .resetPassword(phone: _phone, newPassword: password);
+    // The code MUST be submitted — the backend re-validates it here. Without
+    // it any digits would reset the password of any account.
+    final ok = await ref.read(riderAuthProvider.notifier).resetPassword(
+          phone: _phone,
+          code: otp,
+          password: password,
+          confirmPassword: confirm,
+        );
 
     if (ok && mounted) {
       HapticFeedback.lightImpact();

@@ -31,6 +31,16 @@ import 'package:delivery_boy/features/rider/notifications/services/rider_notific
 import 'package:delivery_boy/features/rider/kyc/services/kyc_api_service.dart';
 import 'package:delivery_boy/features/rider/kyc/repositories/kyc_repository.dart';
 import 'package:delivery_boy/features/rider/kyc/repositories/kyc_repository_impl.dart';
+// Rider "Me" API (/rider/me/* — see the "v1 / rider" Postman collection)
+import 'package:delivery_boy/features/rider/profile/services/rider_me_profile_api_service.dart';
+import 'package:delivery_boy/features/rider/profile/repositories/rider_me_profile_repository.dart';
+import 'package:delivery_boy/features/rider/profile/repositories/rider_me_profile_repository_impl.dart';
+import 'package:delivery_boy/features/rider/orders/services/rider_me_order_api_service.dart';
+import 'package:delivery_boy/features/rider/orders/repositories/rider_me_order_repository.dart';
+import 'package:delivery_boy/features/rider/orders/repositories/rider_me_order_repository_impl.dart';
+import 'package:delivery_boy/features/rider/wallet/services/rider_me_wallet_api_service.dart';
+import 'package:delivery_boy/features/rider/wallet/repositories/rider_me_wallet_repository.dart';
+import 'package:delivery_boy/features/rider/wallet/repositories/rider_me_wallet_repository_impl.dart';
 
 final sl = GetIt.instance;
 
@@ -87,5 +97,21 @@ Future<void> initServiceLocator() async {
   sl.registerLazySingleton(() => KycApiService(sl<Dio>()));
   sl.registerLazySingleton<KycRepository>(
     () => KycRepositoryImpl(sl<KycApiService>()),
+  );
+
+  // ── Rider "Me" API (/rider/me/* — see the "v1 / rider" Postman collection) ──────────
+  sl.registerLazySingleton(() => RiderMeProfileApiService(sl<Dio>()));
+  sl.registerLazySingleton<RiderMeProfileRepository>(
+    () => RiderMeProfileRepositoryImpl(sl<RiderMeProfileApiService>()),
+  );
+
+  sl.registerLazySingleton(() => RiderMeOrderApiService(sl<Dio>()));
+  sl.registerLazySingleton<RiderMeOrderRepository>(
+    () => RiderMeOrderRepositoryImpl(sl<RiderMeOrderApiService>()),
+  );
+
+  sl.registerLazySingleton(() => RiderMeWalletApiService(sl<Dio>()));
+  sl.registerLazySingleton<RiderMeWalletRepository>(
+    () => RiderMeWalletRepositoryImpl(sl<RiderMeWalletApiService>()),
   );
 }

@@ -7,6 +7,7 @@ import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/core/di/service_locator.dart';
 import 'package:delivery_boy/core/router/app_routes.dart';
 import 'package:delivery_boy/core/services/user_session_manager.dart';
+import 'package:delivery_boy/features/rider/auth/models/rider_user_model.dart';
 import 'package:delivery_boy/features/rider/dashboard/views/screens/rider_dashboard_screen.dart';
 import 'package:delivery_boy/features/rider/home/views/widgets/customer_drawer.dart';
 import 'package:delivery_boy/features/rider/notifications/providers/rider_notifications_providers.dart';
@@ -141,8 +142,7 @@ class _RiderHomeScreenState extends ConsumerState<RiderHomeScreen>
   }
 
   String get _riderName {
-    final user = sl<UserSessionManager>().currentUser;
-    final name = user?['name'] as String? ?? user?['fullName'] as String? ?? '';
+    final name = sl<UserSessionManager>().displayName ?? '';
     return name.isNotEmpty ? name.split(' ').first : 'Rider';
   }
 
@@ -279,6 +279,8 @@ class _RiderHomeScreenState extends ConsumerState<RiderHomeScreen>
               onWallet: widget.onViewWallet,
               onLogout: _handleLogout,
               onDeleteAccount: _handleDeleteAccount,
+              isVerified:
+                  ref.watch(riderKycStatusProvider) == KycStatus.approved,
             ),
         ],
       ),

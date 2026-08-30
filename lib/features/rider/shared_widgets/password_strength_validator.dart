@@ -4,11 +4,18 @@ import 'package:hugeicons/hugeicons.dart';
 
 enum PasswordStrength { weak, medium, strong }
 
-/// Evaluates password strength based on 4 criteria.
-/// Returns: weak (0-1), medium (2-3), strong (4).
+/// Evaluates password strength.
+///
+/// Length is a **hard gate, not a point**: the backend enforces `min:8`, so
+/// anything shorter must be [PasswordStrength.weak] no matter how many other
+/// criteria it meets. (Scored as one of four equal points, `"Ab1!"` reached
+/// `medium` on 3 points and sailed past the signup gate straight into a 422.)
+///
+/// Above 8 characters: weak (1), medium (2-3), strong (4).
 PasswordStrength evaluatePasswordStrength(String password) {
-  int score = 0;
-  if (password.length >= 8) score++;
+  if (password.length < 8) return PasswordStrength.weak;
+
+  int score = 1; // length requirement satisfied
   if (password.contains(RegExp(r'[A-Z]'))) score++;
   if (password.contains(RegExp(r'[0-9]'))) score++;
   if (password.contains(RegExp(r'[!@#\$%^&*(),.?":{}|<>_\-]'))) score++;

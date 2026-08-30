@@ -12,6 +12,7 @@ import 'package:delivery_boy/core/services/user_session_manager.dart';
 import 'package:delivery_boy/features/rider/auth/models/rider_user_model.dart';
 import 'package:delivery_boy/core/widgets/sos_floating_button.dart';
 import 'package:delivery_boy/features/rider/notifications/providers/rider_notifications_providers.dart';
+import 'package:delivery_boy/features/rider/profile/providers/rider_me_profile_providers.dart';
 import 'package:delivery_boy/features/rider/orders/providers/rider_orders_providers.dart';
 import 'package:delivery_boy/features/rider/home/views/screens/rider_home_screen.dart';
 import 'package:delivery_boy/features/rider/orders/views/screens/rider_new_orders_screen.dart';
@@ -21,10 +22,9 @@ import 'package:delivery_boy/features/rider/wallet/views/screens/rider_wallet_sc
 import 'package:delivery_boy/features/rider/profile/views/screens/rider_profile_screen.dart';
 import 'package:hugeicons/hugeicons.dart';
 
-/// Provider for online/offline queue toggle state
-final riderQueueProvider = StateProvider<bool>((ref) {
-  final user = sl<UserSessionManager>().currentUser;
-  return user?['queue'] as bool? ?? false;
+/// Online/offline state, sourced from `GET /rider/me`'s `is_online`.
+final riderQueueProvider = Provider<bool>((ref) {
+  return ref.watch(riderMeProfileProvider).profile?.isOnline ?? false;
 });
 
 /// Tracks whether the rider dismissed the KYC reminder banner this session.
@@ -32,20 +32,39 @@ final kycBannerDismissedProvider = StateProvider<bool>((ref) {
   return sl<SharedPreferences>().getBool('kyc_banner_dismissed') ?? false;
 });
 
-KycStatus _currentKycStatus() {
-  final userData = sl<UserSessionManager>().currentUser;
-  if (userData == null) return KycStatus.notStarted;
-  switch (userData['kycStatus'] as String?) {
+/// Maps `/rider/me`'s `verification_status` onto the local [KycStatus].
+///
+/// Deliberately permissive about the wire vocabulary — anything
+/// unrecognised falls back to [KycStatus.notStarted] rather than
+/// mis-reporting a rider as verified.
+KycStatus kycStatusFrom(String? raw) {
+  switch (raw) {
     case 'approved':
+    case 'verified':
       return KycStatus.approved;
     case 'pendingReview':
+    case 'pending_review':
+    case 'under_review':
+    case 'pending':
+    case 'submitted':
       return KycStatus.pendingReview;
     case 'rejected':
+    case 'declined':
       return KycStatus.rejected;
     default:
       return KycStatus.notStarted;
   }
 }
+
+/// Current verification status, preferring the server value and falling
+/// back to the optimistic local echo written after a KYC submission.
+final riderKycStatusProvider = Provider<KycStatus>((ref) {
+  final remote = ref.watch(riderMeProfileProvider).profile?.verificationStatus;
+  if (remote != null) return kycStatusFrom(remote);
+  return kycStatusFrom(
+    sl<UserSessionManager>().currentUser?['kycStatus'] as String?,
+  );
+});
 
 class RiderDashboardScreen extends ConsumerStatefulWidget {
   const RiderDashboardScreen({super.key});
@@ -64,43 +83,45 @@ class _RiderDashboardScreenState extends ConsumerState<RiderDashboardScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(riderNotificationsProvider.notifier).load();
+      // Populates is_online + verification_status for this screen.
+      ref.read(riderMeProfileProvider.notifier).load();
     });
   }
 
   Future<void> _toggleQueue() async {
-    try {
-      final session = sl<UserSessionManager>();
-      final user = session.currentUser;
-      if (user == null) return;
+    final currentQueue = ref.read(riderQueueProvider);
 
-      final currentQueue = ref.read(riderQueueProvider);
-      // Block going online if KYC is not approved
-      if (!currentQueue && _currentKycStatus() != KycStatus.approved) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Complete identity verification to go online'),
-            backgroundColor: AppColors.warning,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-        return;
-      }
-
-      final newQueue = !currentQueue;
-
-      ref.read(riderQueueProvider.notifier).state = newQueue;
-      HapticFeedback.lightImpact();
-
-      final updatedUser = Map<String, dynamic>.from(user)
-        ..['queue'] = newQueue;
-      await session.saveSession(
-        token: session.token!,
-        user: updatedUser,
+    // Block going online until identity verification is approved.
+    if (!currentQueue &&
+        ref.read(riderKycStatusProvider) != KycStatus.approved) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Complete identity verification to go online'),
+          backgroundColor: AppColors.warning,
+          behavior: SnackBarBehavior.floating,
+        ),
       );
-    } catch (_) {
-      ref.read(riderQueueProvider.notifier).state =
-          !ref.read(riderQueueProvider);
+      return;
+    }
+
+    HapticFeedback.lightImpact();
+
+    // setAvailability patches profile.isOnline only once the server
+    // confirms, so riderQueueProvider follows it without extra bookkeeping
+    // and a failed toggle simply leaves the previous state showing.
+    final ok = await ref
+        .read(riderMeProfileProvider.notifier)
+        .setAvailability(!currentQueue);
+
+    if (!ok && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not update your availability'),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
     }
   }
 
@@ -529,7 +550,7 @@ class _KycBanner extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final kycStatus = _currentKycStatus();
+    final kycStatus = ref.watch(riderKycStatusProvider);
     final dismissed = ref.watch(kycBannerDismissedProvider);
 
     if (kycStatus == KycStatus.approved) return const SizedBox.shrink();

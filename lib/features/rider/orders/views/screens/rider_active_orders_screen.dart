@@ -222,7 +222,7 @@ class _TripActionButtonState extends ConsumerState<_TripActionButton> {
     setState(() => _loading = true);
 
     final notifier = ref.read(activeOrdersProvider.notifier);
-    final userId = sl<UserSessionManager>().currentUser?['_id'] as String? ?? '';
+    final userId = sl<UserSessionManager>().userId ?? '';
     final orderId = widget.order.id;
     bool ok = false;
 

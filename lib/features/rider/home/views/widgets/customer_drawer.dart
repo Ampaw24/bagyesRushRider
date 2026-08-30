@@ -36,6 +36,10 @@ class CustomerDrawer extends StatefulWidget {
   final VoidCallback onLogout;
   final VoidCallback onDeleteAccount;
 
+  /// Supplied by the parent, which already watches the rider profile —
+  /// verification state lives on `GET /rider/me`, not in the session.
+  final bool isVerified;
+
   const CustomerDrawer({
     super.key,
     required this.onClose,
@@ -43,6 +47,7 @@ class CustomerDrawer extends StatefulWidget {
     required this.onWallet,
     required this.onLogout,
     required this.onDeleteAccount,
+    this.isVerified = false,
   });
 
   @override
@@ -131,11 +136,11 @@ class _CustomerDrawerState extends State<CustomerDrawer>
     final drawerWidth = w * 0.78;
 
     // Session info
-    final user = sl<UserSessionManager>().currentUser;
-    final name = ((user?['name'] ?? user?['fullName'] ?? '') as String).trim();
+    final session = sl<UserSessionManager>();
+    final name = (session.displayName ?? '').trim();
     final displayName = name.isNotEmpty ? name : 'Rider';
-    final email = (user?['email'] as String?) ?? '';
-    final isVerified = user?['kycStatus'] == 'approved';
+    final email = session.email ?? '';
+    final isVerified = widget.isVerified;
     final initials = displayName
         .split(' ')
         .where((s) => s.isNotEmpty)

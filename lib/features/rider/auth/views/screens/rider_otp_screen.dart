@@ -1,27 +1,34 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:go_router/go_router.dart';
 import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/core/router/app_routes.dart';
 import 'package:delivery_boy/core/widgets/app_gradient_button.dart';
+import 'package:delivery_boy/features/rider/auth/viewmodels/rider_auth_viewmodel.dart';
+import 'package:delivery_boy/features/rider/profile/providers/rider_me_profile_providers.dart';
 import 'package:delivery_boy/features/rider/shared_widgets/otp_input_field.dart';
 import 'package:hugeicons/hugeicons.dart';
 
-// TODO: Re-integrate API calls (sendOtp, signup) once backend is ready.
-
-class RiderOtpScreen extends StatefulWidget {
-  /// Passed via GoRouter extra:
-  /// {'name': String, 'phone': String, 'email': String?, 'password': String}
+/// Phone verification. Reached from two paths:
+///  - signup: carries the vehicle fields collected on the previous screens,
+///    which are submitted to `PUT /rider/me` once verification yields a token;
+///  - login of an unverified account: `mode == 'verify'`, no vehicle data.
+class RiderOtpScreen extends ConsumerStatefulWidget {
+  /// Passed via GoRouter extra: `{phone, email, password, mode?,
+  /// vehicle_type?, plate_number?, vehicle_make?, vehicle_model?,
+  /// vehicle_colour?, vehicle_year?}`
   final Map<String, dynamic> credentials;
 
   const RiderOtpScreen({super.key, required this.credentials});
 
   @override
-  State<RiderOtpScreen> createState() => _RiderOtpScreenState();
+  ConsumerState<RiderOtpScreen> createState() => _RiderOtpScreenState();
 }
 
-class _RiderOtpScreenState extends State<RiderOtpScreen>
+class _RiderOtpScreenState extends ConsumerState<RiderOtpScreen>
     with SingleTickerProviderStateMixin {
   final _otpKey = GlobalKey<OtpInputFieldState>();
 
@@ -33,7 +40,12 @@ class _RiderOtpScreenState extends State<RiderOtpScreen>
   Timer? _countdownTimer;
   String _otp = '';
 
+  /// Guards against the double-submit the completion callback and the
+  /// button would otherwise cause together.
+  bool _busy = false;
+
   String get _phone => widget.credentials['phone'] as String? ?? '';
+  String? get _password => widget.credentials['password'] as String?;
 
   bool get _isComplete => _otp.length == 6;
 
@@ -51,7 +63,7 @@ class _RiderOtpScreenState extends State<RiderOtpScreen>
       CurvedAnimation(parent: _animController, curve: Curves.easeOut),
     );
     _animController.forward();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _startCountdown());
+    WidgetsBinding.instance.addPostFrameCallback((_) => _sendCode());
   }
 
   @override
@@ -59,6 +71,14 @@ class _RiderOtpScreenState extends State<RiderOtpScreen>
     _countdownTimer?.cancel();
     _animController.dispose();
     super.dispose();
+  }
+
+  /// Requests a code, and only then starts the resend countdown.
+  Future<void> _sendCode() async {
+    final sent =
+        await ref.read(riderAuthProvider.notifier).sendPhoneCode(_phone);
+    if (!mounted) return;
+    if (sent) _startCountdown();
   }
 
   void _startCountdown() {
@@ -79,14 +99,85 @@ class _RiderOtpScreenState extends State<RiderOtpScreen>
     });
   }
 
-  void _submit() {
-    if (!_isComplete) return;
+  Future<void> _submit() async {
+    if (!_isComplete || _busy) return;
+    setState(() => _busy = true);
     HapticFeedback.mediumImpact();
-    context.go(AppRoutes.dashboard);
+
+    final ok =
+        await ref.read(riderAuthProvider.notifier).verifyPhoneAndEnsureSession(
+              phone: _phone,
+              code: _otp,
+              password: _password,
+            );
+
+    if (!ok) {
+      if (mounted) setState(() => _busy = false);
+      return;
+    }
+
+    await _submitVehicleProfile();
+    if (mounted) context.go(AppRoutes.dashboard);
   }
+
+  /// Submits the vehicle fields gathered during signup. A failure here must
+  /// not block entry — the rider has verified their phone and can correct
+  /// these later from the profile screen.
+  Future<void> _submitVehicleProfile() async {
+    final c = widget.credentials;
+    if (c['vehicle_type'] == null) return; // login-verify path
+
+    // Only the fields /register does NOT accept. vehicle_type and
+    // plate_number were set atomically at registration; re-sending the plate
+    // would re-run `unique:riders,plate_number` against the rider's own row.
+    const keys = [
+      'vehicle_make',
+      'vehicle_model',
+      'vehicle_colour',
+      'vehicle_year',
+    ];
+    final body = {
+      for (final k in keys)
+        if (c[k] != null) k: c[k],
+    };
+
+    final ok = await ref
+        .read(riderMeProfileProvider.notifier)
+        .updateProfile(body);
+
+    if (!ok && mounted) {
+      Fluttertoast.showToast(
+        msg: 'Vehicle details need re-entering in your profile',
+        backgroundColor: AppColors.warning,
+      );
+    }
+  }
+
+  /// Both paths exit to login rather than back into the signup form.
+  ///
+  /// By the time this screen is reached the account is already created, and
+  /// `/register` can't amend it — so an editable form here would silently
+  /// discard whatever the rider changed. They can sign in and finish
+  /// verifying instead.
+  void _goBack() => context.go(AppRoutes.login);
 
   @override
   Widget build(BuildContext context) {
+    final isLoading = ref.watch(riderAuthProvider).isLoading || _busy;
+
+    ref.listen<RiderAuthState>(riderAuthProvider, (_, next) {
+      if (!mounted) return;
+      if (next.errorMessage != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(next.errorMessage!),
+            backgroundColor: AppColors.error,
+          ),
+        );
+        ref.read(riderAuthProvider.notifier).clearError();
+      }
+    });
+
     return Scaffold(
       backgroundColor: AppColors.scaffold,
       appBar: AppBar(
@@ -95,10 +186,7 @@ class _RiderOtpScreenState extends State<RiderOtpScreen>
         leading: IconButton(
           icon: const Icon(HugeIcons.strokeRoundedArrowLeft01,
               color: AppColors.textPrimary, size: 20),
-          onPressed: () => context.go(
-            AppRoutes.vehicleDetails,
-            extra: widget.credentials,
-          ),
+          onPressed: _goBack,
         ),
       ),
       body: FadeTransition(
@@ -148,7 +236,7 @@ class _RiderOtpScreenState extends State<RiderOtpScreen>
                 OtpInputField(
                   key: _otpKey,
                   digitCount: 6,
-                  enabled: true,
+                  enabled: !isLoading,
                   onCompleted: (otp) {
                     setState(() => _otp = otp);
                     _submit();
@@ -180,7 +268,7 @@ class _RiderOtpScreenState extends State<RiderOtpScreen>
                             ),
                           )
                         : GestureDetector(
-                            onTap: _startCountdown,
+                            onTap: isLoading ? null : _sendCode,
                             child: const Text(
                               'Resend',
                               style: TextStyle(
@@ -197,8 +285,8 @@ class _RiderOtpScreenState extends State<RiderOtpScreen>
                 const SizedBox(height: 40),
 
                 AppGradientButton(
-                  label: 'Verify & Continue',
-                  onPressed: _isComplete ? _submit : null,
+                  label: isLoading ? 'Verifying…' : 'Verify & Continue',
+                  onPressed: (_isComplete && !isLoading) ? _submit : null,
                 ),
 
                 const SizedBox(height: 32),

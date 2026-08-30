@@ -53,17 +53,14 @@ class RiderProfileNotifier extends Notifier<RiderProfileState> {
   UserSessionManager get _session => sl<UserSessionManager>();
 
   Future<void> load() async {
-    final userId = _session.currentUser?['_id'] as String? ?? '';
+    final userId = _session.userId ?? '';
     state = state.copyWith(status: ProfileStatus.loading, clearError: true);
     final result = await _repo.getProfile(userId);
     result.fold(
       (f) => state =
           state.copyWith(status: ProfileStatus.error, errorMessage: f.message),
       (user) async {
-        await _session.saveSession(
-          token: _session.token!,
-          user: user.toJson(),
-        );
+        await _session.saveUser(user.toJson());
         state = state.copyWith(status: ProfileStatus.loaded, user: user);
       },
     );
@@ -79,10 +76,7 @@ class RiderProfileNotifier extends Notifier<RiderProfileState> {
         return false;
       },
       (user) async {
-        await _session.saveSession(
-          token: _session.token!,
-          user: user.toJson(),
-        );
+        await _session.saveUser(user.toJson());
         state = state.copyWith(status: ProfileStatus.loaded, user: user);
         return true;
       },
@@ -99,10 +93,7 @@ class RiderProfileNotifier extends Notifier<RiderProfileState> {
         return false;
       },
       (user) async {
-        await _session.saveSession(
-          token: _session.token!,
-          user: user.toJson(),
-        );
+        await _session.saveUser(user.toJson());
         state = state.copyWith(status: ProfileStatus.loaded, user: user);
         return true;
       },

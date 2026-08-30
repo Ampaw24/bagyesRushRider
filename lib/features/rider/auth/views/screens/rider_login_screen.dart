@@ -63,15 +63,25 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
 
   Future<void> _login() async {
     FocusManager.instance.primaryFocus?.unfocus();
-    // TODO: re-enable API login before release
-    // if (!_formKey.currentState!.validate()) return;
-    // final success = await ref.read(riderAuthProvider.notifier).login(
-    //       phone: _fullPhone,
-    //       password: _password,
-    //     );
-    // if (success && mounted) {
-    //   context.go(AppRoutes.dashboard);
-    // }
+    if (!_formKey.currentState!.validate()) return;
+
+    final success = await ref.read(riderAuthProvider.notifier).login(
+          phone: _fullPhone,
+          password: _password,
+        );
+    if (!success || !mounted) return;
+
+    // An account that never completed phone verification resumes there.
+    final user = ref.read(riderAuthProvider).user;
+    if (user != null && !user.phoneVerified) {
+      context.go(AppRoutes.otp, extra: {
+        'phone': _fullPhone,
+        'password': _password,
+        'mode': 'verify',
+      });
+      return;
+    }
+
     context.go(AppRoutes.dashboard);
   }
 
@@ -404,7 +414,8 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
                               width: double.infinity,
                               height: (h * 0.072).clamp(50.0, 60.0),
                               child: ElevatedButton(
-                                onPressed: _login,
+                                onPressed:
+                                    (isLoading || !_isFilled) ? null : _login,
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: AppColors.primary,
                                   disabledBackgroundColor:

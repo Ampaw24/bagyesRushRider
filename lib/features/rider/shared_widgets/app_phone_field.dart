@@ -30,12 +30,19 @@ class AppPhoneField extends StatefulWidget {
   final TextEditingController? digitController;
   final String initialCountryCode;
 
+  /// Local digits to pre-populate (no country code), for restoring a
+  /// half-finished form. Seeds the enclosing [FormField]'s value too —
+  /// without that, a prefilled number fails validation because the
+  /// FormField still holds ''.
+  final String? initialDigits;
+
   const AppPhoneField({
     super.key,
     this.onChanged,
     this.validator,
     this.digitController,
     this.initialCountryCode = '+233',
+    this.initialDigits,
   });
 
   @override
@@ -58,6 +65,9 @@ class _AppPhoneFieldState extends State<AppPhoneField> {
       orElse: () => _countryCodes.first,
     );
     _ctrl = widget.digitController ?? TextEditingController();
+    if (widget.initialDigits != null && _ctrl.text.isEmpty) {
+      _ctrl.text = widget.initialDigits!;
+    }
     _focusNode = FocusNode()
       ..addListener(() {
         setState(() => _isFocused = _focusNode.hasFocus);
@@ -148,7 +158,7 @@ class _AppPhoneFieldState extends State<AppPhoneField> {
   @override
   Widget build(BuildContext context) {
     return FormField<String>(
-      initialValue: '',
+      initialValue: '$_selectedCode${_ctrl.text}',
       validator: widget.validator ??
           (v) {
             final digits = _ctrl.text.trim();

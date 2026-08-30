@@ -40,6 +40,10 @@ void main() async {
   );
 }
 
+/// Built once. Constructing a GoRouter inside `build()` would hand
+/// MaterialApp a fresh router on every rebuild, discarding navigation state.
+final _appRouter = createAppRouter();
+
 class BagyesRushApp extends StatelessWidget {
   const BagyesRushApp({super.key});
 
@@ -49,7 +53,7 @@ class BagyesRushApp extends StatelessWidget {
       title: 'Delivery Boy',
       theme: AppTheme.light,
       debugShowCheckedModeBanner: false,
-      routerConfig: createAppRouter(),
+      routerConfig: _appRouter,
     );
   }
 }

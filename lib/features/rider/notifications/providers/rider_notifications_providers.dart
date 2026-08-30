@@ -49,7 +49,7 @@ class RiderNotificationsNotifier extends Notifier<RiderNotificationsState> {
   Future<void> load() async {
     state = state.copyWith(status: NotificationsStatus.loading);
 
-    final userId = sl<UserSessionManager>().currentUser?['_id']?.toString();
+    final userId = sl<UserSessionManager>().userId;
     if (userId == null) {
       state = state.copyWith(
         status: NotificationsStatus.error,

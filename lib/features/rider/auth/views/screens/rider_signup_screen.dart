@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -7,29 +8,43 @@ import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/constant/asset_images.dart';
 import 'package:delivery_boy/core/router/app_routes.dart';
 import 'package:delivery_boy/core/widgets/app_gradient_button.dart';
+import 'package:delivery_boy/features/rider/auth/viewmodels/rider_auth_viewmodel.dart';
 import 'package:delivery_boy/features/rider/shared_widgets/app_text_field.dart';
 import 'package:delivery_boy/features/rider/shared_widgets/app_password_field.dart';
 import 'package:delivery_boy/features/rider/shared_widgets/app_phone_field.dart';
 import 'package:delivery_boy/features/rider/shared_widgets/password_strength_validator.dart';
 
-class RiderSignupScreen extends StatefulWidget {
-  const RiderSignupScreen({super.key});
+class RiderSignupScreen extends ConsumerStatefulWidget {
+  /// Values to restore into the form, forwarded back here when registration
+  /// fails on a later screen for a field typed on this one. Empty on a fresh
+  /// start.
+  final Map<String, dynamic> prefill;
+
+  const RiderSignupScreen({super.key, this.prefill = const {}});
 
   @override
-  State<RiderSignupScreen> createState() => _RiderSignupScreenState();
+  ConsumerState<RiderSignupScreen> createState() => _RiderSignupScreenState();
 }
 
-class _RiderSignupScreenState extends State<RiderSignupScreen>
+class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
     with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
-  final _nameCtrl = TextEditingController();
+  final _firstNameCtrl = TextEditingController();
+  final _lastNameCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
+  final _cityCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
   final _confirmCtrl = TextEditingController();
+  final _phoneDigitsCtrl = TextEditingController();
 
   String _phone = '';
   String _password = '';
   DateTime? _lastBackPress;
+
+  /// Server-side rejections for fields on this screen, seeded on arrival
+  /// when we've been sent back from the vehicle screen. Cleared per-field as
+  /// the user edits.
+  Map<String, String> _serverErrors = {};
 
   late AnimationController _animController;
   late Animation<double> _fadeAnim;
@@ -52,30 +67,82 @@ class _RiderSignupScreenState extends State<RiderSignupScreen>
     _passwordCtrl.addListener(() {
       setState(() => _password = _passwordCtrl.text);
     });
+    _restorePrefill();
+  }
+
+  /// Repopulates the form when we've been bounced back from a failed
+  /// registration, and surfaces whichever field the server rejected.
+  void _restorePrefill() {
+    final p = widget.prefill;
+    if (p.isEmpty) return;
+
+    _firstNameCtrl.text = (p['first_name'] as String?) ?? '';
+    _lastNameCtrl.text = (p['last_name'] as String?) ?? '';
+    _emailCtrl.text = (p['email'] as String?) ?? '';
+    _cityCtrl.text = (p['city'] as String?) ?? '';
+    _passwordCtrl.text = (p['password'] as String?) ?? '';
+    _confirmCtrl.text = (p['password'] as String?) ?? '';
+    _password = _passwordCtrl.text;
+
+    // AppPhoneField wants the local digits; the map carries E.164.
+    final fullPhone = (p['phone'] as String?) ?? '';
+    _phone = fullPhone;
+    _phoneDigitsCtrl.text = _localDigitsOf(fullPhone);
+
+    final errors = (p['field_errors'] as Map?)?.cast<String, String>();
+    if (errors != null && errors.isNotEmpty) {
+      _serverErrors = Map.of(errors);
+      // Run validation once mounted so the rejected field is already marked.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _formKey.currentState?.validate();
+      });
+    }
+  }
+
+  /// Strips the country code so the digits can seed AppPhoneField.
+  String _localDigitsOf(String e164) {
+    final match = RegExp(r'^\+\d{1,4}').firstMatch(e164);
+    return match == null ? e164 : e164.substring(match.end);
+  }
+
+  /// Consumes a server error once — the message stops applying as soon as
+  /// the user edits that field.
+  String? _takeServerError(String field) => _serverErrors[field];
+
+  void _clearServerError(String field) {
+    if (_serverErrors.containsKey(field)) {
+      setState(() => _serverErrors.remove(field));
+    }
   }
 
   @override
   void dispose() {
     _animController.dispose();
-    _nameCtrl.dispose();
+    _firstNameCtrl.dispose();
+    _lastNameCtrl.dispose();
     _emailCtrl.dispose();
+    _cityCtrl.dispose();
     _passwordCtrl.dispose();
     _confirmCtrl.dispose();
+    _phoneDigitsCtrl.dispose();
     super.dispose();
   }
 
   bool get _isFilled {
     final strength = evaluatePasswordStrength(_password);
     final emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
-    return _nameCtrl.text.trim().length >= 2 &&
+    return _firstNameCtrl.text.trim().length >= 2 &&
+        _lastNameCtrl.text.trim().length >= 2 &&
         _phone.length >= 9 &&
         emailRegex.hasMatch(_emailCtrl.text.trim()) &&
-        _password.isNotEmpty &&
+        _cityCtrl.text.trim().isNotEmpty &&
+        _password.length >= 8 && // backend: min:8
         strength != PasswordStrength.weak &&
         _confirmCtrl.text == _password;
   }
 
-  void _proceed() {
+  Future<void> _proceed() async {
+    FocusManager.instance.primaryFocus?.unfocus();
     if (!_formKey.currentState!.validate()) return;
 
     final strength = evaluatePasswordStrength(_password);
@@ -98,16 +165,36 @@ class _RiderSignupScreenState extends State<RiderSignupScreen>
       return;
     }
 
+    // No network call here. `POST /register` requires vehicle_type and
+    // plate_number for riders, so registration can only happen once the
+    // vehicle screens have run — see rider_vehicle_details_screen.
     context.go(AppRoutes.vehicleInfo, extra: {
-      'name': _nameCtrl.text.trim(),
-      'phone': _phone,
+      'first_name': _firstNameCtrl.text.trim(),
+      'last_name': _lastNameCtrl.text.trim(),
       'email': _emailCtrl.text.trim(),
+      'phone': _phone,
+      'city': _cityCtrl.text.trim(),
       'password': _password,
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    final isLoading = ref.watch(riderAuthProvider).isLoading;
+
+    ref.listen<RiderAuthState>(riderAuthProvider, (_, next) {
+      if (!mounted) return;
+      if (next.errorMessage != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(next.errorMessage!),
+            backgroundColor: AppColors.error,
+          ),
+        );
+        ref.read(riderAuthProvider.notifier).clearError();
+      }
+    });
+
     final mq = MediaQuery.of(context);
     final w = mq.size.width;
     final h = mq.size.height;
@@ -201,17 +288,35 @@ class _RiderSignupScreenState extends State<RiderSignupScreen>
 
                         SizedBox(height: h * 0.038),
 
-                        // ── Full Name ─────────────────────────────────────
+                        // ── First Name ────────────────────────────────────
                         AppTextField(
-                          label: 'Full Name',
-                          hint: 'Enter your full name',
+                          label: 'First Name',
+                          hint: 'Enter your first name',
                           prefixIcon: HugeIcons.strokeRoundedUser,
-                          controller: _nameCtrl,
+                          controller: _firstNameCtrl,
                           textCapitalization: TextCapitalization.words,
                           onChanged: (_) => setState(() {}),
                           validator: (v) {
                             if (v == null || v.trim().length < 2) {
-                              return 'Enter your full name (min 2 characters)';
+                              return 'Enter your first name (min 2 characters)';
+                            }
+                            return null;
+                          },
+                        ),
+
+                        SizedBox(height: h * 0.022),
+
+                        // ── Last Name ─────────────────────────────────────
+                        AppTextField(
+                          label: 'Last Name',
+                          hint: 'Enter your last name',
+                          prefixIcon: HugeIcons.strokeRoundedUser,
+                          controller: _lastNameCtrl,
+                          textCapitalization: TextCapitalization.words,
+                          onChanged: (_) => setState(() {}),
+                          validator: (v) {
+                            if (v == null || v.trim().length < 2) {
+                              return 'Enter your last name (min 2 characters)';
                             }
                             return null;
                           },
@@ -232,8 +337,17 @@ class _RiderSignupScreenState extends State<RiderSignupScreen>
                         ),
                         SizedBox(height: h * 0.010),
                         AppPhoneField(
-                          onChanged: (full) => setState(() => _phone = full),
+                          digitController: _phoneDigitsCtrl,
+                          initialDigits: _phoneDigitsCtrl.text.isEmpty
+                              ? null
+                              : _phoneDigitsCtrl.text,
+                          onChanged: (full) {
+                            _clearServerError('phone');
+                            setState(() => _phone = full);
+                          },
                           validator: (v) {
+                            final serverError = _takeServerError('phone');
+                            if (serverError != null) return serverError;
                             if (v == null || v.trim().length < 9) {
                               return 'Enter a valid phone number';
                             }
@@ -250,7 +364,13 @@ class _RiderSignupScreenState extends State<RiderSignupScreen>
                           prefixIcon: HugeIcons.strokeRoundedMail01,
                           controller: _emailCtrl,
                           keyboardType: TextInputType.emailAddress,
+                          onChanged: (_) {
+                            _clearServerError('email');
+                            setState(() {});
+                          },
                           validator: (v) {
+                            final serverError = _takeServerError('email');
+                            if (serverError != null) return serverError;
                             if (v == null || v.trim().isEmpty) {
                               return 'Please enter your email address';
                             }
@@ -258,6 +378,33 @@ class _RiderSignupScreenState extends State<RiderSignupScreen>
                                 RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
                             if (!emailRegex.hasMatch(v.trim())) {
                               return 'Enter a valid email address';
+                            }
+                            return null;
+                          },
+                        ),
+
+                        SizedBox(height: h * 0.022),
+
+                        // ── City ──────────────────────────────────────────
+                        // Required by the backend for riders and vendors.
+                        AppTextField(
+                          label: 'City',
+                          hint: 'e.g. Accra',
+                          prefixIcon: HugeIcons.strokeRoundedCity03,
+                          controller: _cityCtrl,
+                          textCapitalization: TextCapitalization.words,
+                          inputFormatters: [
+                            LengthLimitingTextInputFormatter(255),
+                          ],
+                          onChanged: (_) {
+                            _clearServerError('city');
+                            setState(() {});
+                          },
+                          validator: (v) {
+                            final serverError = _takeServerError('city');
+                            if (serverError != null) return serverError;
+                            if (v == null || v.trim().isEmpty) {
+                              return 'Enter the city you will operate in';
                             }
                             return null;
                           },
@@ -274,6 +421,11 @@ class _RiderSignupScreenState extends State<RiderSignupScreen>
                           validator: (v) {
                             if (v == null || v.isEmpty) {
                               return 'Please enter a password';
+                            }
+                            // Length first — "too weak" isn't actionable
+                            // when the real problem is that it's short.
+                            if (v.length < 8) {
+                              return 'Password must be at least 8 characters';
                             }
                             if (evaluatePasswordStrength(v) ==
                                 PasswordStrength.weak) {
@@ -307,8 +459,9 @@ class _RiderSignupScreenState extends State<RiderSignupScreen>
 
                         // ── Continue button ───────────────────────────────
                         AppGradientButton(
-                          label: 'Continue',
-                          onPressed: _isFilled ? _proceed : null,
+                          label: isLoading ? 'Creating account…' : 'Continue',
+                          onPressed:
+                              (_isFilled && !isLoading) ? _proceed : null,
                         ),
 
                         SizedBox(height: h * 0.032),

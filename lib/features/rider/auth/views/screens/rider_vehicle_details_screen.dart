@@ -12,6 +12,10 @@ import 'package:delivery_boy/features/rider/auth/views/screens/rider_vehicle_inf
 import 'package:delivery_boy/features/rider/shared_widgets/app_text_field.dart';
 import 'package:hugeicons/hugeicons.dart';
 
+/// Final data-collection step, and where the account is actually created.
+///
+/// `POST /register` requires `vehicle_type` and `plate_number` for riders,
+/// so this is the earliest point at which the whole payload exists.
 class RiderVehicleDetailsScreen extends ConsumerStatefulWidget {
   final Map<String, dynamic> credentials;
 
@@ -28,6 +32,9 @@ class _RiderVehicleDetailsScreenState
   final _formKey = GlobalKey<FormState>();
 
   final _regNumCtrl = TextEditingController();
+
+  /// Server rejection for the plate, shown inline. Cleared on edit.
+  String? _plateError;
   final _yearCtrl = TextEditingController();
   final _makeCtrl = TextEditingController();
   final _modelCtrl = TextEditingController();
@@ -108,28 +115,145 @@ class _RiderVehicleDetailsScreenState
     if (_makeCtrl.text.trim().isEmpty) return false;
     if (_modelCtrl.text.trim().isEmpty) return false;
     if (_colorCtrl.text.trim().isEmpty) return false;
-    if (_vehicleType.requiresPlate && _regNumCtrl.text.trim().isEmpty) {
-      return false;
-    }
+    // A plate is always required: the backend exempts bicycles, but bicycle
+    // is not among VehicleType::selectable().
+    if (_regNumCtrl.text.trim().isEmpty) return false;
     return true;
   }
 
-  void _submit() {
+  /// Everything gathered across the three screens, in API field names.
+  /// `vehicle_make/model/colour/year` are not accepted by `/register` —
+  /// the OTP screen sends those to `PUT /rider/me` after verification.
+  Map<String, dynamic> get _collected => {
+        ...widget.credentials,
+        'plate_number': _regNumCtrl.text.trim().toUpperCase(),
+        'vehicle_year': int.tryParse(_yearCtrl.text.trim()),
+        'vehicle_make': _makeCtrl.text.trim(),
+        'vehicle_model': _modelCtrl.text.trim(),
+        'vehicle_colour': _colorCtrl.text.trim(), // British spelling per API
+      };
+
+  Future<void> _submit() async {
+    FocusManager.instance.primaryFocus?.unfocus();
     if (!_formKey.currentState!.validate()) return;
     HapticFeedback.mediumImpact();
-    ref.read(pendingVehicleProvider.notifier).state = PendingVehicleInfo(
-      type: _vehicleType.name,
-      regNumber: _regNumCtrl.text.trim(),
-      year: _yearCtrl.text.trim(),
-      make: _makeCtrl.text.trim(),
-      model: _modelCtrl.text.trim(),
-      color: _colorCtrl.text.trim(),
+
+    final c = widget.credentials;
+
+    // Already registered (e.g. the rider backed out of OTP and returned).
+    // Re-POSTing would report their own phone as taken.
+    if (c['registered'] == true) {
+      context.go(AppRoutes.otp, extra: _collected);
+      return;
+    }
+
+    final ok = await ref.read(riderAuthProvider.notifier).register(
+          email: c['email'] as String? ?? '',
+          phone: c['phone'] as String? ?? '',
+          password: c['password'] as String? ?? '',
+          confirmPassword: c['password'] as String? ?? '',
+          firstName: c['first_name'] as String? ?? '',
+          lastName: c['last_name'] as String? ?? '',
+          city: c['city'] as String? ?? '',
+          vehicleType: c['vehicle_type'] as String? ?? _vehicleType.apiValue,
+          plateNumber: _regNumCtrl.text.trim(),
+        );
+
+    if (!mounted) return;
+
+    if (!ok) {
+      _handleRegisterFailure();
+      return;
+    }
+
+    context.go(AppRoutes.otp, extra: {..._collected, 'registered': true});
+  }
+
+  /// Puts each rejected field where the rider can act on it: plate errors
+  /// inline on this screen, identity errors back on the signup form.
+  void _handleRegisterFailure() {
+    final fieldErrors = ref.read(riderAuthProvider).fieldErrors;
+    if (fieldErrors.isEmpty) return; // snackbar from ref.listen covers it
+
+    String? first(String key) {
+      final list = fieldErrors[key];
+      return (list != null && list.isNotEmpty) ? list.first : null;
+    }
+
+    // Owned by this screen.
+    final plateMsg = first('plate_number') ?? first('vehicle_type');
+    if (plateMsg != null) {
+      setState(() => _plateError = plateMsg);
+      _formKey.currentState?.validate();
+      return;
+    }
+
+    // Owned by the signup screen — send the rider back with everything they
+    // typed, plus the message, so the form isn't empty on arrival.
+    const identityFields = [
+      'email',
+      'phone',
+      'password',
+      'first_name',
+      'last_name',
+      'city',
+    ];
+    final offending = identityFields.where((f) => first(f) != null).toList();
+    if (offending.isEmpty) return;
+
+    final takenAccount = ref.read(riderAuthProvider).fieldErrors.entries.any(
+          (e) =>
+              (e.key == 'phone' || e.key == 'email') &&
+              e.value.any((m) =>
+                  RegExp(r'already been taken', caseSensitive: false)
+                      .hasMatch(m)),
+        );
+
+    final messages = {for (final f in offending) f: first(f)!};
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(messages.values.first),
+        backgroundColor: AppColors.error,
+        duration: const Duration(seconds: 6),
+        action: SnackBarAction(
+          // The account already exists — signing in beats re-typing it.
+          label: takenAccount ? 'Sign in' : 'Edit',
+          textColor: Colors.white,
+          onPressed: () {
+            if (takenAccount) {
+              context.go(AppRoutes.login);
+            } else {
+              context.go(AppRoutes.signup, extra: {
+                ...widget.credentials,
+                'field_errors': messages,
+              });
+            }
+          },
+        ),
+      ),
     );
-    context.go(AppRoutes.otp, extra: widget.credentials);
   }
 
   @override
   Widget build(BuildContext context) {
+    final isLoading = ref.watch(riderAuthProvider).isLoading;
+
+    // Field-specific messages are placed by _handleRegisterFailure; this
+    // catches everything else (network, 500s, unmapped fields).
+    ref.listen<RiderAuthState>(riderAuthProvider, (_, next) {
+      if (!mounted) return;
+      if (next.errorMessage != null && next.fieldErrors.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(next.errorMessage!),
+            backgroundColor: AppColors.error,
+          ),
+        );
+        ref.read(riderAuthProvider.notifier).clearError();
+      }
+    });
+
     final mq = MediaQuery.of(context);
     final w = mq.size.width;
     final h = mq.size.height;
@@ -219,19 +343,24 @@ class _RiderVehicleDetailsScreenState
                               children: [
                                 // License plate
                                 AppTextField(
-                                  label: _vehicleType.requiresPlate
-                                      ? 'License Plate Number'
-                                      : 'Registration Number (if any)',
-                                  hint: _vehicleType.requiresPlate
-                                      ? 'e.g. GR-1234-22'
-                                      : 'Leave blank if none',
+                                  label: 'License Plate Number',
+                                  hint: 'e.g. GR-1234-22',
                                   prefixIcon: HugeIcons.strokeRoundedIdentityCard,
                                   controller: _regNumCtrl,
                                   textCapitalization:
                                       TextCapitalization.characters,
+                                  inputFormatters: [
+                                    LengthLimitingTextInputFormatter(32),
+                                  ],
+                                  onChanged: (_) {
+                                    if (_plateError != null) {
+                                      setState(() => _plateError = null);
+                                    }
+                                    _onChanged();
+                                  },
                                   validator: (v) {
-                                    if (_vehicleType.requiresPlate &&
-                                        (v == null || v.trim().isEmpty)) {
+                                    if (_plateError != null) return _plateError;
+                                    if (v == null || v.trim().isEmpty) {
                                       return 'Please enter the license plate number';
                                     }
                                     return null;
@@ -339,8 +468,12 @@ class _RiderVehicleDetailsScreenState
                         SizedBox(height: h * 0.036),
 
                         AppGradientButton(
-                          label: 'Continue',
-                          onPressed: _canSubmit ? _submit : null,
+                          label: isLoading
+                              ? 'Creating account…'
+                              : 'Create Account',
+                          isLoading: isLoading,
+                          onPressed:
+                              (_canSubmit && !isLoading) ? _submit : null,
                         ),
 
                         SizedBox(height: h * 0.04),

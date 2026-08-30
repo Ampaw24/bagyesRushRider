@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/core/router/app_routes.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
 
@@ -11,20 +12,20 @@ import 'package:hugeicons/hugeicons.dart';
 class _PageData {
   final String title;
   final String subtitle;
-  final IconData mainIcon;
   final Color color;
   final Color accentLight;
   final String badge;
   final IconData badgeIcon;
+  final String illustrationAsset;
 
   const _PageData({
     required this.title,
     required this.subtitle,
-    required this.mainIcon,
     required this.color,
     required this.accentLight,
     required this.badge,
     required this.badgeIcon,
+    required this.illustrationAsset,
   });
 }
 
@@ -33,41 +34,41 @@ const _pages = [
     title: 'Welcome to\nbagyesRUSH',
     subtitle:
         'Join thousands of riders delivering happiness across Ghana. Fast, reliable, and rewarding.',
-    mainIcon: HugeIcons.strokeRoundedMotorbike01,
     color: AppColors.primary,
     accentLight: Color(0xFFFFEBEE),
     badge: 'Rider Network',
     badgeIcon: HugeIcons.strokeRoundedUserGroup,
+    illustrationAsset: 'assets/images/onboarding/welcome_delivery.svg',
   ),
   _PageData(
     title: 'Accept Orders\nInstantly',
     subtitle:
         'Get real-time delivery requests straight to your phone. One tap to accept and start earning.',
-    mainIcon: HugeIcons.strokeRoundedNotification02,
     color: Color(0xFFFF7043),
     accentLight: Color(0xFFFFE0B2),
     badge: 'Real-Time Alerts',
     badgeIcon: HugeIcons.strokeRoundedFlash,
+    illustrationAsset: 'assets/images/onboarding/order_alert.svg',
   ),
   _PageData(
     title: 'Track Your\nEarnings',
     subtitle:
         'Monitor daily earnings, weekly bonuses, and withdraw instantly to your mobile money wallet.',
-    mainIcon: HugeIcons.strokeRoundedWallet01,
     color: Color(0xFF00897B),
     accentLight: Color(0xFFB2DFDB),
     badge: 'Instant Payout',
     badgeIcon: HugeIcons.strokeRoundedChartUp,
+    illustrationAsset: 'assets/images/onboarding/earnings_wallet.svg',
   ),
   _PageData(
     title: 'Safe &\nAlways Supported',
     subtitle:
         'Verified customers, full coverage and a dedicated team available 24/7 for every ride you make.',
-    mainIcon: HugeIcons.strokeRoundedUserCheck01,
     color: Color(0xFF5C6BC0),
     accentLight: Color(0xFFC5CAE9),
     badge: '24/7 Support',
     badgeIcon: HugeIcons.strokeRoundedHeadphones,
+    illustrationAsset: 'assets/images/onboarding/support_chat.svg',
   ),
 ];
 
@@ -82,7 +83,7 @@ class OnboardingIntroScreen extends StatefulWidget {
 
 class _OnboardingIntroScreenState extends State<OnboardingIntroScreen>
     with TickerProviderStateMixin {
-  final _pageController = PageController();
+  final _pageController = PageController(initialPage: 2);
 
   // Entry animation — restarted on every page change
   late AnimationController _entryCtrl;
@@ -94,7 +95,7 @@ class _OnboardingIntroScreenState extends State<OnboardingIntroScreen>
   late AnimationController _floatCtrl;
   late Animation<double> _floatAnim;
 
-  int _currentPage = 0;
+  int _currentPage = 2;
 
   @override
   void initState() {
@@ -445,42 +446,21 @@ class _Illustration extends StatelessWidget {
                 ),
               ),
 
-              // Decorative floating circles
-              ..._floatingCircles(s),
-
-              // Main icon — animated float
-              Center(
+              // Main artwork — animated float
+              Align(
+                alignment: const Alignment(0, -0.18),
                 child: AnimatedBuilder(
                   animation: floatAnim,
                   builder: (_, child) => Transform.translate(
                     offset: Offset(0, floatAnim.value),
                     child: child,
                   ),
-                  child: Container(
-                    width: s * 0.5,
-                    height: s * 0.5,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        colors: [
-                          data.color,
-                          data.color.withValues(alpha: 0.72),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: data.color.withValues(alpha: 0.38),
-                          blurRadius: 36,
-                          offset: const Offset(0, 14),
-                        ),
-                      ],
-                    ),
-                    child: Icon(
-                      data.mainIcon,
-                      size: s * 0.22,
-                      color: Colors.white,
+                  child: SizedBox(
+                    width: s * 0.62,
+                    height: s * 0.62,
+                    child: SvgPicture.asset(
+                      data.illustrationAsset,
+                      fit: BoxFit.contain,
                     ),
                   ),
                 ),
@@ -529,35 +509,5 @@ class _Illustration extends StatelessWidget {
         ),
       );
     });
-  }
-
-  // Decorative circles positioned relative to the container centre
-  List<Widget> _floatingCircles(double s) {
-    const specs = [
-      (dx: -0.38, dy: -0.16, r: 0.065),
-      (dx: 0.35, dy: -0.22, r: 0.05),
-      (dx: -0.30, dy: 0.28, r: 0.055),
-      (dx: 0.36, dy: 0.22, r: 0.075),
-      (dx: 0.06, dy: -0.41, r: 0.042),
-      (dx: -0.12, dy: 0.40, r: 0.038),
-    ];
-
-    return specs.map((c) {
-      final size = s * c.r * 2;
-      final left = s / 2 + c.dx * s - size / 2;
-      final top = s / 2 + c.dy * s - size / 2;
-      return Positioned(
-        left: left,
-        top: top,
-        child: Container(
-          width: size,
-          height: size,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: data.color.withValues(alpha: 0.16),
-          ),
-        ),
-      );
-    }).toList();
   }
 }

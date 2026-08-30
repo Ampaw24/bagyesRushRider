@@ -32,7 +32,7 @@ class _RiderNewOrdersScreenState extends ConsumerState<RiderNewOrdersScreen> {
   }
 
   String get _userId =>
-      sl<UserSessionManager>().currentUser?['_id'] as String? ?? '';
+      sl<UserSessionManager>().userId ?? '';
 
   void _openDetailSheet(RiderOrderModel order) {
     showModalBottomSheet(
