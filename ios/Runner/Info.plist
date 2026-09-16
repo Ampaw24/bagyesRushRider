@@ -56,6 +56,6 @@
 		<key>NSLocationWhenInUseUsageDescription</key>
 		<string>This app requires location access to show your position on the map</string>
 		<key>UIStatusBarHidden</key>
-		<true/>
+		<false/>
 	</dict>
 </plist>
