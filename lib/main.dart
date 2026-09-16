@@ -53,7 +53,7 @@ class BagyesRushApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      title: 'Delivery Boy',
+      title: 'BagyesRush Rider',
       theme: AppTheme.light,
       debugShowCheckedModeBanner: false,
       routerConfig: _appRouter,

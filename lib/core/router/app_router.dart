@@ -6,7 +6,7 @@ import 'package:delivery_boy/core/router/app_routes.dart';
 import 'package:delivery_boy/core/utils/network_utility.dart' show sessionRevision;
 
 // ── Splash / Intro ─────────────────────────────────────────────────────────────
-import 'package:delivery_boy/pages/unboardingscreen/splashscreen.dart';
+import 'package:delivery_boy/pages/splashScreen.dart';
 import 'package:delivery_boy/pages/unboardingscreen/onboarding_screen.dart';
 // ── Auth screens ──────────────────────────────────────────────────────────────
 import 'package:delivery_boy/features/rider/auth/views/screens/rider_login_screen.dart';

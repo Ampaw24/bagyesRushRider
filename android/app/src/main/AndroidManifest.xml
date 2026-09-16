@@ -6,7 +6,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
    <application
-        android:label="BagyesRUSH_Rider"
+        android:label="BagyesRUSH Rider"
         android:icon="@mipmap/launcher_icon">
         <meta-data android:name="com.google.android.geo.API_KEY"
                android:value="AIzaSyA6QwaWqE4gtpQq4tTXGVIxLmeEeVKhYUc"/>
