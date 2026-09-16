@@ -248,7 +248,7 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
 
                                 SizedBox(height: h * 0.036),
 
-                                // ── Phone Label ────────────────────────────────
+                                 // ── Phone Label ────────────────────────────────
                                 Text(
                                   'Phone Number',
                                   style: TextStyle(
@@ -259,7 +259,7 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
                                     letterSpacing: 0.1,
                                   ),
                                 ),
-                                SizedBox(height: h * 0.010),
+                                const SizedBox(height: 5),
 
                                 // ── Phone Field ────────────────────────────────
                                 AppPhoneField(
@@ -273,7 +273,7 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
                                   },
                                 ),
 
-                                SizedBox(height: h * 0.025),
+                                const SizedBox(height: 16),
 
                                 // ── Password Label ─────────────────────────────
                                 Text(
@@ -286,7 +286,7 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
                                     letterSpacing: 0.1,
                                   ),
                                 ),
-                                SizedBox(height: h * 0.010),
+                                const SizedBox(height: 5),
 
                                 // ── Password Field ─────────────────────────────
                                 TextFormField(
@@ -318,7 +318,7 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
                                     hintText: 'Enter your password',
                                     prefixIcon: Icon(
                                       HugeIcons.strokeRoundedLock,
-                                      size: 22,
+                                      size: 20,
                                       color: Colors.grey.shade400,
                                     ),
                                     suffixIcon: GestureDetector(
@@ -331,7 +331,7 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
                                           _obscurePassword
                                               ? HugeIcons.strokeRoundedViewOff
                                               : HugeIcons.strokeRoundedEye,
-                                          size: 22,
+                                          size: 20,
                                           color: Colors.grey.shade400,
                                         ),
                                       ),
@@ -345,38 +345,38 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
                                     fillColor: isLoading
                                         ? Colors.grey.shade100
                                         : const Color(0xFFF8F9FB),
-                                    contentPadding: EdgeInsets.only(
-                                        left: 0,
-                                        right: w * 0.04,
-                                        top: h * 0.022,
-                                        bottom: h * 0.022),
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 14,
+                                      vertical: 12,
+                                    ),
+                                    isDense: true,
                                     border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(16),
+                                      borderRadius: BorderRadius.circular(12),
                                       borderSide: const BorderSide(
                                           color: AppColors.border),
                                     ),
                                     enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(16),
+                                      borderRadius: BorderRadius.circular(12),
                                       borderSide: const BorderSide(
-                                          color: AppColors.border, width: 1.5),
+                                          color: AppColors.border, width: 1.0),
                                     ),
                                     focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(16),
+                                      borderRadius: BorderRadius.circular(12),
                                       borderSide: const BorderSide(
-                                          color: AppColors.primary, width: 2),
+                                          color: AppColors.primary, width: 1.5),
                                     ),
                                     errorBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(16),
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: const BorderSide(
+                                          color: AppColors.error, width: 1.0),
+                                    ),
+                                    focusedErrorBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
                                       borderSide: const BorderSide(
                                           color: AppColors.error, width: 1.5),
                                     ),
-                                    focusedErrorBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(16),
-                                      borderSide: const BorderSide(
-                                          color: AppColors.error, width: 2),
-                                    ),
                                     disabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(16),
+                                      borderRadius: BorderRadius.circular(12),
                                       borderSide: const BorderSide(
                                           color: AppColors.border),
                                     ),
@@ -392,8 +392,8 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
                                         : () => context
                                             .push(AppRoutes.forgotPassword),
                                     style: TextButton.styleFrom(
-                                      padding: EdgeInsets.symmetric(
-                                          vertical: h * 0.010, horizontal: 0),
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 6, horizontal: 0),
                                     ),
                                     child: Text(
                                       'Forgot Password?',
@@ -407,12 +407,12 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
                                   ),
                                 ),
 
-                                SizedBox(height: h * 0.01),
+                                const SizedBox(height: 12),
 
                                 // ── Sign In Button ─────────────────────────────
                                 SizedBox(
                                   width: double.infinity,
-                                  height: (h * 0.072).clamp(50.0, 60.0),
+                                  height: 46,
                                   child: ElevatedButton(
                                     onPressed: (isLoading || !_isFilled)
                                         ? null
@@ -423,7 +423,7 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
                                           .withValues(alpha: 0.5),
                                       elevation: 0,
                                       shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(14),
+                                        borderRadius: BorderRadius.circular(12),
                                       ),
                                     ),
                                     child: isLoading

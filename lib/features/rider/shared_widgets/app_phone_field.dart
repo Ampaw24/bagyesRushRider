@@ -177,7 +177,7 @@ class _AppPhoneFieldState extends State<AppPhoneField> {
             : _isFocused
                 ? AppColors.primary
                 : AppColors.border;
-        final borderWidth = (state.hasError || _isFocused) ? 2.0 : 1.5;
+        final borderWidth = (_isFocused || state.hasError) ? 1.5 : 1.0;
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -185,16 +185,16 @@ class _AppPhoneFieldState extends State<AppPhoneField> {
           children: [
             AnimatedContainer(
               duration: const Duration(milliseconds: 200),
-              height: 56,
+              height: 46,
               decoration: BoxDecoration(
                 color: const Color(0xFFF8F9FB),
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: borderColor, width: borderWidth),
                 boxShadow: const [
                   BoxShadow(
                     color: Color(0x0A000000),
-                    blurRadius: 8,
-                    offset: Offset(0, 2),
+                    blurRadius: 6,
+                    offset: Offset(0, 1),
                   ),
                 ],
               ),
@@ -205,8 +205,8 @@ class _AppPhoneFieldState extends State<AppPhoneField> {
                   GestureDetector(
                     onTap: () => _showCountryPicker(context, state),
                     child: Container(
-                      height: 56,
-                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                      height: 46,
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
                       color: Colors.transparent,
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -214,9 +214,9 @@ class _AppPhoneFieldState extends State<AppPhoneField> {
                         children: [
                           Text(
                             _selected.flag,
-                            style: const TextStyle(fontSize: 22),
+                            style: const TextStyle(fontSize: 18),
                           ),
-                          const SizedBox(width: 6),
+                          const SizedBox(width: 5),
                           Text(
                             _selected.code,
                             style: const TextStyle(
@@ -226,10 +226,10 @@ class _AppPhoneFieldState extends State<AppPhoneField> {
                               color: AppColors.textPrimary,
                             ),
                           ),
-                          const SizedBox(width: 4),
+                          const SizedBox(width: 3),
                           Icon(
                             HugeIcons.strokeRoundedArrowDown01,
-                            size: 22,
+                            size: 18,
                             color: Colors.grey.shade500,
                           ),
                         ],

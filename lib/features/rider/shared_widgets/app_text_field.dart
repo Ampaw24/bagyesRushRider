@@ -49,7 +49,6 @@ class AppTextField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final w = MediaQuery.of(context).size.width;
-    final h = MediaQuery.of(context).size.height;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -66,7 +65,7 @@ class AppTextField extends StatelessWidget {
             letterSpacing: 0.1,
           ),
         ),
-        SizedBox(height: h * 0.010),
+        const SizedBox(height: 5),
 
         // ── Input field ─────────────────────────────────────────
         TextFormField(
@@ -94,7 +93,7 @@ class AppTextField extends StatelessWidget {
             hintText: hint,
             helperText: helperText,
             prefixIcon: prefixIcon != null
-                ? Icon(prefixIcon, size: 22, color: Colors.grey.shade400)
+                ? Icon(prefixIcon, size: 20, color: Colors.grey.shade400)
                 : null,
             suffix: suffix,
             hintStyle: TextStyle(
@@ -111,34 +110,33 @@ class AppTextField extends StatelessWidget {
             fillColor: enabled
                 ? const Color(0xFFF8F9FB)
                 : Colors.grey.shade100,
-            contentPadding: EdgeInsets.only(
-              left: 0,
-              right: w * 0.04,
-              top: h * 0.022,
-              bottom: h * 0.022,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 12,
             ),
+            isDense: true,
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: AppColors.border),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(color: AppColors.border, width: 1.5),
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppColors.border, width: 1.0),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(color: AppColors.primary, width: 2),
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
             ),
             errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(color: AppColors.error, width: 1.5),
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppColors.error, width: 1.0),
             ),
             focusedErrorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(color: AppColors.error, width: 2),
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppColors.error, width: 1.5),
             ),
             disabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: AppColors.border),
             ),
           ),

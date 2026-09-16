@@ -69,26 +69,24 @@ flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
   remove_alpha_ios: true
-  image_path: "assets/images/logo.png"
-  # Android adaptive icon — without this, launchers can't mask the icon
-  # into their rounded-square/circle/squircle shape, so it shows as a
-  # hard-cornered square. logo.png is a full-bleed square with no padding,
-  # so it can't be used as the foreground directly (its edges would be
-  # cropped by the mask); logo_adaptive_fg.png is the same artwork shrunk
-  # to ~60% and centered on a transparent canvas to sit inside the safe
-  # zone. iOS rounds every icon itself, so it needs no equivalent.
-  adaptive_icon_background: "#FFFFFF"
-  adaptive_icon_foreground: "assets/images/logo_adaptive_fg.png"
+  image_path: "assets/images/app_icon_ios.png"
+  adaptive_icon_background: "#E91D25"
+  adaptive_icon_foreground: "assets/images/app_icon_android_fg.png"
+  adaptive_icon_foreground_inset: 0
 
-# Native (pre-Flutter-engine) launch screen — plain white background, no
-# logo. Matches the customer/vendor app's approach: that app ships the
-# stock, untouched Flutter template native splash (blank white on both
-# platforms) and does all branding in its first Flutter frame instead.
-# Mirrored here rather than sizing a logo for the native splash.
 flutter_native_splash:
   color: "#FFFFFF"
+  image: "assets/images/splash_logo_clean.png"
+  color_dark: "#121212"
+  image_dark: "assets/images/splash_logo_dark.png"
   android_12:
     color: "#FFFFFF"
+    image: "assets/images/splash_logo_a12_clean.png"
+    icon_background_color: "#FFFFFF"
+    color_dark: "#121212"
+    image_dark: "assets/images/splash_logo_a12_dark.png"
+    icon_background_color_dark: "#121212"
+  web: false
 
 flutter:
   uses-material-design: true

@@ -19,8 +19,8 @@ class AppGradientButton extends StatelessWidget {
     required this.onPressed,
     this.isLoading = false,
     this.width,
-    this.height = 54,
-    this.borderRadius = 14,
+    this.height = 46,
+    this.borderRadius = 12,
     this.labelStyle,
   });
 

@@ -44,8 +44,8 @@ const _pages = [
     title: 'Accept Orders\nInstantly',
     subtitle:
         'Get real-time delivery requests straight to your phone. One tap to accept and start earning.',
-    color: Color(0xFFFF7043),
-    accentLight: Color(0xFFFFE0B2),
+    color: AppColors.primary,
+    accentLight: Color(0xFFFFEBEE),
     badge: 'Real-Time Alerts',
     badgeIcon: HugeIcons.strokeRoundedFlash,
     illustrationAsset: 'assets/images/onboarding/order_alert.svg',
@@ -54,8 +54,8 @@ const _pages = [
     title: 'Track Your\nEarnings',
     subtitle:
         'Monitor daily earnings, weekly bonuses, and withdraw instantly to your mobile money wallet.',
-    color: Color(0xFF00897B),
-    accentLight: Color(0xFFB2DFDB),
+    color: AppColors.primary,
+    accentLight: Color(0xFFFFEBEE),
     badge: 'Instant Payout',
     badgeIcon: HugeIcons.strokeRoundedChartUp,
     illustrationAsset: 'assets/images/onboarding/earnings_wallet.svg',
@@ -64,8 +64,8 @@ const _pages = [
     title: 'Safe &\nAlways Supported',
     subtitle:
         'Verified customers, full coverage and a dedicated team available 24/7 for every ride you make.',
-    color: Color(0xFF5C6BC0),
-    accentLight: Color(0xFFC5CAE9),
+    color: AppColors.primary,
+    accentLight: Color(0xFFFFEBEE),
     badge: '24/7 Support',
     badgeIcon: HugeIcons.strokeRoundedHeadphones,
     illustrationAsset: 'assets/images/onboarding/support_chat.svg',
@@ -83,7 +83,7 @@ class OnboardingIntroScreen extends StatefulWidget {
 
 class _OnboardingIntroScreenState extends State<OnboardingIntroScreen>
     with TickerProviderStateMixin {
-  final _pageController = PageController(initialPage: 2);
+  final _pageController = PageController(initialPage: 0);
 
   // Entry animation — restarted on every page change
   late AnimationController _entryCtrl;
@@ -95,7 +95,7 @@ class _OnboardingIntroScreenState extends State<OnboardingIntroScreen>
   late AnimationController _floatCtrl;
   late Animation<double> _floatAnim;
 
-  int _currentPage = 2;
+  int _currentPage = 0;
 
   @override
   void initState() {

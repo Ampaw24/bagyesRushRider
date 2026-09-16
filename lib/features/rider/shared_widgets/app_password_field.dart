@@ -32,7 +32,6 @@ class _AppPasswordFieldState extends State<AppPasswordField> {
   @override
   Widget build(BuildContext context) {
     final w = MediaQuery.of(context).size.width;
-    final h = MediaQuery.of(context).size.height;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -49,7 +48,7 @@ class _AppPasswordFieldState extends State<AppPasswordField> {
             letterSpacing: 0.1,
           ),
         ),
-        SizedBox(height: h * 0.010),
+        const SizedBox(height: 5),
 
         // ── Password input ──────────────────────────────────────
         TextFormField(
@@ -71,7 +70,7 @@ class _AppPasswordFieldState extends State<AppPasswordField> {
             hintText: widget.hint,
             prefixIcon: Icon(
               HugeIcons.strokeRoundedLock,
-              size: 22,
+              size: 20,
               color: Colors.grey.shade400,
             ),
             suffixIcon: GestureDetector(
@@ -82,7 +81,7 @@ class _AppPasswordFieldState extends State<AppPasswordField> {
                   _obscure
                       ? HugeIcons.strokeRoundedViewOff
                       : HugeIcons.strokeRoundedEye,
-                  size: 22,
+                  size: 20,
                   color: Colors.grey.shade400,
                 ),
               ),
@@ -94,31 +93,30 @@ class _AppPasswordFieldState extends State<AppPasswordField> {
             ),
             filled: true,
             fillColor: const Color(0xFFF8F9FB),
-            contentPadding: EdgeInsets.only(
-              left: 0,
-              right: w * 0.04,
-              top: h * 0.022,
-              bottom: h * 0.022,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 12,
             ),
+            isDense: true,
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: AppColors.border),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(color: AppColors.border, width: 1.5),
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppColors.border, width: 1.0),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(color: AppColors.primary, width: 2),
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
             ),
             errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(color: AppColors.error, width: 1.5),
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppColors.error, width: 1.0),
             ),
             focusedErrorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(color: AppColors.error, width: 2),
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppColors.error, width: 1.5),
             ),
           ),
         ),
