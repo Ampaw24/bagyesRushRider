@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:delivery_boy/core/services/user_session_manager.dart';
@@ -46,13 +47,20 @@ final sl = GetIt.instance;
 
 Future<void> initServiceLocator() async {
   // ── External ────────────────────────────────────────────────────────────
+  // SharedPreferences still backs non-auth device prefs (settings, dashboard
+  // banners, notification read-state) — the session itself lives in secure
+  // storage below.
   final prefs = await SharedPreferences.getInstance();
   sl.registerLazySingleton<SharedPreferences>(() => prefs);
+  sl.registerLazySingleton<FlutterSecureStorage>(() => const FlutterSecureStorage());
 
   // ── Core ────────────────────────────────────────────────────────────────
-  sl.registerLazySingleton<UserSessionManager>(
-    () => UserSessionManager(sl<SharedPreferences>()),
-  );
+  // Built eagerly (not registerLazySingleton) and hydrated up front: the Dio
+  // interceptor below reads UserSessionManager.token synchronously on every
+  // request, and secure storage has no sync read API.
+  final sessionManager = UserSessionManager(sl<FlutterSecureStorage>());
+  await sessionManager.load();
+  sl.registerLazySingleton<UserSessionManager>(() => sessionManager);
   sl.registerLazySingleton<Dio>(
     () => NetworkUtility.createDio(sl<UserSessionManager>()),
   );

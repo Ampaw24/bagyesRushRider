@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/core/router/app_routes.dart';
 import 'package:delivery_boy/core/widgets/app_gradient_button.dart';
+import 'package:delivery_boy/features/rider/auth/views/widgets/registration_stepper.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 // ── Vehicle Type Enum ─────────────────────────────────────────────────────────
@@ -449,89 +450,4 @@ class _VehicleTileState extends State<_VehicleTile>
   }
 }
 
-// ── Registration Stepper (public — shared with vehicle details screen) ─────────
 
-class RegistrationStepper extends StatelessWidget {
-  final List<String> steps;
-  final int currentIndex;
-
-  const RegistrationStepper({
-    super.key,
-    required this.steps,
-    required this.currentIndex,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final w = MediaQuery.of(context).size.width;
-    final circleSize = (w * 0.072).clamp(28.0, 40.0);
-
-    return Row(
-      children: [
-        for (int i = 0; i < steps.length; i++) ...[
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
-                width: circleSize,
-                height: circleSize,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: i <= currentIndex ? AppColors.primary : Colors.white,
-                  border: Border.all(
-                    color: i <= currentIndex ? AppColors.primary : AppColors.border,
-                    width: 1.5,
-                  ),
-                ),
-                child: Center(
-                  child: i < currentIndex
-                      ? Icon(
-                          HugeIcons.strokeRoundedCheckmarkCircle01,
-                          color: Colors.white,
-                          size: (w * 0.038).clamp(14.0, 20.0),
-                        )
-                      : Text(
-                          '${i + 1}',
-                          style: TextStyle(
-                            fontFamily: 'Mukta',
-                            fontSize: (w * 0.032).clamp(11.0, 15.0),
-                            fontWeight: FontWeight.w700,
-                            color: i == currentIndex
-                                ? Colors.white
-                                : AppColors.textSecondary,
-                          ),
-                        ),
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                steps[i],
-                style: TextStyle(
-                  fontFamily: 'Mukta',
-                  fontSize: (w * 0.026).clamp(8.0, 11.0),
-                  fontWeight:
-                      i == currentIndex ? FontWeight.w700 : FontWeight.w400,
-                  color: i == currentIndex
-                      ? AppColors.primary
-                      : AppColors.textSecondary,
-                ),
-              ),
-            ],
-          ),
-          if (i < steps.length - 1)
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 20),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  height: (w * 0.005).clamp(2.0, 4.0),
-                  color: i < currentIndex ? AppColors.primary : AppColors.border,
-                ),
-              ),
-            ),
-        ],
-      ],
-    );
-  }
-}

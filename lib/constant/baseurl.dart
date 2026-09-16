@@ -1,8 +1,8 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 /// Base URL for the Laravel v1 API.
 ///
-/// Override at build time without touching source:
-///   flutter run --dart-define=BASE_URL=http://host:port/api/v1
-const String kBaseUrl = String.fromEnvironment(
-  'BASE_URL',
-  defaultValue: 'http://31.187.74.65:8085/api/v1',
-);
+/// Sourced from `.env` (key `BASE_URL`), loaded in `main()` before this
+/// getter is first read. Override per-environment by editing `.env` —
+/// never hardcode a host here.
+String get kBaseUrl => dotenv.env['DEV_BASE_URL']!;

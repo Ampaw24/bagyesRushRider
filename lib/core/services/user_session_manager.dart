@@ -1,7 +1,14 @@
 import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-/// Persists the signed-in session (tokens + the raw user JSON).
+/// Persists the signed-in session (tokens + the raw user JSON) in the
+/// platform keychain/keystore via [FlutterSecureStorage].
+///
+/// Reads are served from an in-memory cache hydrated by [load] — callers
+/// throughout the app (router guards, providers, viewmodels) read [token],
+/// [currentUser], etc. synchronously, and secure storage has no sync read
+/// API. [load] must be awaited once at startup, before anything that reads
+/// these getters (in particular, before the Dio interceptor is built).
 ///
 /// [currentUser] is an untyped map so it can round-trip whatever the API
 /// returns. Prefer the typed accessors below over indexing it directly —
@@ -12,24 +19,33 @@ class UserSessionManager {
   static const _refreshTokenKey = 'refresh_token';
   static const _userKey = 'user_data';
 
-  final SharedPreferences _prefs;
+  final FlutterSecureStorage _storage;
 
-  UserSessionManager(this._prefs);
+  String? _token;
+  String? _refreshToken;
+  Map<String, dynamic>? _currentUser;
 
-  String? get token => _prefs.getString(_tokenKey);
+  UserSessionManager(this._storage);
 
-  String? get refreshToken => _prefs.getString(_refreshTokenKey);
+  /// Hydrates the in-memory session from secure storage. Call once at
+  /// startup before any getter is read.
+  Future<void> load() async {
+    _token = await _storage.read(key: _tokenKey);
+    _refreshToken = await _storage.read(key: _refreshTokenKey);
+    final raw = await _storage.read(key: _userKey);
+    _currentUser = raw == null ? null : jsonDecode(raw) as Map<String, dynamic>;
+  }
+
+  String? get token => _token;
+
+  String? get refreshToken => _refreshToken;
 
   bool get isLoggedIn {
     final t = token;
     return t != null && t.isNotEmpty;
   }
 
-  Map<String, dynamic>? get currentUser {
-    final raw = _prefs.getString(_userKey);
-    if (raw == null) return null;
-    return jsonDecode(raw) as Map<String, dynamic>;
-  }
+  Map<String, dynamic>? get currentUser => _currentUser;
 
   // ── Typed accessors ─────────────────────────────────────────────────────
   // The `_id` / `name` fallbacks read sessions written by the pre-Laravel
@@ -73,20 +89,31 @@ class UserSessionManager {
     String? refreshToken,
     required Map<String, dynamic> user,
   }) async {
-    await _prefs.setString(_tokenKey, token);
+    _token = token;
     if (refreshToken != null && refreshToken.isNotEmpty) {
-      await _prefs.setString(_refreshTokenKey, refreshToken);
+      _refreshToken = refreshToken;
     }
-    await _prefs.setString(_userKey, jsonEncode(user));
+    _currentUser = user;
+
+    await _storage.write(key: _tokenKey, value: token);
+    if (refreshToken != null && refreshToken.isNotEmpty) {
+      await _storage.write(key: _refreshTokenKey, value: refreshToken);
+    }
+    await _storage.write(key: _userKey, value: jsonEncode(user));
   }
 
   Future<void> saveTokens({
     required String token,
     String? refreshToken,
   }) async {
-    await _prefs.setString(_tokenKey, token);
+    _token = token;
     if (refreshToken != null && refreshToken.isNotEmpty) {
-      await _prefs.setString(_refreshTokenKey, refreshToken);
+      _refreshToken = refreshToken;
+    }
+
+    await _storage.write(key: _tokenKey, value: token);
+    if (refreshToken != null && refreshToken.isNotEmpty) {
+      await _storage.write(key: _refreshTokenKey, value: refreshToken);
     }
   }
 
@@ -95,18 +122,23 @@ class UserSessionManager {
   /// Use this instead of re-calling [saveSession] with `token!` — that
   /// pattern throws when the token has already been cleared (e.g. by a 401).
   Future<void> updateUser(Map<String, dynamic> patch) async {
-    final merged = {...?currentUser, ...patch};
-    await _prefs.setString(_userKey, jsonEncode(merged));
+    _currentUser = {...?_currentUser, ...patch};
+    await _storage.write(key: _userKey, value: jsonEncode(_currentUser));
   }
 
   /// Replaces the stored user wholesale, leaving the tokens intact.
   Future<void> saveUser(Map<String, dynamic> user) async {
-    await _prefs.setString(_userKey, jsonEncode(user));
+    _currentUser = user;
+    await _storage.write(key: _userKey, value: jsonEncode(user));
   }
 
   Future<void> clearSession() async {
-    await _prefs.remove(_tokenKey);
-    await _prefs.remove(_refreshTokenKey);
-    await _prefs.remove(_userKey);
+    _token = null;
+    _refreshToken = null;
+    _currentUser = null;
+
+    await _storage.delete(key: _tokenKey);
+    await _storage.delete(key: _refreshTokenKey);
+    await _storage.delete(key: _userKey);
   }
 }

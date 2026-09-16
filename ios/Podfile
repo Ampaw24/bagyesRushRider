@@ -1,5 +1,5 @@
 # Minimum iOS version required by google_maps_flutter and location packages
-platform :ios, '14.0'
+platform :ios, '15.0'
 
 # CocoaPods analytics sends network stats synchronously affecting flutter build latency.
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'

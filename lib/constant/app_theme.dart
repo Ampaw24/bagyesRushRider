@@ -8,6 +8,8 @@ import 'package:flutter/services.dart';
 /// Accent: Warm Amber (#F59E0B) — for highlights, badges, ratings
 abstract final class AppColors {
   // Primary palette
+  static Color kDecorativeBackgroundColor = Color(0xFFFBF7F4);
+
   static const Color primary = Color(0xFFD32F2F);
   static const Color primaryLight = Color(0xFFEF5350);
   static const Color primaryDark = Color(0xFFB71C1C);

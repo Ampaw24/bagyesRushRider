@@ -9,6 +9,7 @@ import 'package:delivery_boy/core/router/app_routes.dart';
 import 'package:delivery_boy/core/widgets/app_gradient_button.dart';
 import 'package:delivery_boy/features/rider/auth/viewmodels/rider_auth_viewmodel.dart';
 import 'package:delivery_boy/features/rider/auth/views/screens/rider_vehicle_info_screen.dart';
+import 'package:delivery_boy/features/rider/auth/views/widgets/registration_stepper.dart';
 import 'package:delivery_boy/features/rider/shared_widgets/app_text_field.dart';
 import 'package:hugeicons/hugeicons.dart';
 

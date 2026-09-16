@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'app_theme.dart';
 
 // ── Colors (aligned with AppColors but kept for backward compat) ──
+/// Warm cream backdrop shared by the splash, onboarding and login screens.
+const Color kDecorativeBackgroundColor = Color(0xFFFBF7F4);
 const Color scaffoldBgColor = AppColors.scaffold;
 const Color primaryColor = AppColors.primary;
 const Color greyColor = AppColors.textSecondary;
