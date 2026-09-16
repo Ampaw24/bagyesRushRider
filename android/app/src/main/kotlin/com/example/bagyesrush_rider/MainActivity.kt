@@ -1,4 +1,4 @@
-package com.example.delivery_boy
+package com.example.bagyesrush_rider
 
 import io.flutter.embedding.android.FlutterActivity
 

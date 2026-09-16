@@ -73,11 +73,14 @@ flutter_launcher_icons:
 
 # Native (pre-Flutter-engine) launch screen — plain background, centered
 # logo, matches the Flutter splash scaffold color for a seamless handoff.
+# Uses a pre-sized 560x560 copy of the logo (logo_splash.png): feeding the
+# full 2134x2134 master straight in makes flutter_native_splash render a
+# ~530dp icon at baseline density — wider than most phone screens.
 flutter_native_splash:
   color: "#FFFFFF"
-  image: assets/images/logo.png
+  image: assets/images/logo_splash.png
   android_12:
-    image: assets/images/logo.png
+    image: assets/images/logo_splash.png
     color: "#FFFFFF"
   fullscreen: true
 

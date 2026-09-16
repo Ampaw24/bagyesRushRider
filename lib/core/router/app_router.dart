@@ -51,7 +51,8 @@ const _publicRoutes = {
 
 GoRouter createAppRouter() {
   return GoRouter(
-    initialLocation: AppRoutes.intro,
+     //initialLocation: AppRoutes.intro,
+    initialLocation: AppRoutes.splash,
     // Re-evaluates the guard when a 401 clears the session mid-session.
     refreshListenable: sessionRevision,
     redirect: (context, state) {

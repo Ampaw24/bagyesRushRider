@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/core/di/service_locator.dart';
-import 'package:delivery_boy/core/router/app_routes.dart';
+import 'package:delivery_boy/core/services/user_session_manager.dart';
+import 'package:delivery_boy/features/rider/auth/views/widgets/change_password_sheet.dart';
+import 'package:delivery_boy/features/rider/auth/views/widgets/phone_change_flow_sheet.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 class RiderSettingsScreen extends ConsumerStatefulWidget {
@@ -63,7 +64,25 @@ class _RiderSettingsScreenState extends ConsumerState<RiderSettingsScreen> {
             icon: HugeIcons.strokeRoundedLockPassword,
             iconColor: AppColors.primary,
             title: 'Change Password',
-            onTap: () => context.push(AppRoutes.forgotPassword),
+            onTap: () => ChangePasswordSheet.show(context),
+          ),
+          _tile(
+            icon: HugeIcons.strokeRoundedSmartPhone01,
+            iconColor: AppColors.primary,
+            title: 'Change Phone Number',
+            trailing: Text(
+              sl<UserSessionManager>().phone ?? '',
+              style: TextStyle(
+                fontFamily: 'Roboto',
+                fontSize: 12,
+                color: Colors.grey.shade500,
+              ),
+            ),
+            onTap: () {
+              final phone = sl<UserSessionManager>().phone;
+              if (phone == null || phone.isEmpty) return;
+              PhoneChangeFlowSheet.show(context, oldPhone: phone);
+            },
           ),
           _switchTile(
             icon: HugeIcons.strokeRoundedNotification01,

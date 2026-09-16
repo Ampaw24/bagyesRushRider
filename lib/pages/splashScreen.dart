@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:delivery_boy/constant/asset_images.dart';
 import 'package:delivery_boy/constant/colors.dart';
 import 'package:delivery_boy/core/di/service_locator.dart';
@@ -83,113 +81,95 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    // Standard, icon-like footprint — proportional across phones, tablets
+    // and landscape without ever dominating the screen.
+    final logoSize = (size.shortestSide * 0.22).clamp(80.0, 160.0);
+
     return Scaffold(
       backgroundColor: kDecorativeBackgroundColor,
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          final width = constraints.maxWidth;
-          final height = constraints.maxHeight;
-
-          // Card is clamped so it stays comfortable on both small phones
-          // and large tablets, while still scaling with the viewport.
-          final cardSize =
-              (math.min(width, height) * 0.34).clamp(120.0, 260.0);
-          final loaderWidth = (width * 0.32).clamp(96.0, 220.0);
-
-          return DecorativeBackground(
-            child: SafeArea(
-              child: Column(
-                children: [
-                  const Spacer(flex: 5),
-                  ScaleTransition(
-                    scale: _scaleAnimation,
-                    child: FadeTransition(
-                      opacity: _fadeAnimation,
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(cardSize * 0.22),
-                        child: Image.asset(
-                          AssetImages.bagyesLogo,
-                          width: cardSize,
-                          height: cardSize,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    ),
-                  ),
-                  FadeTransition(
+      body: DecorativeBackground(
+        child: SafeArea(
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: size.width * 0.08),
+            child: Column(
+              children: [
+                const Spacer(flex: 5),
+                ScaleTransition(
+                  scale: _scaleAnimation,
+                  child: FadeTransition(
                     opacity: _fadeAnimation,
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 22),
-                      child: Container(
-                        width: 40,
-                        height: 2.5,
-                        decoration: BoxDecoration(
-                          color: primaryColor.withValues(alpha: 0.55),
-                          borderRadius: BorderRadius.circular(2),
-                        ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(logoSize * 0.22),
+                      child: Image.asset(
+                        AssetImages.bagyesLogo,
+                        width: logoSize,
+                        height: logoSize,
+                        fit: BoxFit.cover,
                       ),
                     ),
                   ),
-                  FadeTransition(
+                ),
+                SizedBox(height: size.height * 0.025),
+                FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: Container(
+                    width: size.width * 0.1,
+                    height: size.height * 0.0035,
+                    decoration: BoxDecoration(
+                      color: primaryColor.withValues(alpha: 0.55),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                SizedBox(height: size.height * 0.018),
+                FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      'FAST · RELIABLE · QUALITY',
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      style: TextStyle(
+                        fontSize: size.width * 0.032,
+                        color: greyColor.withValues(alpha: 0.85),
+                        letterSpacing: size.width * 0.006,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+                const Spacer(flex: 6),
+                FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: SizedBox(
+                    width: size.width * 0.08,
+                    height: size.width * 0.08,
+                    child: CircularProgressIndicator(
+                      strokeWidth: size.width * 0.006,
+                      valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.symmetric(vertical: size.height * 0.02),
+                  child: FadeTransition(
                     opacity: _fadeAnimation,
-                    child: Padding(
-                      padding: const EdgeInsets.only(
-                        top: 18,
-                        left: 24,
-                        right: 24,
-                      ),
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Text(
-                          'FAST · RELIABLE · QUALITY',
-                          textAlign: TextAlign.center,
-                          maxLines: 1,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: greyColor.withValues(alpha: 0.8),
-                            letterSpacing: 3,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+                    child: Text(
+                      _versionLabel ?? '',
+                      style: TextStyle(
+                        fontSize: size.width * 0.03,
+                        color: greyColor.withValues(alpha: 0.6),
+                        letterSpacing: 0.5,
                       ),
                     ),
                   ),
-                  const Spacer(flex: 6),
-                  FadeTransition(
-                    opacity: _fadeAnimation,
-                    child: SizedBox(
-                      width: loaderWidth,
-                      height: 3,
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(2),
-                        child: LinearProgressIndicator(
-                          backgroundColor: Colors.grey.withValues(alpha: 0.2),
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            primaryColor,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 12, bottom: 20),
-                    child: FadeTransition(
-                      opacity: _fadeAnimation,
-                      child: Text(
-                        _versionLabel ?? '',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: greyColor.withValues(alpha: 0.6),
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-          );
-        },
+          ),
+        ),
       ),
     );
   }

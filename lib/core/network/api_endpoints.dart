@@ -29,6 +29,14 @@ abstract final class ApiEndpoints {
   /// Body: `{phone, code, password, password_confirmation}`.
   static const passwordReset = '/password/reset';
 
+  /// Changes the signed-in user's password using their current one —
+  /// distinct from the OTP-based [passwordForgot]/[passwordReset] pair.
+  /// Requires Bearer auth. Body:
+  /// `{current_password, password, password_confirmation}`.
+  /// Verified live: returns 401 (not 404) without a valid token, confirming
+  /// the route exists on this backend.
+  static const passwordChange = '/password/change';
+
   // NOTE: this backend has no /auth/refresh-token route (verified: 404).
   // A refresh token is persisted when returned, but cannot be redeemed yet.
 

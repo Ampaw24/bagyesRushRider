@@ -245,6 +245,63 @@ class RiderAuthNotifier extends Notifier<RiderAuthState> {
     return true;
   }
 
+  /// Verifies an OTP with no session side-effects — proves ownership of the
+  /// rider's *current* phone before changing it. Distinct from
+  /// [verifyPhoneAndEnsureSession], which verifies a newly-registered phone
+  /// and may log the caller in; a phone-change flow starts already
+  /// authenticated and must not touch `phone_verified` for a number that's
+  /// about to be replaced.
+  Future<bool> verifyPhoneOwnership({
+    required String phone,
+    required String code,
+  }) async {
+    state = state.copyWith(status: AuthStatus.loading, clearError: true);
+
+    final result = await _repo.verifyPhone(phone: phone, code: code);
+    return result.fold(
+      (f) {
+        state = state.copyWith(
+            status: AuthStatus.error, errorMessage: f.message);
+        return false;
+      },
+      (_) {
+        state = state.copyWith(status: AuthStatus.initial);
+        return true;
+      },
+    );
+  }
+
+  /// Changes the signed-in rider's password. Distinct from
+  /// [sendForgotPasswordCode]/[resetPassword] — keeps the rider signed in
+  /// and needs their current password rather than an OTP.
+  Future<bool> changePassword({
+    required String currentPassword,
+    required String newPassword,
+    required String confirmPassword,
+  }) async {
+    state = state.copyWith(status: AuthStatus.loading, clearError: true);
+
+    final result = await _repo.changePassword(
+      currentPassword: currentPassword,
+      newPassword: newPassword,
+      confirmPassword: confirmPassword,
+    );
+
+    if (result.isLeft()) {
+      final failure = _failureOf(result);
+      state = state.copyWith(
+        status: AuthStatus.error,
+        errorMessage: failure?.message ?? 'Request failed',
+        fieldErrors:
+            failure is ValidationFailure ? failure.errors : const {},
+      );
+      return false;
+    }
+
+    state = state.copyWith(status: AuthStatus.initial, clearError: true);
+    return true;
+  }
+
   Future<bool> resetPassword({
     required String phone,
     required String code,

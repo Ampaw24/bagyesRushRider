@@ -23,7 +23,7 @@ if (flutterVersionName == null) {
 }
 
 android {
-    namespace "com.example.delivery_boy"
+    namespace "com.example.bagyesrush_rider"
     compileSdk 36
     ndkVersion "28.2.13676358"
 
@@ -32,7 +32,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.example.delivery_boy"
+        applicationId "com.example.bagyesrush_rider"
         minSdk flutter.minSdkVersion
         targetSdk 35
         versionCode 2

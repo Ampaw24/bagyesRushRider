@@ -51,6 +51,20 @@ class RiderAuthApiService {
         'password_confirmation': confirmPassword,
       });
 
+  /// Requires Bearer auth (the interceptor attaches it). Distinct from
+  /// [sendForgotPasswordCode]/[resetPassword] — this needs the current
+  /// password, not an OTP.
+  Future<Response<dynamic>> changePassword({
+    required String currentPassword,
+    required String newPassword,
+    required String confirmPassword,
+  }) =>
+      _dio.post(ApiEndpoints.passwordChange, data: {
+        'current_password': currentPassword,
+        'password': newPassword,
+        'password_confirmation': confirmPassword,
+      });
+
   Future<Response<dynamic>> getProfile() => _dio.get(ApiEndpoints.profile);
 
   Future<Response<dynamic>> logout() => _dio.post(ApiEndpoints.logout);

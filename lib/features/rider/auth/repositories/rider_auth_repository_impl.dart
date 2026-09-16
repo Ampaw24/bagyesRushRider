@@ -85,6 +85,18 @@ class RiderAuthRepositoryImpl implements RiderAuthRepository {
           ));
 
   @override
+  Future<Either<Failure, void>> changePassword({
+    required String currentPassword,
+    required String newPassword,
+    required String confirmPassword,
+  }) =>
+      _run(() => _api.changePassword(
+            currentPassword: currentPassword,
+            newPassword: newPassword,
+            confirmPassword: confirmPassword,
+          ));
+
+  @override
   Future<Either<Failure, AuthUserModel>> getProfile() => _run(() async {
         final response = await _api.getProfile();
         // NOTE: /profile has no `user` envelope level — unlike login/register.

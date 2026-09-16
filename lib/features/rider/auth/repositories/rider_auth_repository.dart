@@ -61,6 +61,16 @@ abstract class RiderAuthRepository {
     required String confirmPassword,
   });
 
+  /// Changes the signed-in rider's password (`/password/change`). Keeps the
+  /// rider signed in and needs their current password — distinct from the
+  /// OTP-based [sendForgotPasswordCode]/[resetPassword] flow, which is for
+  /// a rider who can't provide one.
+  ResultFuture<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+    required String confirmPassword,
+  });
+
   ResultFuture<AuthUserModel> getProfile();
 
   ResultFuture<void> logout();
