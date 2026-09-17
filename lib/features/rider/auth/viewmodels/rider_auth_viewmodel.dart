@@ -126,7 +126,7 @@ class RiderAuthNotifier extends Notifier<RiderAuthState> {
     required String firstName,
     required String lastName,
     required String city,
-    required String vehicleType,
+    required int vehicleTypeId,
     required String plateNumber,
   }) async {
     state = state.copyWith(status: AuthStatus.loading, clearError: true);
@@ -139,7 +139,7 @@ class RiderAuthNotifier extends Notifier<RiderAuthState> {
       firstName: firstName,
       lastName: lastName,
       city: city,
-      vehicleType: vehicleType,
+      vehicleTypeId: vehicleTypeId,
       plateNumber: plateNumber,
     );
 
@@ -180,7 +180,7 @@ class RiderAuthNotifier extends Notifier<RiderAuthState> {
     required String firstName,
     required String lastName,
     required String city,
-    required String vehicleType,
+    required int vehicleTypeId,
     required String plateNumber,
     required bool acceptTerms,
     required bool consentToVerification,
@@ -194,7 +194,7 @@ class RiderAuthNotifier extends Notifier<RiderAuthState> {
       firstName: firstName,
       lastName: lastName,
       city: city,
-      vehicleType: vehicleType,
+      vehicleTypeId: vehicleTypeId,
       plateNumber: plateNumber,
     );
     if (!registered) return false;

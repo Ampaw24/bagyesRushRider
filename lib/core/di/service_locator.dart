@@ -8,18 +8,6 @@ import 'package:delivery_boy/core/utils/network_utility.dart';
 import 'package:delivery_boy/features/rider/auth/repositories/rider_auth_repository.dart';
 import 'package:delivery_boy/features/rider/auth/repositories/rider_auth_repository_impl.dart';
 import 'package:delivery_boy/features/rider/auth/services/rider_auth_api_service.dart';
-// Phase 5: Wallet
-import 'package:delivery_boy/features/rider/wallet/repositories/rider_wallet_repository.dart';
-import 'package:delivery_boy/features/rider/wallet/repositories/rider_wallet_repository_impl.dart';
-import 'package:delivery_boy/features/rider/wallet/services/rider_wallet_api_service.dart';
-// Phase 6: Profile
-import 'package:delivery_boy/features/rider/profile/repositories/rider_profile_repository.dart';
-import 'package:delivery_boy/features/rider/profile/repositories/rider_profile_repository_impl.dart';
-import 'package:delivery_boy/features/rider/profile/services/rider_profile_api_service.dart';
-// Notifications
-import 'package:delivery_boy/features/rider/notifications/repositories/rider_notifications_repository.dart';
-import 'package:delivery_boy/features/rider/notifications/repositories/rider_notifications_repository_impl.dart';
-import 'package:delivery_boy/features/rider/notifications/services/rider_notifications_api_service.dart';
 // Rider "Me" API (/rider/me/* — see the "v1 / rider" Postman collection)
 import 'package:delivery_boy/features/rider/profile/services/rider_me_profile_api_service.dart';
 import 'package:delivery_boy/features/rider/profile/repositories/rider_me_profile_repository.dart';
@@ -30,6 +18,10 @@ import 'package:delivery_boy/features/rider/orders/repositories/rider_me_order_r
 import 'package:delivery_boy/features/rider/wallet/services/rider_me_wallet_api_service.dart';
 import 'package:delivery_boy/features/rider/wallet/repositories/rider_me_wallet_repository.dart';
 import 'package:delivery_boy/features/rider/wallet/repositories/rider_me_wallet_repository_impl.dart';
+// Vehicle catalogue (public reads — signup wizard's Type/Make/Model picker)
+import 'package:delivery_boy/features/rider/vehicles/service/rider_vehicle_catalog_api_service.dart';
+import 'package:delivery_boy/features/rider/vehicles/repository/vehicle_catalog_repository.dart';
+import 'package:delivery_boy/features/rider/vehicles/repository/vehicle_catalog_repository_impl.dart';
 
 final sl = GetIt.instance;
 
@@ -59,24 +51,6 @@ Future<void> initServiceLocator() async {
     () => RiderAuthRepositoryImpl(sl<RiderAuthApiService>()),
   );
 
-  // ── Rider Wallet ────────────────────────────────────────────────────────
-  sl.registerLazySingleton(() => RiderWalletApiService(sl<Dio>()));
-  sl.registerLazySingleton<RiderWalletRepository>(
-    () => RiderWalletRepositoryImpl(sl<RiderWalletApiService>()),
-  );
-
-  // ── Rider Profile ───────────────────────────────────────────────────────
-  sl.registerLazySingleton(() => RiderProfileApiService(sl<Dio>()));
-  sl.registerLazySingleton<RiderProfileRepository>(
-    () => RiderProfileRepositoryImpl(sl<RiderProfileApiService>()),
-  );
-
-  // ── Rider Notifications ──────────────────────────────────────────────────
-  sl.registerLazySingleton(() => RiderNotificationsApiService(sl<Dio>()));
-  sl.registerLazySingleton<RiderNotificationsRepository>(
-    () => RiderNotificationsRepositoryImpl(sl<RiderNotificationsApiService>()),
-  );
-
   // ── Rider "Me" API (/rider/me/* — see the "v1 / rider" Postman collection) ──────────
   sl.registerLazySingleton(() => RiderMeProfileApiService(sl<Dio>()));
   sl.registerLazySingleton<RiderMeProfileRepository>(
@@ -91,5 +65,11 @@ Future<void> initServiceLocator() async {
   sl.registerLazySingleton(() => RiderMeWalletApiService(sl<Dio>()));
   sl.registerLazySingleton<RiderMeWalletRepository>(
     () => RiderMeWalletRepositoryImpl(sl<RiderMeWalletApiService>()),
+  );
+
+  // ── Vehicle Catalogue ───────────────────────────────────────────────────
+  sl.registerLazySingleton(() => RiderVehicleCatalogApiService(sl<Dio>()));
+  sl.registerLazySingleton<VehicleCatalogRepository>(
+    () => VehicleCatalogRepositoryImpl(sl<RiderVehicleCatalogApiService>()),
   );
 }

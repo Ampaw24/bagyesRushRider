@@ -1,9 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:delivery_boy/core/di/service_locator.dart';
-import 'package:delivery_boy/core/services/user_session_manager.dart';
 import 'package:delivery_boy/features/rider/notifications/models/rider_notification_model.dart';
-import 'package:delivery_boy/features/rider/notifications/repositories/rider_notifications_repository.dart';
 
 // ── Status ────────────────────────────────────────────────────────────────────
 
@@ -46,30 +43,13 @@ class RiderNotificationsNotifier extends Notifier<RiderNotificationsState> {
   @override
   RiderNotificationsState build() => const RiderNotificationsState();
 
+  // TODO(backend): there is no `/rider/me/notifications` endpoint yet — the
+  // old Node `/notifications/user/:id` route 404s on the Laravel backend, so
+  // this is stubbed to an empty inbox until a replacement endpoint exists.
   Future<void> load() async {
-    state = state.copyWith(status: NotificationsStatus.loading);
-
-    final userId = sl<UserSessionManager>().userId;
-    if (userId == null) {
-      state = state.copyWith(
-        status: NotificationsStatus.error,
-        errorMessage: 'User not found',
-      );
-      return;
-    }
-
-    final result =
-        await sl<RiderNotificationsRepository>().getNotifications(userId);
-
-    result.fold(
-      (failure) => state = state.copyWith(
-        status: NotificationsStatus.error,
-        errorMessage: failure.message,
-      ),
-      (notifications) => state = state.copyWith(
-        status: NotificationsStatus.loaded,
-        notifications: notifications,
-      ),
+    state = state.copyWith(
+      status: NotificationsStatus.loaded,
+      notifications: const [],
     );
   }
 

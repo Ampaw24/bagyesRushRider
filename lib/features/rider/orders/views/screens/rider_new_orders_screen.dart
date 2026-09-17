@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/core/widgets/animated_list_item.dart';
+import 'package:delivery_boy/core/widgets/app_toast.dart';
 import 'package:delivery_boy/core/widgets/shimmer_list_placeholder.dart';
 import 'package:delivery_boy/features/rider/orders/models/rider_me_order_model.dart';
 import 'package:delivery_boy/features/rider/orders/providers/rider_me_order_providers.dart';
@@ -75,11 +76,11 @@ class _RiderNewOrdersScreenState extends ConsumerState<RiderNewOrdersScreen> {
     final ok = await ref.read(riderMeOffersProvider.notifier).accept(offer.id);
     if (ok && mounted) {
       HapticFeedback.mediumImpact();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Order accepted!'),
-          backgroundColor: AppColors.success,
-        ),
+      AppToast.show(
+        context,
+        isSuccess: true,
+        title: 'Order Accepted',
+        subtitle: 'This delivery has been added to your active orders.',
       );
     }
   }
@@ -88,16 +89,10 @@ class _RiderNewOrdersScreenState extends ConsumerState<RiderNewOrdersScreen> {
   Widget build(BuildContext context) {
     final state = ref.watch(riderMeOffersProvider);
 
-    ref.listen<RiderMeOffersState>(riderMeOffersProvider, (_, next) {
-      if (next.errorMessage != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(next.errorMessage!),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
-    });
+    // The offers list poll (every 25s) used to surface a failed
+    // GET /rider/me/offers as a snackbar on every retry — noisy and not
+    // actionable for the rider, so a failed load just falls back silently to
+    // the last known list/empty state instead of interrupting them.
 
     if (state.status == RiderMeOrdersStatus.loading ||
         state.status == RiderMeOrdersStatus.initial) {

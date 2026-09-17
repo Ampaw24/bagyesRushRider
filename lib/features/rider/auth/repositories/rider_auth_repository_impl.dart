@@ -22,7 +22,7 @@ class RiderAuthRepositoryImpl implements RiderAuthRepository {
     required String firstName,
     required String lastName,
     required String city,
-    required String vehicleType,
+    required int vehicleTypeId,
     required String plateNumber,
   }) =>
       _run(() async {
@@ -35,7 +35,7 @@ class RiderAuthRepositoryImpl implements RiderAuthRepository {
           'first_name': firstName,
           'last_name': lastName,
           'city': city,
-          'vehicle_type': vehicleType,
+          'vehicle_type_id':  vehicleTypeId,
           // Normalised: `unique:riders,plate_number` is a raw string
           // comparison, and TextCapitalization is only a keyboard hint —
           // it doesn't touch pasted text.

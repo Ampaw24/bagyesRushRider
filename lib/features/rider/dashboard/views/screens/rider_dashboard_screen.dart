@@ -128,6 +128,7 @@ class _RiderDashboardScreenState extends ConsumerState<RiderDashboardScreen> {
 
   void _goToOrders() => setState(() => _currentIndex = 1);
   void _goToWallet() => setState(() => _currentIndex = 2);
+  void _goToProfile() => setState(() => _currentIndex = 3);
 
   @override
   Widget build(BuildContext context) {
@@ -161,6 +162,7 @@ class _RiderDashboardScreenState extends ConsumerState<RiderDashboardScreen> {
         onToggleQueue: _toggleQueue,
         onViewAllOrders: _goToOrders,
         onViewWallet: _goToWallet,
+        onViewProfile: _goToProfile,
       ),
       _OrdersTab(isOnline: isOnline, onToggle: _toggleQueue),
       const RiderWalletScreen(),

@@ -40,16 +40,14 @@ abstract final class ApiEndpoints {
   // NOTE: this backend has no /auth/refresh-token route (verified: 404).
   // A refresh token is persisted when returned, but cannot be redeemed yet.
 
-  // ── Profile ───────────────────────────────────────────────────────────────
-  static String riderProfile(String id) => '/couriers/details/$id';
-  static const updateCourier = '/couriers/update';
-  static const uploadDoc = '/couriers/upload/doc';
-
-  // ── Wallet / Earnings ─────────────────────────────────────────────────────
-  static String getEarnings(String id) => '/earnings/user/$id';
-
-  // ── Notifications ─────────────────────────────────────────────────────────
-  static String getNotifications(String id) => '/notifications/user/$id';
+  // ── Vehicle catalogue (public reads — no auth required) ─────────────────────
+  // Cascading reference data for the rider signup vehicle picker:
+  // type -> make (filtered by vehicle_type_id) -> model (filtered by
+  // vehicle_make_id). Admin CRUD counterparts exist under /admin/vehicle-*
+  // but are not needed by this app.
+  static const vehicleTypes = '/vehicle-types';
+  static const vehicleMakes = '/vehicle-makes';
+  static const vehicleModels = '/vehicle-models';
 
   // ═══════════════════════════════════════════════════════════════════════
   // Rider "Me" API — /rider/me/*

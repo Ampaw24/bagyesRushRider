@@ -2,44 +2,42 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:delivery_boy/constant/app_theme.dart';
+import 'package:delivery_boy/core/di/service_locator.dart';
 import 'package:delivery_boy/core/router/app_routes.dart';
+import 'package:delivery_boy/core/services/user_session_manager.dart';
 import 'package:delivery_boy/features/rider/auth/models/rider_user_model.dart';
-import 'package:delivery_boy/features/rider/profile/providers/rider_profile_providers.dart';
+import 'package:delivery_boy/features/rider/auth/viewmodels/rider_auth_viewmodel.dart';
+import 'package:delivery_boy/features/rider/dashboard/views/screens/rider_dashboard_screen.dart';
+import 'package:delivery_boy/features/rider/profile/providers/rider_document_completion_providers.dart';
+import 'package:delivery_boy/features/rider/profile/providers/rider_me_profile_providers.dart';
 import 'package:hugeicons/hugeicons.dart';
-
-// iOS-style grouped background, used by Grab / DoorDash Dasher
-const _kBg = Color(0xFFF2F2F7);
-
-List<Color> _kycRingColors(KycStatus? status) {
-  switch (status) {
-    case KycStatus.approved:
-      return [AppColors.success, Color(0xFF66BB6A), AppColors.success];
-    case KycStatus.pendingReview:
-      return [Colors.orange, Colors.amber, Colors.orange];
-    case KycStatus.rejected:
-      return [AppColors.error, Colors.redAccent, AppColors.error];
-    default:
-      return [Color(0xFFE0E0E0), Color(0xFFBDBDBD), Color(0xFFE0E0E0)];
-  }
-}
 
 class RiderProfileScreen extends ConsumerWidget {
   const RiderProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(riderProfileProvider);
-    final user = state.user;
+    final w = MediaQuery.sizeOf(context).width;
+    final navClearance = MediaQuery.paddingOf(context).bottom;
 
-    final docCount = [
-      user?.selfie,
-      user?.licenceFront,
-      user?.licenceBack,
-      user?.motorInsurance,
-      user?.roadWorthy,
-    ].where((v) => v != null && v.isNotEmpty).length;
-    final completePct = docCount / 5.0;
-    final isComplete = user?.isProfileComplete ?? false;
+    final session = sl<UserSessionManager>();
+    final profile = ref.watch(riderMeProfileProvider).profile;
+    final kycStatus = ref.watch(riderKycStatusProvider);
+    final docStatus = ref.watch(riderDocumentCompletionProvider).valueOrNull;
+
+    final docCount = docStatus?.values.where((uploaded) => uploaded).length ?? 0;
+    final docTotal = docStatus?.length ?? 0;
+    final isComplete = docStatus != null && docCount == docTotal;
+
+    final displayName = (session.displayName ?? '').trim();
+    final name = displayName.isNotEmpty ? displayName : 'Rider';
+    final initials = name
+        .split(' ')
+        .where((s) => s.isNotEmpty)
+        .map((s) => s[0])
+        .take(2)
+        .join()
+        .toUpperCase();
 
     void showLogoutDialog() {
       showDialog(
@@ -50,25 +48,31 @@ class RiderProfileScreen extends ConsumerWidget {
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           title: const Text(
             'Log Out',
-            style: TextStyle(fontWeight: FontWeight.w700),
+            style: TextStyle(fontFamily: 'Mukta', fontWeight: FontWeight.w700),
           ),
-          content: const Text('Are you sure you want to log out?'),
+          content: const Text(
+            'Are you sure you want to log out?',
+            style: TextStyle(fontFamily: 'Mukta'),
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancel'),
+              child: const Text('Cancel', style: TextStyle(fontFamily: 'Mukta')),
             ),
             TextButton(
               onPressed: () async {
                 Navigator.pop(ctx);
-                await ref.read(riderProfileProvider.notifier).logout();
+                await ref.read(riderAuthProvider.notifier).logout();
                 if (!context.mounted) return;
                 context.go(AppRoutes.login);
               },
               child: const Text(
                 'Log Out',
                 style: TextStyle(
-                    color: AppColors.error, fontWeight: FontWeight.w700),
+                  fontFamily: 'Mukta',
+                  color: AppColors.error,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
           ],
@@ -76,287 +80,357 @@ class RiderProfileScreen extends ConsumerWidget {
       );
     }
 
-    final bottomPad = MediaQuery.paddingOf(context).bottom;
-
     return Scaffold(
-      backgroundColor: _kBg,
-      body: CustomScrollView(
-        physics: const BouncingScrollPhysics(),
-        slivers: [
-          // ── App bar ──────────────────────────────────────────────────────
-          SliverAppBar(
-            automaticallyImplyLeading: false,
-            backgroundColor: _kBg,
-            surfaceTintColor: Colors.transparent,
-            elevation: 0,
-            pinned: true,
-            title: const Text(
-              'Profile',
-              style: TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
-              ),
+      backgroundColor: AppColors.scaffold,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // ── Fixed header — stays put while the sections below scroll ──
+            _Header(
+              w: w,
+              name: name,
+              phone: session.phone ?? '',
+              email: session.email,
+              initials: initials,
+              selfieUrl: profile?.photoUrl,
+              kycStatus: kycStatus,
+              docCount: docCount,
+              docTotal: docTotal,
+              isComplete: isComplete,
+              onEdit: () => context.push(AppRoutes.editProfile),
+              onTapDocuments: () => context.push(AppRoutes.documentUpload),
             ),
-          ),
 
-          SliverPadding(
-            padding: EdgeInsets.fromLTRB(16, 0, 16, bottomPad + 24),
-            sliver: SliverList(
-              delegate: SliverChildListDelegate([
-                // ── Identity card ───────────────────────────────────────
-                _SectionCard(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
+            // ── Scrollable sections ─────────────────────────────────────
+            Expanded(
+              child: ListView(
+                padding: EdgeInsets.zero,
+                physics: const AlwaysScrollableScrollPhysics(),
+                children: [
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      w * 0.05,
+                      w * 0.06,
+                      w * 0.05,
+                      navClearance + w * 0.1,
+                    ),
                     child: Column(
                       children: [
-                        // Avatar with KYC-status ring + online dot
-                        GestureDetector(
-                          onTap: () => context.push(AppRoutes.editProfile),
-                          child: Stack(
-                            alignment: Alignment.bottomRight,
-                            children: [
-                              // Outer KYC status ring
-                              Container(
-                                width: 96,
-                                height: 96,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  gradient: SweepGradient(
-                                    colors: _kycRingColors(user?.kycStatus),
-                                  ),
-                                ),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(3),
-                                  child: Container(
-                                    decoration: const BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: Colors.white,
-                                    ),
-                                    child: ClipOval(
-                                      child: user?.selfie != null &&
-                                              user!.selfie!.isNotEmpty
-                                          ? Image.network(
-                                              user.selfie!,
-                                              fit: BoxFit.cover,
-                                              errorBuilder: (_, __, ___) => Icon(
-                                                  HugeIcons.strokeRoundedUser,
-                                                  size: 42,
-                                                  color: Colors.grey.shade400),
-                                            )
-                                          : Icon(HugeIcons.strokeRoundedUser,
-                                              size: 42,
-                                              color: Colors.grey.shade400),
-                                    ),
-                                  ),
-                                ),
+                        _SectionCard(
+                          label: 'Account',
+                          w: w,
+                          tiles: [
+                            _ProfileTile(
+                              icon: HugeIcons.strokeRoundedFileUpload,
+                              label: 'Documents',
+                              trailing: _CountBadge(
+                                count: docCount,
+                                total: docTotal,
+                                isComplete: isComplete,
                               ),
-                              // Online / offline dot
-                              Container(
-                                width: 22,
-                                height: 22,
-                                decoration: BoxDecoration(
-                                  color: (user?.queue ?? false)
-                                      ? AppColors.success
-                                      : Colors.grey.shade400,
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                      color: Colors.white, width: 2.5),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        // Name
-                        Text(
-                          user?.name ?? 'Rider',
-                          style: const TextStyle(
-                            fontSize: 19,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        // Phone
-                        Text(
-                          user?.phone ?? '',
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                        if (user?.email != null &&
-                            user!.email!.isNotEmpty) ...[
-                          const SizedBox(height: 2),
-                          Text(
-                            user.email!,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: AppColors.textSecondary,
+                              onTap: () =>
+                                  context.push(AppRoutes.documentUpload),
+                              w: w,
                             ),
-                          ),
-                        ],
-                        const SizedBox(height: 14),
-                        // KYC badge + edit button
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            _KycBadge(status: user?.kycStatus),
-                            const SizedBox(width: 10),
-                            GestureDetector(
+                            _ProfileTile(
+                              icon: HugeIcons.strokeRoundedUserEdit01,
+                              label: 'Edit Profile',
                               onTap: () =>
                                   context.push(AppRoutes.editProfile),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 14, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: _kBg,
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: const Text(
-                                  'Edit Profile',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.primary,
-                                  ),
-                                ),
-                              ),
+                              w: w,
+                            ),
+                            _ProfileTile(
+                              icon: HugeIcons.strokeRoundedNotification01,
+                              label: 'Notifications',
+                              onTap: () =>
+                                  context.push(AppRoutes.notifications),
+                              w: w,
+                            ),
+                            _ProfileTile(
+                              icon: HugeIcons.strokeRoundedSettings01,
+                              label: 'Settings',
+                              onTap: () => context.push(AppRoutes.settings),
+                              w: w,
                             ),
                           ],
                         ),
+                        SizedBox(height: w * 0.05),
+                        _SectionCard(
+                          label: 'Support',
+                          w: w,
+                          tiles: [
+                            _ProfileTile(
+                              icon: HugeIcons.strokeRoundedHeadphones,
+                              label: 'Help & Support',
+                              onTap: () {},
+                              w: w,
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: w * 0.07),
+                        _LogoutButton(w: w, onTap: showLogoutDialog),
                       ],
                     ),
                   ),
-                ),
-
-                // ── Info strip ──────────────────────────────────────────
-                const SizedBox(height: 12),
-                _InfoStrip(
-                  docCount: docCount,
-                  isOnline: user?.queue ?? false,
-                  numberPlate: user?.numberPlate,
-                ),
-
-                // ── Completion nudge ────────────────────────────────────
-                if (!isComplete) ...[
-                  const SizedBox(height: 12),
-                  _CompletionBanner(
-                    docCount: docCount,
-                    completePct: completePct,
-                    onTap: () => context.push(AppRoutes.documentUpload),
-                  ),
                 ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
-                // ── Account section ─────────────────────────────────────
-                const SizedBox(height: 24),
-                _SectionHeader(label: 'Account'),
-                const SizedBox(height: 8),
-                _SectionCard(
-                  child: Column(
-                    children: [
-                      _Tile(
-                        icon: HugeIcons.strokeRoundedEdit01,
-                        color: AppColors.primary,
-                        title: 'Edit Profile',
-                        onTap: () => context.push(AppRoutes.editProfile),
-                      ),
-                      _Tile(
-                        icon: HugeIcons.strokeRoundedFileUpload,
-                        color: Colors.orange,
-                        title: 'Documents',
-                        trailing: _DocsBadge(isComplete: isComplete),
-                        onTap: () => context.push(AppRoutes.documentUpload),
-                      ),
-                      _Tile(
-                        icon: HugeIcons.strokeRoundedNotification01,
-                        color: Colors.blue,
-                        title: 'Notifications',
-                        onTap: () =>
-                            context.push(AppRoutes.notifications),
-                      ),
-                      _Tile(
-                        icon: HugeIcons.strokeRoundedSettings01,
-                        color: Colors.grey.shade600,
-                        title: 'Settings',
-                        onTap: () => context.push(AppRoutes.settings),
-                        last: true,
-                      ),
-                    ],
+// ─── Header ─────────────────────────────────────────────────────────────────
+
+class _Header extends StatelessWidget {
+  final double w;
+  final String name;
+  final String phone;
+  final String? email;
+  final String initials;
+  final String? selfieUrl;
+  final KycStatus? kycStatus;
+  final int docCount;
+  final int docTotal;
+  final bool isComplete;
+  final VoidCallback onEdit;
+  final VoidCallback onTapDocuments;
+
+  const _Header({
+    required this.w,
+    required this.name,
+    required this.phone,
+    this.email,
+    required this.initials,
+    this.selfieUrl,
+    this.kycStatus,
+    required this.docCount,
+    required this.docTotal,
+    required this.isComplete,
+    required this.onEdit,
+    required this.onTapDocuments,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.fromLTRB(w * 0.05, w * 0.04, w * 0.05, w * 0.06),
+      color: AppColors.scaffold,
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Profile',
+                style: TextStyle(
+                  fontFamily: 'Mukta',
+                  fontSize: w * 0.06,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              GestureDetector(
+                onTap: onEdit,
+                child: Container(
+                  padding: EdgeInsets.all(w * 0.024),
+                  decoration: const BoxDecoration(
+                    color: AppColors.surfaceVariant,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    HugeIcons.strokeRoundedPencilEdit02,
+                    color: AppColors.textPrimary,
+                    size: w * 0.045,
                   ),
                 ),
-
-                // ── More section ────────────────────────────────────────
-                const SizedBox(height: 24),
-                _SectionHeader(label: 'More'),
-                const SizedBox(height: 8),
-                _SectionCard(
-                  child: Column(
-                    children: [
-                      _Tile(
-                        icon: HugeIcons.strokeRoundedHeadphones,
-                        color: Colors.teal,
-                        title: 'Support',
-                        onTap: () {},
-                      ),
-                      _Tile(
-                        icon: HugeIcons.strokeRoundedLogout01,
-                        color: AppColors.error,
-                        title: 'Log Out',
-                        titleColor: AppColors.error,
-                        onTap: showLogoutDialog,
-                        last: true,
-                      ),
-                    ],
+              ),
+            ],
+          ),
+          SizedBox(height: w * 0.06),
+          GestureDetector(
+            onTap: onEdit,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  padding: EdgeInsets.all(w * 0.01),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: AppColors.primary.withValues(alpha: 0.18),
+                      width: w * 0.008,
+                    ),
+                  ),
+                  child: CircleAvatar(
+                    radius: w * 0.13,
+                    backgroundColor: AppColors.primary,
+                    backgroundImage:
+                        (selfieUrl != null && selfieUrl!.isNotEmpty)
+                            ? NetworkImage(selfieUrl!)
+                            : null,
+                    child: (selfieUrl != null && selfieUrl!.isNotEmpty)
+                        ? null
+                        : Text(
+                            initials,
+                            style: TextStyle(
+                              fontFamily: 'Mukta',
+                              color: Colors.white,
+                              fontSize: w * 0.085,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
                   ),
                 ),
-              ]),
+                Positioned(
+                  right: 0,
+                  bottom: 0,
+                  child: Container(
+                    padding: EdgeInsets.all(w * 0.015),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppColors.scaffold, width: 2),
+                    ),
+                    child: Icon(
+                      HugeIcons.strokeRoundedCamera01,
+                      color: Colors.white,
+                      size: w * 0.032,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
+          SizedBox(height: w * 0.035),
+          Text(
+            name,
+            style: TextStyle(
+              fontFamily: 'Mukta',
+              fontSize: w * 0.05,
+              fontWeight: FontWeight.w800,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          if (phone.isNotEmpty || (email != null && email!.isNotEmpty)) ...[
+            SizedBox(height: w * 0.006),
+            Text(
+              phone.isNotEmpty ? phone : email!,
+              style: TextStyle(
+                fontFamily: 'Mukta',
+                fontSize: w * 0.033,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
+          SizedBox(height: w * 0.03),
+          _KycBadge(status: kycStatus),
+          if (!isComplete) ...[
+            SizedBox(height: w * 0.05),
+            _CompletionBar(
+              w: w,
+              count: docCount,
+              total: docTotal,
+              onTap: onTapDocuments,
+            ),
+          ],
         ],
       ),
     );
   }
 }
 
-// ── Shared widgets ─────────────────────────────────────────────────────────
+// ─── Completion progress ────────────────────────────────────────────────────
 
-class _SectionCard extends StatelessWidget {
-  final Widget child;
-  const _SectionCard({required this.child});
+class _CompletionBar extends StatelessWidget {
+  final double w;
+  final int count;
+  final int total;
+  final VoidCallback onTap;
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: child,
-    );
-  }
-}
-
-class _SectionHeader extends StatelessWidget {
-  final String label;
-  const _SectionHeader({required this.label});
+  const _CompletionBar({
+    required this.w,
+    required this.count,
+    required this.total,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 6),
-      child: Text(
-        label,
-        style: const TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.w600,
-          color: AppColors.textSecondary,
+    final progress = total == 0 ? 0.0 : count / total;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(w * 0.04),
+        child: Container(
+          width: double.infinity,
+          padding: EdgeInsets.all(w * 0.04),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceVariant,
+            borderRadius: BorderRadius.circular(w * 0.04),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Complete your profile',
+                    style: TextStyle(
+                      fontFamily: 'Mukta',
+                      fontSize: w * 0.034,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '$count/$total',
+                        style: TextStyle(
+                          fontFamily: 'Mukta',
+                          fontSize: w * 0.032,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      SizedBox(width: w * 0.01),
+                      Icon(
+                        HugeIcons.strokeRoundedArrowRight01,
+                        size: w * 0.036,
+                        color: AppColors.textSecondary,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              SizedBox(height: w * 0.025),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(w * 0.02),
+                child: LinearProgressIndicator(
+                  value: progress,
+                  minHeight: w * 0.016,
+                  backgroundColor: AppColors.border,
+                  valueColor:
+                      const AlwaysStoppedAnimation<Color>(AppColors.primary),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
+
+// ─── KYC badge ──────────────────────────────────────────────────────────────
 
 class _KycBadge extends StatelessWidget {
   final KycStatus? status;
@@ -364,36 +438,36 @@ class _KycBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final (label, bg, fg) = switch (status) {
-      KycStatus.approved => ('Verified', const Color(0xFFE6F4EA), AppColors.success),
-      KycStatus.pendingReview => ('Under Review', const Color(0xFFFFF8E1), Colors.orange),
-      KycStatus.rejected => ('Rejected', const Color(0xFFFFEBEE), AppColors.error),
-      _ => ('Not Verified', const Color(0xFFF5F5F5), AppColors.textSecondary),
+    final w = MediaQuery.sizeOf(context).width;
+    final (label, color) = switch (status) {
+      KycStatus.approved => ('Verified', AppColors.success),
+      KycStatus.pendingReview => ('Under Review', AppColors.warning),
+      KycStatus.rejected => ('Rejected', AppColors.error),
+      _ => ('Not Verified', AppColors.textHint),
     };
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      padding: EdgeInsets.symmetric(horizontal: w * 0.028, vertical: w * 0.014),
       decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(20),
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(w * 0.05),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            status == KycStatus.approved
-                ? HugeIcons.strokeRoundedCheckmarkCircle02
-                : HugeIcons.strokeRoundedAlert02,
-            size: 12,
-            color: fg,
+          Container(
+            width: w * 0.018,
+            height: w * 0.018,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
           ),
-          const SizedBox(width: 4),
+          SizedBox(width: w * 0.017),
           Text(
             label,
             style: TextStyle(
-              fontSize: 11,
+              fontFamily: 'Mukta',
+              fontSize: w * 0.03,
               fontWeight: FontWeight.w600,
-              color: fg,
+              color: color,
             ),
           ),
         ],
@@ -402,269 +476,206 @@ class _KycBadge extends StatelessWidget {
   }
 }
 
-class _InfoStrip extends StatelessWidget {
-  final int docCount;
-  final bool isOnline;
-  final String? numberPlate;
+// ─── Section card ───────────────────────────────────────────────────────────
 
-  const _InfoStrip({
-    required this.docCount,
-    required this.isOnline,
-    this.numberPlate,
-  });
+class _SectionCard extends StatelessWidget {
+  final String? label;
+  final double w;
+  final List<Widget> tiles;
 
-  @override
-  Widget build(BuildContext context) {
-    return IntrinsicHeight(
-      child: Row(
-        children: [
-          Expanded(
-            child: _InfoTile(
-              icon: HugeIcons.strokeRoundedFile01,
-              value: '$docCount/5',
-              label: 'Documents',
-            ),
-          ),
-          const VerticalDivider(width: 1, color: Color(0xFFE5E5EA)),
-          Expanded(
-            child: _InfoTile(
-              icon: HugeIcons.strokeRoundedCircle,
-              value: isOnline ? 'Online' : 'Offline',
-              label: 'Status',
-              valueColor:
-                  isOnline ? AppColors.success : AppColors.textSecondary,
-            ),
-          ),
-          if (numberPlate != null && numberPlate!.isNotEmpty) ...[
-            const VerticalDivider(width: 1, color: Color(0xFFE5E5EA)),
-            Expanded(
-              child: _InfoTile(
-                icon: HugeIcons.strokeRoundedCar01,
-                value: numberPlate!,
-                label: 'Plate',
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _InfoTile extends StatelessWidget {
-  final IconData icon;
-  final String value;
-  final String label;
-  final Color? valueColor;
-
-  const _InfoTile({
-    required this.icon,
-    required this.value,
-    required this.label,
-    this.valueColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: Colors.white,
-      padding: const EdgeInsets.symmetric(vertical: 14),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 20, color: AppColors.textSecondary),
-          const SizedBox(height: 6),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: valueColor ?? AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 11,
-              color: AppColors.textSecondary,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _CompletionBanner extends StatelessWidget {
-  final int docCount;
-  final double completePct;
-  final VoidCallback onTap;
-
-  const _CompletionBanner({
-    required this.docCount,
-    required this.completePct,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.orange.shade100),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: Colors.orange.shade50,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(HugeIcons.strokeRoundedAlert02,
-                  size: 20, color: Colors.orange.shade700),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Complete your profile',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: LinearProgressIndicator(
-                      value: completePct,
-                      minHeight: 4,
-                      backgroundColor: Colors.grey.shade100,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                          Colors.orange.shade600),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '$docCount of 5 documents uploaded',
-                    style: const TextStyle(
-                      fontSize: 11,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 10),
-            Icon(HugeIcons.strokeRoundedArrowRight01,
-                size: 18, color: Colors.grey.shade400),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _DocsBadge extends StatelessWidget {
-  final bool isComplete;
-  const _DocsBadge({required this.isComplete});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: isComplete
-            ? const Color(0xFFE6F4EA)
-            : Colors.orange.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        isComplete ? 'Complete' : 'Pending',
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
-          color: isComplete ? AppColors.success : Colors.orange,
-        ),
-      ),
-    );
-  }
-}
-
-class _Tile extends StatelessWidget {
-  final IconData icon;
-  final Color color;
-  final String title;
-  final Color? titleColor;
-  final Widget? trailing;
-  final VoidCallback onTap;
-  final bool last;
-
-  const _Tile({
-    required this.icon,
-    required this.color,
-    required this.title,
-    required this.onTap,
-    this.titleColor,
-    this.trailing,
-    this.last = false,
-  });
+  const _SectionCard({this.label, required this.w, required this.tiles});
 
   @override
   Widget build(BuildContext context) {
     return Column(
-      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
-            child: Row(
-              children: [
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(9),
-                  ),
-                  child: Icon(icon, color: color, size: 19),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
-                      color: titleColor ?? AppColors.textPrimary,
-                    ),
-                  ),
-                ),
-                trailing ??
-                    Icon(
-                      HugeIcons.strokeRoundedArrowRight01,
-                      size: 18,
-                      color: Colors.grey.shade400,
-                    ),
-              ],
+        if (label != null) ...[
+          Padding(
+            padding: EdgeInsets.only(bottom: w * 0.025, left: w * 0.01),
+            child: Text(
+              label!,
+              style: TextStyle(
+                fontFamily: 'Mukta',
+                fontSize: w * 0.032,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textHint,
+                letterSpacing: 0.5,
+              ),
             ),
           ),
+        ],
+        Container(
+          width: double.infinity,
+          padding: EdgeInsets.symmetric(horizontal: w * 0.03),
+          decoration: BoxDecoration(
+            color: AppColors.card,
+            borderRadius: BorderRadius.circular(w * 0.045),
+            border: Border.all(color: AppColors.border, width: 0.7),
+          ),
+          child: Column(
+            children: [
+              for (int i = 0; i < tiles.length; i++) ...[
+                tiles[i],
+                if (i != tiles.length - 1)
+                  const Divider(height: 1, color: AppColors.divider),
+              ],
+            ],
+          ),
         ),
-        if (!last)
-          Divider(height: 1, indent: 66, color: const Color(0xFFF2F2F7)),
       ],
+    );
+  }
+}
+
+class _ProfileTile extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  final double w;
+  final Widget? trailing;
+
+  const _ProfileTile({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    required this.w,
+    this.trailing,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(w * 0.03),
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: w * 0.03),
+          child: Row(
+            children: [
+              Container(
+                width: w * 0.1,
+                height: w * 0.1,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(w * 0.026),
+                ),
+                child: Icon(icon, color: AppColors.primary, size: w * 0.05),
+              ),
+              SizedBox(width: w * 0.035),
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontFamily: 'Mukta',
+                    fontSize: w * 0.037,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+              if (trailing != null) ...[
+                trailing!,
+                SizedBox(width: w * 0.02),
+              ],
+              Container(
+                width: w * 0.07,
+                height: w * 0.07,
+                alignment: Alignment.center,
+                decoration: const BoxDecoration(
+                  color: AppColors.surfaceVariant,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  HugeIcons.strokeRoundedArrowRight01,
+                  color: AppColors.textSecondary,
+                  size: w * 0.038,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CountBadge extends StatelessWidget {
+  final int count;
+  final int total;
+  final bool isComplete;
+
+  const _CountBadge({
+    required this.count,
+    required this.total,
+    required this.isComplete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final w = MediaQuery.sizeOf(context).width;
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: w * 0.02, vertical: w * 0.008),
+      decoration: BoxDecoration(
+        color: isComplete
+            ? AppColors.success.withValues(alpha: 0.1)
+            : AppColors.warning.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(w * 0.05),
+      ),
+      child: Text(
+        '$count/$total',
+        style: TextStyle(
+          fontFamily: 'Mukta',
+          fontSize: w * 0.03,
+          fontWeight: FontWeight.w600,
+          color: isComplete ? AppColors.success : AppColors.warning,
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Log out ────────────────────────────────────────────────────────────────
+
+class _LogoutButton extends StatelessWidget {
+  final double w;
+  final VoidCallback onTap;
+
+  const _LogoutButton({required this.w, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(w * 0.03),
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: w * 0.03),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                HugeIcons.strokeRoundedLogout01,
+                color: AppColors.error,
+                size: w * 0.045,
+              ),
+              SizedBox(width: w * 0.02),
+              Text(
+                'Log Out',
+                style: TextStyle(
+                  fontFamily: 'Mukta',
+                  fontSize: w * 0.038,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.error,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

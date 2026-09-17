@@ -8,15 +8,17 @@ import 'package:hugeicons/hugeicons.dart';
 import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/core/router/app_routes.dart';
 import 'package:delivery_boy/core/widgets/app_gradient_button.dart';
-import 'package:delivery_boy/features/rider/auth/data/vehicle_catalog.dart';
 import 'package:delivery_boy/features/rider/auth/viewmodels/rider_auth_viewmodel.dart';
-import 'package:delivery_boy/features/rider/auth/views/screens/rider_vehicle_info_screen.dart';
 import 'package:delivery_boy/features/rider/auth/views/widgets/registration_stepper.dart';
 import 'package:delivery_boy/features/rider/shared_widgets/app_password_field.dart';
 import 'package:delivery_boy/features/rider/shared_widgets/app_phone_field.dart';
 import 'package:delivery_boy/features/rider/shared_widgets/app_select_field.dart';
 import 'package:delivery_boy/features/rider/shared_widgets/app_text_field.dart';
 import 'package:delivery_boy/features/rider/shared_widgets/password_strength_validator.dart';
+import 'package:delivery_boy/features/rider/vehicles/model/vehicle_make_model.dart';
+import 'package:delivery_boy/features/rider/vehicles/model/vehicle_model_model.dart';
+import 'package:delivery_boy/features/rider/vehicles/model/vehicle_type_model.dart';
+import 'package:delivery_boy/features/rider/vehicles/viewmodel/vehicle_catalog_viewmodel.dart';
 
 class RiderSignupScreen extends ConsumerStatefulWidget {
   /// Values to restore into the form when registration fails or is redirected back.
@@ -50,15 +52,23 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
   final _confirmCtrl = TextEditingController();
   String _password = '';
 
-  // Step 2: Vehicle Type
-  VehicleType _selectedVehicleType = VehicleType.motorcycle;
+  // Step 2: Vehicle Type — fetched from GET /vehicle-types (see
+  // VehicleCatalogNotifier), not a hardcoded enum.
+  VehicleTypeModel? _selectedVehicleType;
 
-  // Step 3: Vehicle Specs
+  // Step 3: Vehicle Specs — Make/Model come from the cascading
+  // GET /vehicle-makes / GET /vehicle-models endpoints.
   final _plateCtrl = TextEditingController();
   final _yearCtrl = TextEditingController();
-  final _makeCtrl = TextEditingController();
-  final _modelCtrl = TextEditingController();
+  VehicleMakeModel? _selectedMake;
+  VehicleModelModel? _selectedModel;
   final _colorCtrl = TextEditingController();
+
+  /// Ids to re-select once the catalogue reloads after a register failure
+  /// sends the rider back here with [widget.prefill].
+  int? _pendingVehicleTypeId;
+  int? _pendingMakeId;
+  int? _pendingModelId;
 
   DateTime? _lastBackPress;
   Map<String, String> _serverErrors = {};
@@ -124,14 +134,77 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
       _confirmCtrl,
       _plateCtrl,
       _yearCtrl,
-      _makeCtrl,
-      _modelCtrl,
       _colorCtrl,
     ]) {
       c.addListener(_rebuild);
     }
 
     _restorePrefill();
+    Future.microtask(_loadVehicleCatalog);
+  }
+
+  /// Fetches vehicle types up front, then — if this screen was reopened
+  /// after a register failure — walks the cascade to re-select whatever the
+  /// rider had already chosen (see [_restorePrefill]).
+  Future<void> _loadVehicleCatalog() async {
+    final notifier = ref.read(vehicleCatalogProvider.notifier);
+    await notifier.loadTypes();
+    if (!mounted) return;
+
+    final typeId = _pendingVehicleTypeId;
+    if (typeId == null) return;
+    final type = _findById(
+      ref.read(vehicleCatalogProvider).types,
+      (t) => t.id,
+      typeId,
+    );
+    if (type == null) return;
+    setState(() => _selectedVehicleType = type);
+
+    await notifier.loadMakes(type.id);
+    if (!mounted) return;
+
+    final makeId = _pendingMakeId;
+    if (makeId == null) return;
+    final make = _findById(
+      ref.read(vehicleCatalogProvider).makes,
+      (m) => m.id,
+      makeId,
+    );
+    if (make == null) return;
+    setState(() => _selectedMake = make);
+
+    await notifier.loadModels(make.id);
+    if (!mounted) return;
+
+    final modelId = _pendingModelId;
+    if (modelId == null) return;
+    final model = _findById(
+      ref.read(vehicleCatalogProvider).models,
+      (m) => m.id,
+      modelId,
+    );
+    if (model != null) setState(() => _selectedModel = model);
+  }
+
+  T? _findById<T>(List<T> items, int Function(T) idOf, int id) {
+    for (final item in items) {
+      if (idOf(item) == id) return item;
+    }
+    return null;
+  }
+
+  void _selectVehicleType(VehicleTypeModel type) {
+    if (_selectedVehicleType?.id == type.id) return;
+    HapticFeedback.selectionClick();
+    setState(() {
+      _selectedVehicleType = type;
+      // Make/Model depend on the type — clear them so a stale selection
+      // from a different type can't linger as "selected".
+      _selectedMake = null;
+      _selectedModel = null;
+    });
+    ref.read(vehicleCatalogProvider.notifier).loadMakes(type.id);
   }
 
   void _rebuild() {
@@ -154,20 +227,15 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
     _phone = fullPhone;
     _phoneDigitsCtrl.text = _localDigitsOf(fullPhone);
 
-    final vehicleTypeStr =
-        p['vehicleType'] as String? ?? p['vehicle_type'] as String?;
-    if (vehicleTypeStr != null) {
-      _selectedVehicleType = VehicleType.values.firstWhere(
-        (e) => e.name == vehicleTypeStr || e.apiValue == vehicleTypeStr,
-        orElse: () => VehicleType.motorcycle,
-      );
-    }
+    // Resolved against the live catalogue once it loads — see
+    // _loadVehicleCatalog, which runs right after this.
+    _pendingVehicleTypeId = int.tryParse('${p['vehicle_type_id'] ?? ''}');
+    _pendingMakeId = int.tryParse('${p['vehicle_make_id'] ?? ''}');
+    _pendingModelId = int.tryParse('${p['vehicle_model_id'] ?? ''}');
 
     _plateCtrl.text = (p['plate_number'] as String?) ?? '';
     if (p['vehicle_year'] != null)
       _yearCtrl.text = p['vehicle_year'].toString();
-    _makeCtrl.text = (p['vehicle_make'] as String?) ?? '';
-    _modelCtrl.text = (p['vehicle_model'] as String?) ?? '';
     _colorCtrl.text = (p['vehicle_colour'] as String?) ?? '';
 
     final errors = (p['field_errors'] as Map?)?.cast<String, String>();
@@ -214,8 +282,6 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
     _confirmCtrl.dispose();
     _plateCtrl.dispose();
     _yearCtrl.dispose();
-    _makeCtrl.dispose();
-    _modelCtrl.dispose();
     _colorCtrl.dispose();
     super.dispose();
   }
@@ -238,33 +304,24 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
         _confirmCtrl.text == _password;
   }
 
-  bool get _isStep2Valid => true; // Vehicle type is always selected
+  bool get _isStep2Valid => _selectedVehicleType != null;
 
-  /// Makes available for the currently-selected vehicle category.
-  List<String> get _availableMakes =>
-      VehicleCatalog.makesFor(isElectric: _selectedVehicleType.isElectric);
-
-  /// Models for [_makeCtrl]'s current make, within the current category —
-  /// empty until a make is chosen.
-  List<String> get _availableModels => _makeCtrl.text.isEmpty
-      ? const []
-      : VehicleCatalog.modelsFor(
-          isElectric: _selectedVehicleType.isElectric,
-          make: _makeCtrl.text,
-        );
+  /// Last 20 registration years, newest first. Not part of the vehicle
+  /// catalogue API (which has no year endpoint), so this stays a simple
+  /// generated range rather than a network call.
+  List<int> get _availableYears {
+    final current = DateTime.now().year;
+    return List.generate(20, (i) => current - i);
+  }
 
   bool get _isStep3Valid {
     final yearVal = int.tryParse(_yearCtrl.text.trim());
-    final validMake = _availableMakes.contains(_makeCtrl.text);
-    final validModel = validMake && _availableModels.contains(_modelCtrl.text);
-    final validYear =
-        yearVal != null && VehicleCatalog.years().contains(yearVal);
+    final validYear = yearVal != null && _availableYears.contains(yearVal);
 
     return _plateCtrl.text.trim().isNotEmpty &&
-        validMake &&
-        validModel &&
-        validYear &&
-        _colorCtrl.text.trim().isNotEmpty;
+        _selectedMake != null &&
+        _selectedModel != null &&
+        validYear;
   }
 
   bool get _canProceedCurrentStep {
@@ -323,6 +380,10 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
 
     HapticFeedback.mediumImpact();
 
+    final type = _selectedVehicleType!;
+    final make = _selectedMake!;
+    final model = _selectedModel!;
+
     final collected = {
       'first_name': _firstNameCtrl.text.trim(),
       'last_name': _lastNameCtrl.text.trim(),
@@ -330,13 +391,18 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
       'phone': _phone,
       'city': _cityCtrl.text.trim(),
       'password': _password,
-      'vehicleType': _selectedVehicleType.name,
-      'vehicle_type': _selectedVehicleType.apiValue,
+      // `vehicle_type_id` is what `POST /register` actually needs (see
+      // RiderTermsConditionsScreen); `vehicle_type` (the slug) is kept for
+      // the later `PUT /rider/me` shape.
+      'vehicle_type_id': type.id.toString(),
+      'vehicle_type': type.slug,
       'plate_number': _plateCtrl.text.trim().toUpperCase(),
       'vehicle_year': int.tryParse(_yearCtrl.text.trim()),
-      'vehicle_make': _makeCtrl.text.trim(),
-      'vehicle_model': _modelCtrl.text.trim(),
-      'vehicle_colour': _colorCtrl.text.trim(),
+      'vehicle_make_id': make.id,
+      'vehicle_make': make.name,
+      'vehicle_model_id': model.id,
+      'vehicle_model': model.name,
+      //'vehicle_colour': _colorCtrl.text.trim(),
     };
 
     context.go(AppRoutes.termsAndConditions, extra: collected);
@@ -675,114 +741,140 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
   // ── Step 2: Vehicle Type Selection ─────────────────────────────────────────
 
   Widget _buildStep2VehicleType(double hPad, double w, double h) {
+    final catalog = ref.watch(vehicleCatalogProvider);
+
     return SingleChildScrollView(
       padding: EdgeInsets.symmetric(horizontal: hPad),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(height: h * 0.01),
-          ...VehicleType.values.map((type) {
-            final isSelected = _selectedVehicleType == type;
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 14),
-              child: InkWell(
-                onTap: () {
-                  HapticFeedback.selectionClick();
-                  setState(() => _selectedVehicleType = type);
-                },
-                borderRadius: BorderRadius.circular(12),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 220),
-                  padding: EdgeInsets.all(w * 0.04),
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? AppColors.primary.withValues(alpha: 0.04)
-                        : Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: isSelected ? AppColors.primary : AppColors.border,
-                      width: isSelected ? 2.0 : 1.0,
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: (w * 0.13).clamp(44.0, 56.0),
-                        height: (w * 0.13).clamp(44.0, 56.0),
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? AppColors.primary.withValues(alpha: 0.12)
-                              : AppColors.surfaceVariant,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Icon(
-                          type.icon,
-                          color: isSelected
-                              ? AppColors.primary
-                              : AppColors.textSecondary,
-                          size: 26,
-                        ),
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              type.label,
-                              style: TextStyle(
-                                fontFamily: 'Mukta',
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                                color: isSelected
-                                    ? AppColors.primary
-                                    : AppColors.textPrimary,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              type.description,
-                              style: const TextStyle(
-                                fontFamily: 'Mukta',
-                                fontSize: 13,
-                                color: AppColors.textSecondary,
-                                height: 1.3,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        width: 24,
-                        height: 24,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: isSelected
-                              ? AppColors.primary
-                              : Colors.transparent,
-                          border: Border.all(
-                            color: isSelected
-                                ? AppColors.primary
-                                : AppColors.border,
-                            width: 1.5,
-                          ),
-                        ),
-                        child: isSelected
-                            ? const Icon(
-                                HugeIcons.strokeRoundedCheckmarkCircle01,
-                                color: Colors.white,
-                                size: 14,
-                              )
-                            : null,
-                      ),
-                    ],
-                  ),
+          if (catalog.isLoadingTypes)
+            Padding(
+              padding: EdgeInsets.symmetric(vertical: h * 0.06),
+              child: const Center(child: CircularProgressIndicator()),
+            )
+          else if (catalog.typesError != null)
+            _CatalogRetry(
+              message: catalog.typesError!,
+              onRetry: () =>
+                  ref.read(vehicleCatalogProvider.notifier).loadTypes(),
+            )
+          else if (catalog.types.isEmpty)
+            Padding(
+              padding: EdgeInsets.symmetric(vertical: h * 0.06),
+              child: Text(
+                'No vehicle types are available right now.',
+                style: TextStyle(
+                  fontFamily: 'Mukta',
+                  color: AppColors.textSecondary,
+                  fontSize: (w * 0.036).clamp(13.0, 15.0),
                 ),
               ),
-            );
-          }),
+            )
+          else
+            ...catalog.types.map((type) {
+              final isSelected = _selectedVehicleType?.id == type.id;
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 14),
+                child: InkWell(
+                  onTap: () => _selectVehicleType(type),
+                  borderRadius: BorderRadius.circular(12),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 220),
+                    padding: EdgeInsets.all(w * 0.04),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? AppColors.primary.withValues(alpha: 0.04)
+                          : Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color:
+                            isSelected ? AppColors.primary : AppColors.border,
+                        width: isSelected ? 2.0 : 1.0,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: (w * 0.13).clamp(44.0, 56.0),
+                          height: (w * 0.13).clamp(44.0, 56.0),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? AppColors.primary.withValues(alpha: 0.12)
+                                : AppColors.surfaceVariant,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(
+                            HugeIcons.strokeRoundedMotorbike01,
+                            color: isSelected
+                                ? AppColors.primary
+                                : AppColors.textSecondary,
+                            size: 26,
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                type.name,
+                                style: TextStyle(
+                                  fontFamily: 'Mukta',
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                  color: isSelected
+                                      ? AppColors.primary
+                                      : AppColors.textPrimary,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                (type.description ?? '').isNotEmpty
+                                    ? type.description!
+                                    : 'Max parcel size: ${type.maxParcelSizeLabel}',
+                                style: const TextStyle(
+                                  fontFamily: 'Mukta',
+                                  fontSize: 13,
+                                  color: AppColors.textSecondary,
+                                  height: 1.3,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          width: 24,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: isSelected
+                                ? AppColors.primary
+                                : Colors.transparent,
+                            border: Border.all(
+                              color: isSelected
+                                  ? AppColors.primary
+                                  : AppColors.border,
+                              width: 1.5,
+                            ),
+                          ),
+                          child: isSelected
+                              ? const Icon(
+                                  HugeIcons.strokeRoundedCheckmarkCircle01,
+                                  color: Colors.white,
+                                  size: 14,
+                                )
+                              : null,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }),
           SizedBox(height: h * 0.03),
         ],
       ),
@@ -848,52 +940,94 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
 
             SizedBox(height: h * 0.018),
 
-            // Make/Model/Year are constrained to a known catalog (see
-            // VehicleCatalog) instead of free text, so a rider can't submit
-            // a model that doesn't exist for their vehicle category.
-            AppSelectField<String>(
-              label: 'Make',
-              hint: 'Select the manufacturer',
-              sheetTitle: 'Select Make',
-              prefixIcon: HugeIcons.strokeRoundedCar01,
-              value: _availableMakes.contains(_makeCtrl.text)
-                  ? _makeCtrl.text
-                  : null,
-              options: _availableMakes,
-              labelBuilder: (make) => make,
-              onChanged: (make) => setState(() {
-                _makeCtrl.text = make ?? '';
-                // Model depends on make — clear it so a stale model from a
-                // different manufacturer can't linger as "selected".
-                _modelCtrl.text = '';
-              }),
-              validator: (v) =>
-                  (v == null || v.isEmpty) ? 'Select the manufacturer' : null,
-            ),
+            // Make/Model are constrained to the live vehicle catalogue
+            // (GET /vehicle-makes, /vehicle-models) instead of free text, so
+            // a rider can't submit a model that doesn't exist for their
+            // vehicle type.
+            Builder(builder: (context) {
+              final catalog = ref.watch(vehicleCatalogProvider);
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  AppSelectField<VehicleMakeModel>(
+                    label: 'Make',
+                    hint: catalog.isLoadingMakes
+                        ? 'Loading manufacturers…'
+                        : 'Select the manufacturer',
+                    sheetTitle: 'Select Make',
+                    prefixIcon: HugeIcons.strokeRoundedCar01,
+                    enabled:
+                        !catalog.isLoadingMakes && catalog.makes.isNotEmpty,
+                    value: _selectedMake,
+                    options: catalog.makes,
+                    labelBuilder: (make) => make.name,
+                    onChanged: (make) {
+                      if (make == null) return;
+                      setState(() {
+                        _selectedMake = make;
+                        // Model depends on make — clear it so a stale model
+                        // from a different manufacturer can't linger as
+                        // "selected".
+                        _selectedModel = null;
+                      });
+                      ref
+                          .read(vehicleCatalogProvider.notifier)
+                          .loadModels(make.id);
+                    },
+                    validator: (v) =>
+                        v == null ? 'Select the manufacturer' : null,
+                  ),
+                  if (catalog.makesError != null && _selectedVehicleType != null)
+                    _InlineRetry(
+                      message: catalog.makesError!,
+                      onRetry: () => ref
+                          .read(vehicleCatalogProvider.notifier)
+                          .loadMakes(_selectedVehicleType!.id),
+                    ),
+                ],
+              );
+            }),
 
             SizedBox(height: h * 0.018),
 
-            AppSelectField<String>(
-              // Forces a fresh FormField (and therefore an unselected value)
-              // whenever the make changes, since _availableModels depends on it.
-              key: ValueKey('model-${_makeCtrl.text}'),
-              label: 'Model',
-              hint: _makeCtrl.text.isEmpty
-                  ? 'Select a make first'
-                  : 'Select the model',
-              sheetTitle: 'Select Model',
-              prefixIcon: HugeIcons.strokeRoundedMotorbike01,
-              enabled: _makeCtrl.text.isNotEmpty,
-              value: _availableModels.contains(_modelCtrl.text)
-                  ? _modelCtrl.text
-                  : null,
-              options: _availableModels,
-              labelBuilder: (model) => model,
-              onChanged: (model) =>
-                  setState(() => _modelCtrl.text = model ?? ''),
-              validator: (v) =>
-                  (v == null || v.isEmpty) ? 'Select the model' : null,
-            ),
+            Builder(builder: (context) {
+              final catalog = ref.watch(vehicleCatalogProvider);
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  AppSelectField<VehicleModelModel>(
+                    // Forces a fresh FormField (and therefore an unselected
+                    // value) whenever the make changes, since the options
+                    // depend on it.
+                    key: ValueKey('model-${_selectedMake?.id}'),
+                    label: 'Model',
+                    hint: _selectedMake == null
+                        ? 'Select a make first'
+                        : catalog.isLoadingModels
+                            ? 'Loading models…'
+                            : 'Select the model',
+                    sheetTitle: 'Select Model',
+                    prefixIcon: HugeIcons.strokeRoundedMotorbike01,
+                    enabled: _selectedMake != null &&
+                        !catalog.isLoadingModels &&
+                        catalog.models.isNotEmpty,
+                    value: _selectedModel,
+                    options: catalog.models,
+                    labelBuilder: (model) => model.name,
+                    onChanged: (model) =>
+                        setState(() => _selectedModel = model),
+                    validator: (v) => v == null ? 'Select the model' : null,
+                  ),
+                  if (catalog.modelsError != null && _selectedMake != null)
+                    _InlineRetry(
+                      message: catalog.modelsError!,
+                      onRetry: () => ref
+                          .read(vehicleCatalogProvider.notifier)
+                          .loadModels(_selectedMake!.id),
+                    ),
+                ],
+              );
+            }),
 
             SizedBox(height: h * 0.018),
 
@@ -903,7 +1037,7 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
               sheetTitle: 'Select Year',
               prefixIcon: HugeIcons.strokeRoundedCalendar01,
               value: int.tryParse(_yearCtrl.text),
-              options: VehicleCatalog.years(),
+              options: _availableYears,
               labelBuilder: (year) => year.toString(),
               onChanged: (year) =>
                   setState(() => _yearCtrl.text = year?.toString() ?? ''),
@@ -913,25 +1047,25 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
 
             SizedBox(height: h * 0.018),
 
-            AppTextField(
-              label: 'Color',
-              hint: 'e.g. Red',
-              prefixIcon: HugeIcons.strokeRoundedPaintBoard,
-              controller: _colorCtrl,
-              textCapitalization: TextCapitalization.words,
-              onChanged: (_) => setState(() {}),
-              validator: (v) =>
-                  (v == null || v.trim().isEmpty) ? 'Please enter color' : null,
-            ),
+            // AppTextField(
+            //   label: 'Color',
+            //   hint: 'e.g. Red',
+            //   prefixIcon: HugeIcons.strokeRoundedPaintBoard,
+            //   controller: _colorCtrl,
+            //   textCapitalization: TextCapitalization.words,
+            //   onChanged: (_) => setState(() {}),
+            //   validator: (v) =>
+            //       (v == null || v.trim().isEmpty) ? 'Please enter color' : null,
+            // ),
 
-            SizedBox(height: h * 0.012),
+            //  SizedBox(height: h * 0.012),
 
-            _ColorQuickPick(
-              controller: _colorCtrl,
-              onPicked: () => setState(() {}),
-            ),
+            // _ColorQuickPick(
+            //   controller: _colorCtrl,
+            //   onPicked: () => setState(() {}),
+            // ),
 
-            if (_selectedVehicleType.isElectric) ...[
+            if (_selectedVehicleType?.isElectric ?? false) ...[
               SizedBox(height: h * 0.018),
               Container(
                 padding: const EdgeInsets.all(12),
@@ -1067,68 +1201,167 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
   }
 }
 
-// ── Color Quick Pick Helper ──────────────────────────────────────────────────
+// ── Catalogue Load-Error Retry ────────────────────────────────────────────────
 
-class _ColorQuickPick extends StatelessWidget {
-  final TextEditingController controller;
-  final VoidCallback onPicked;
+/// Shown in place of a list (vehicle types) when its fetch failed — the
+/// list/error/empty states share a consistent, simple look across the app.
+class _CatalogRetry extends StatelessWidget {
+  final String message;
+  final VoidCallback onRetry;
 
-  const _ColorQuickPick({required this.controller, required this.onPicked});
-
-  static const _colors = [
-    ('Black', Color(0xFF1A1A1A)),
-    ('White', Color(0xFFF0F0F0)),
-    ('Silver', Color(0xFFA8A8A8)),
-    ('Red', AppColors.primary),
-    ('Blue', Color(0xFF3182CE)),
-    ('Yellow', Color(0xFFF59E0B)),
-    ('Green', Color(0xFF38A169)),
-    ('Orange', Color(0xFFDD6B20)),
-  ];
+  const _CatalogRetry({required this.message, required this.onRetry});
 
   @override
   Widget build(BuildContext context) {
-    final current = controller.text.trim().toLowerCase();
+    final w = MediaQuery.of(context).size.width;
 
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: _colors.map((entry) {
-        final name = entry.$1;
-        final color = entry.$2;
-        final isSelected = current == name.toLowerCase();
-        final isLight = name == 'White' || name == 'Yellow';
-
-        return GestureDetector(
-          onTap: () {
-            controller.text = name;
-            onPicked();
-          },
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: isSelected ? color : color.withValues(alpha: 0.14),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: color,
-                width: isSelected ? 1.5 : 1.0,
-              ),
-            ),
-            child: Text(
-              name,
-              style: TextStyle(
-                fontFamily: 'Mukta',
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: isSelected
-                    ? (isLight ? Colors.black87 : Colors.white)
-                    : AppColors.textSecondary,
-              ),
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: w * 0.06),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            message,
+            style: const TextStyle(
+              fontFamily: 'Mukta',
+              color: AppColors.error,
+              fontSize: 13,
             ),
           ),
-        );
-      }).toList(),
+          SizedBox(height: w * 0.026),
+          OutlinedButton(
+            onPressed: onRetry,
+            style: OutlinedButton.styleFrom(
+              side: const BorderSide(color: AppColors.border),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            child: const Text(
+              'Retry',
+              style:
+                  TextStyle(fontFamily: 'Mukta', fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
+
+// ── Inline Retry (Make/Model load failures) ─────────────────────────────────
+
+/// A compact one-line error + retry, used under the Make/Model selects
+/// where a full-page [_CatalogRetry] would be too heavy.
+class _InlineRetry extends StatelessWidget {
+  final String message;
+  final VoidCallback onRetry;
+
+  const _InlineRetry({required this.message, required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    final w = MediaQuery.of(context).size.width;
+
+    return Padding(
+      padding: EdgeInsets.only(top: w * 0.015, left: w * 0.01),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              message,
+              style: const TextStyle(
+                fontFamily: 'Mukta',
+                color: AppColors.error,
+                fontSize: 12,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: onRetry,
+            style: TextButton.styleFrom(
+              padding: EdgeInsets.symmetric(horizontal: w * 0.02),
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            child: const Text(
+              'Retry',
+              style: TextStyle(
+                fontFamily: 'Mukta',
+                fontWeight: FontWeight.w700,
+                fontSize: 12,
+                color: AppColors.primary,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Color Quick Pick Helper ──────────────────────────────────────────────────
+//["Not required for now "]
+// class _ColorQuickPick extends StatelessWidget {
+//   final TextEditingController controller;
+//   final VoidCallback onPicked;
+
+//   const _ColorQuickPick({required this.controller, required this.onPicked});
+
+//   static const _colors = [
+//     ('Black', Color(0xFF1A1A1A)),
+//     ('White', Color(0xFFF0F0F0)),
+//     ('Silver', Color(0xFFA8A8A8)),
+//     ('Red', AppColors.primary),
+//     ('Blue', Color(0xFF3182CE)),
+//     ('Yellow', Color(0xFFF59E0B)),
+//     ('Green', Color(0xFF38A169)),
+//     ('Orange', Color(0xFFDD6B20)),
+//   ];
+
+//   @override
+//   Widget build(BuildContext context) {
+//     final current = controller.text.trim().toLowerCase();
+
+//     return Wrap(
+//       spacing: 8,
+//       runSpacing: 8,
+//       children: _colors.map((entry) {
+//         final name = entry.$1;
+//         final color = entry.$2;
+//         final isSelected = current == name.toLowerCase();
+//         final isLight = name == 'White' || name == 'Yellow';
+
+//         return GestureDetector(
+//           onTap: () {
+//             controller.text = name;
+//             onPicked();
+//           },
+//           child: AnimatedContainer(
+//             duration: const Duration(milliseconds: 200),
+//             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+//             decoration: BoxDecoration(
+//               color: isSelected ? color : color.withValues(alpha: 0.14),
+//               borderRadius: BorderRadius.circular(20),
+//               border: Border.all(
+//                 color: color,
+//                 width: isSelected ? 1.5 : 1.0,
+//               ),
+//             ),
+//             child: Text(
+//               name,
+//               style: TextStyle(
+//                 fontFamily: 'Mukta',
+//                 fontSize: 12,
+//                 fontWeight: FontWeight.w600,
+//                 color: isSelected
+//                     ? (isLight ? Colors.black87 : Colors.white)
+//                     : AppColors.textSecondary,
+//               ),
+//             ),
+//           ),
+//         );
+//       }).toList(),
+//     );
+//   }
+// }

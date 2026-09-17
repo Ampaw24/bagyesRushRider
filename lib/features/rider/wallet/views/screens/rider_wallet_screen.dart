@@ -1,11 +1,15 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/core/widgets/animated_list_item.dart';
 import 'package:delivery_boy/core/widgets/shimmer_list_placeholder.dart';
-import 'package:delivery_boy/features/rider/wallet/providers/rider_wallet_providers.dart';
+import 'package:delivery_boy/features/rider/wallet/models/rider_me_wallet_model.dart';
+import 'package:delivery_boy/features/rider/wallet/providers/rider_me_wallet_providers.dart';
 import 'package:hugeicons/hugeicons.dart';
+
+enum WalletPeriod { all, today, thisWeek, thisMonth }
 
 // ─── Dummy data ───────────────────────────────────────────────────────────────
 
@@ -48,39 +52,66 @@ class RiderWalletScreen extends ConsumerStatefulWidget {
 }
 
 class _State extends ConsumerState<RiderWalletScreen> {
+  WalletPeriod _period = WalletPeriod.all;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(riderWalletProvider.notifier).load();
+      ref.read(riderMeWalletProvider.notifier).load();
     });
   }
 
+  DateTime? _txDate(RiderMeWalletTransactionModel tx) =>
+      tx.createdAt == null ? null : DateTime.tryParse(tx.createdAt!);
+
+  bool _matchesPeriod(DateTime? d, WalletPeriod p) {
+    if (d == null) return false;
+    final now = DateTime.now();
+    return switch (p) {
+      WalletPeriod.today =>
+        d.year == now.year && d.month == now.month && d.day == now.day,
+      WalletPeriod.thisWeek => now.difference(d).inDays < 7,
+      WalletPeriod.thisMonth => d.year == now.year && d.month == now.month,
+      WalletPeriod.all => true,
+    };
+  }
+
+  double _subtotal(List<RiderMeWalletTransactionModel> txs, WalletPeriod p) {
+    return txs.where((t) => t.isCredit).fold(0.0, (sum, t) {
+      return _matchesPeriod(_txDate(t), p)
+          ? sum + (t.amount?.toDouble() ?? 0)
+          : sum;
+    });
+  }
+
+  List<RiderMeWalletTransactionModel> _filtered(
+      List<RiderMeWalletTransactionModel> txs) {
+    if (_period == WalletPeriod.all) return txs;
+    return txs.where((t) => _matchesPeriod(_txDate(t), _period)).toList();
+  }
+
+  String _formatTxDate(DateTime? d) =>
+      d == null ? '' : DateFormat('MMM d, h:mm a').format(d);
+
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(riderWalletProvider);
+    final state = ref.watch(riderMeWalletProvider);
     final w = MediaQuery.of(context).size.width;
     final h = MediaQuery.of(context).size.height;
     final top = MediaQuery.of(context).padding.top;
 
-    final today = state.status == WalletStatus.loaded
-        ? state.todayTotal
-        : _todayDummy;
-    final week = state.status == WalletStatus.loaded
-        ? state.weekTotal
-        : _weekDummy;
-    final month = state.status == WalletStatus.loaded
-        ? state.monthTotal
-        : _monthDummy;
-    final total = state.status == WalletStatus.loaded
-        ? (double.tryParse(state.wallet?.total ?? '0') ?? 0)
-        : _totalDummy;
+    final isLoaded = state.status == RiderMeWalletStatus.loaded;
+    final today = isLoaded ? _subtotal(state.transactions, WalletPeriod.today) : _todayDummy;
+    final week = isLoaded ? _subtotal(state.transactions, WalletPeriod.thisWeek) : _weekDummy;
+    final month = isLoaded ? _subtotal(state.transactions, WalletPeriod.thisMonth) : _monthDummy;
+    final total = isLoaded ? (state.wallet?.balance.toDouble() ?? 0) : _totalDummy;
 
     return Scaffold(
       backgroundColor: AppColors.scaffold,
       body: RefreshIndicator(
         color: AppColors.primary,
-        onRefresh: () => ref.read(riderWalletProvider.notifier).load(),
+        onRefresh: () => ref.read(riderMeWalletProvider.notifier).load(),
         child: CustomScrollView(
           physics: const BouncingScrollPhysics(
               parent: AlwaysScrollableScrollPhysics()),
@@ -179,10 +210,8 @@ class _State extends ConsumerState<RiderWalletScreen> {
                       ),
                     ),
                     _PeriodFilter(
-                      period: state.period,
-                      onSelect: (p) => ref
-                          .read(riderWalletProvider.notifier)
-                          .setPeriod(p),
+                      period: _period,
+                      onSelect: (p) => setState(() => _period = p),
                     ),
                   ],
                 ),
@@ -192,27 +221,26 @@ class _State extends ConsumerState<RiderWalletScreen> {
             SizedBox(height: h * 0.01).asSliver,
 
             // ── List ─────────────────────────────────────────────────────────
-            if (state.status == WalletStatus.loading)
+            if (state.status == RiderMeWalletStatus.loading)
               const SliverToBoxAdapter(
                 child: ShimmerListPlaceholder(
                     itemCount: 5, itemHeight: 68),
               )
-            else if (state.status == WalletStatus.loaded &&
-                state.filteredEarnings.isNotEmpty)
+            else if (isLoaded && _filtered(state.transactions).isNotEmpty)
               SliverPadding(
                 padding: EdgeInsets.fromLTRB(
                     w * 0.04, 0, w * 0.04, h * 0.06),
                 sliver: SliverList.builder(
-                  itemCount: state.filteredEarnings.length,
+                  itemCount: _filtered(state.transactions).length,
                   itemBuilder: (_, i) {
-                    final item = state.filteredEarnings[i];
+                    final item = _filtered(state.transactions)[i];
                     return AnimatedListItem(
                       index: i,
                       child: _TxTile(
                         title: item.description ?? 'Delivery',
-                        sub: item.formattedDate,
+                        sub: _formatTxDate(_txDate(item)),
                         amount: item.amount?.toDouble() ?? 0,
-                        credit: true,
+                        credit: item.isCredit,
                         w: w,
                         h: h,
                       ),
@@ -627,8 +655,8 @@ class _InfoTile extends StatelessWidget {
 // ─── Period Filter ────────────────────────────────────────────────────────────
 
 class _PeriodFilter extends StatelessWidget {
-  final EarningsPeriod period;
-  final void Function(EarningsPeriod) onSelect;
+  final WalletPeriod period;
+  final void Function(WalletPeriod) onSelect;
   const _PeriodFilter({required this.period, required this.onSelect});
 
   @override
@@ -637,13 +665,13 @@ class _PeriodFilter extends StatelessWidget {
     final h = MediaQuery.of(context).size.height;
 
     return Row(
-      children: EarningsPeriod.values.map((p) {
+      children: WalletPeriod.values.map((p) {
         final selected = period == p;
         final label = switch (p) {
-          EarningsPeriod.all => 'All',
-          EarningsPeriod.today => 'Today',
-          EarningsPeriod.thisWeek => 'Week',
-          EarningsPeriod.thisMonth => 'Month',
+          WalletPeriod.all => 'All',
+          WalletPeriod.today => 'Today',
+          WalletPeriod.thisWeek => 'Week',
+          WalletPeriod.thisMonth => 'Month',
         };
         return GestureDetector(
           onTap: () => onSelect(p),

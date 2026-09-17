@@ -1,9 +1,9 @@
 /// The rider terms-of-use agreement shown on the signup wizard's terms
 /// screen, authored as HTML and rendered with `flutter_html`.
 ///
-/// Segregated into its own class — like [VehicleCatalog] — so the legal
-/// copy and its version tag can be swapped (e.g. for a CMS/backend-fetched
-/// version) without touching the screen that renders it.
+/// Segregated into its own class so the legal copy and its version tag can
+/// be swapped (e.g. for a CMS/backend-fetched version) without touching the
+/// screen that renders it.
 abstract final class RiderAgreementContent {
   /// Bumped whenever [html]'s substance changes; sent to
   /// `POST /rider/me/agreement` as `terms_version`.

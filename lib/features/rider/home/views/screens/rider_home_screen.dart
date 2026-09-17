@@ -8,12 +8,16 @@ import 'package:delivery_boy/core/di/service_locator.dart';
 import 'package:delivery_boy/core/router/app_routes.dart';
 import 'package:delivery_boy/core/services/user_session_manager.dart';
 import 'package:delivery_boy/features/rider/auth/models/rider_user_model.dart';
+import 'package:delivery_boy/features/rider/auth/viewmodels/rider_auth_viewmodel.dart';
 import 'package:delivery_boy/features/rider/dashboard/views/screens/rider_dashboard_screen.dart';
 import 'package:delivery_boy/features/rider/home/views/widgets/customer_drawer.dart';
 import 'package:delivery_boy/features/rider/notifications/providers/rider_notifications_providers.dart';
 import 'package:delivery_boy/features/rider/orders/models/rider_me_order_model.dart';
 import 'package:delivery_boy/features/rider/orders/providers/rider_me_order_providers.dart';
 import 'package:delivery_boy/features/rider/orders/views/widgets/rider_me_order_status.dart';
+import 'package:delivery_boy/features/rider/profile/providers/rider_document_completion_providers.dart';
+import 'package:delivery_boy/features/rider/profile/providers/rider_me_profile_providers.dart';
+import 'package:delivery_boy/features/rider/shared_widgets/rider_setup_progress_card.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Data models (local / mock)
@@ -41,12 +45,14 @@ class RiderHomeScreen extends ConsumerStatefulWidget {
   final VoidCallback onToggleQueue;
   final VoidCallback onViewAllOrders;
   final VoidCallback onViewWallet;
+  final VoidCallback onViewProfile;
 
   const RiderHomeScreen({
     super.key,
     required this.onToggleQueue,
     required this.onViewAllOrders,
     required this.onViewWallet,
+    required this.onViewProfile,
   });
 
   @override
@@ -152,7 +158,11 @@ class _RiderHomeScreenState extends ConsumerState<RiderHomeScreen>
         child: SlideTransition(position: _sectionSlides[index], child: child),
       );
 
-  void _handleLogout() => context.go(AppRoutes.login);
+  Future<void> _handleLogout() async {
+    await ref.read(riderAuthProvider.notifier).logout();
+    if (!mounted) return;
+    context.go(AppRoutes.login);
+  }
 
   void _handleDeleteAccount() {
     showDialog<void>(
@@ -184,88 +194,117 @@ class _RiderHomeScreenState extends ConsumerState<RiderHomeScreen>
     final unread = ref.watch(riderNotificationsProvider).unreadCount;
     final historyOrders =
         ref.watch(riderMeOrderHistoryProvider).orders.take(2).toList();
+    final photoUrl = ref.watch(riderMeProfileProvider).profile?.photoUrl;
+    final initials = _riderName.isNotEmpty
+        ? _riderName[0].toUpperCase()
+        : 'R';
+
+    // Same technique as the vendor dashboard's "Finish Setup" card: show the
+    // checklist in place of the online toggle while verification documents
+    // are still outstanding, since the rider can't go online until then
+    // anyway (see _toggleQueue's KYC gate).
+    final docStatus = ref.watch(riderDocumentCompletionProvider).valueOrNull;
+    final setupSteps = buildRiderSetupSteps(
+      docStatus ?? const {},
+      onStart: () => context.push(AppRoutes.documentUpload),
+    );
+    final setupIncomplete =
+        docStatus == null ? false : setupSteps.any((s) => !s.completed);
 
     return Scaffold(
       backgroundColor: AppColors.scaffold,
       body: Stack(
         children: [
-          // ── Main scrollable content ──────────────────────────────────
           SafeArea(
-            child: CustomScrollView(
-              physics: const BouncingScrollPhysics(),
-              slivers: [
-                SliverToBoxAdapter(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      SizedBox(height: h * 0.018),
+            child: Column(
+              children: [
+                // ── Fixed header — stays put while the rest scrolls ─────
+                SizedBox(height: h * 0.018),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: hPad),
+                  child: _section(
+                    0,
+                    _HomeHeader(
+                      greeting: _greeting,
+                      name: _riderName,
+                      initials: initials,
+                      photoUrl: photoUrl,
+                      unread: unread,
+                      onMenu: _openDrawer,
+                      onBell: () => context.push(AppRoutes.notifications),
+                      onAvatar: widget.onViewProfile,
+                    ),
+                  ),
+                ),
+                SizedBox(height: h * 0.022),
 
-                      // ── Header ────────────────────────────────────────
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: hPad),
-                        child: _section(
-                          0,
-                          _HomeHeader(
-                            greeting: _greeting,
-                            name: _riderName,
-                            unread: unread,
-                            onMenu: _openDrawer,
-                            onBell: () => context.push(AppRoutes.notifications),
-                          ),
+                // ── Scrollable content ───────────────────────────────────
+                Expanded(
+                  child: CustomScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    slivers: [
+                      SliverToBoxAdapter(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // ── Online toggle, or setup checklist while
+                            // KYC is incomplete ────────────────────────
+                            Padding(
+                              padding:
+                                  EdgeInsets.symmetric(horizontal: hPad),
+                              child: _section(
+                                1,
+                                setupIncomplete
+                                    ? RiderSetupProgressCard(
+                                        steps: setupSteps)
+                                    : _OnlineCard(
+                                        isOnline: isOnline,
+                                        onToggle: () {
+                                          HapticFeedback.lightImpact();
+                                          widget.onToggleQueue();
+                                        },
+                                      ),
+                              ),
+                            ),
+
+                            SizedBox(height: h * 0.026),
+
+                            // ── Announcements ───────────────────────────
+                            _section(
+                              2,
+                              _AnnouncementsSection(
+                                announcements: _announcements,
+                                controller: _pageCtrl,
+                                currentPage: _currentPage,
+                                onPageChanged: (i) =>
+                                    setState(() => _currentPage = i),
+                                hPad: hPad,
+                                h: h,
+                                w: w,
+                              ),
+                            ),
+
+                            SizedBox(height: h * 0.026),
+
+                            // ── Recent deliveries ───────────────────────
+                            Padding(
+                              padding:
+                                  EdgeInsets.symmetric(horizontal: hPad),
+                              child: _section(
+                                3,
+                                _RecentOrdersSection(
+                                  orders: historyOrders,
+                                  onShowAll: widget.onViewAllOrders,
+                                  w: w,
+                                  h: h,
+                                ),
+                              ),
+                            ),
+
+                            SizedBox(height: h * 0.04),
+                          ],
                         ),
                       ),
-
-                      SizedBox(height: h * 0.022),
-
-                      // ── Online / Offline card ─────────────────────────
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: hPad),
-                        child: _section(
-                          1,
-                          _OnlineCard(
-                            isOnline: isOnline,
-                            onToggle: () {
-                              HapticFeedback.lightImpact();
-                              widget.onToggleQueue();
-                            },
-                          ),
-                        ),
-                      ),
-
-                      SizedBox(height: h * 0.026),
-
-                      // ── Announcements ─────────────────────────────────
-                      _section(
-                        2,
-                        _AnnouncementsSection(
-                          announcements: _announcements,
-                          controller: _pageCtrl,
-                          currentPage: _currentPage,
-                          onPageChanged: (i) =>
-                              setState(() => _currentPage = i),
-                          hPad: hPad,
-                          h: h,
-                          w: w,
-                        ),
-                      ),
-
-                      SizedBox(height: h * 0.026),
-
-                      // ── Recent deliveries ─────────────────────────────
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: hPad),
-                        child: _section(
-                          3,
-                          _RecentOrdersSection(
-                            orders: historyOrders,
-                            onShowAll: widget.onViewAllOrders,
-                            w: w,
-                            h: h,
-                          ),
-                        ),
-                      ),
-
-                      SizedBox(height: h * 0.04),
                     ],
                   ),
                 ),
@@ -297,104 +336,159 @@ class _RiderHomeScreenState extends ConsumerState<RiderHomeScreen>
 class _HomeHeader extends StatelessWidget {
   final String greeting;
   final String name;
+  final String initials;
+  final String? photoUrl;
   final int unread;
   final VoidCallback onMenu;
   final VoidCallback onBell;
+  final VoidCallback onAvatar;
 
   const _HomeHeader({
     required this.greeting,
     required this.name,
+    required this.initials,
+    this.photoUrl,
     required this.unread,
     required this.onMenu,
     required this.onBell,
+    required this.onAvatar,
   });
 
   @override
   Widget build(BuildContext context) {
     final w = MediaQuery.of(context).size.width;
 
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Hamburger menu button
-        GestureDetector(
-          onTap: onMenu,
-          child: Container(
-            width: (w * 0.11).clamp(40.0, 50.0),
-            height: (w * 0.11).clamp(40.0, 50.0),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceVariant,
-              borderRadius: BorderRadius.circular(w * 0.032),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: Icon(
-              HugeIcons.strokeRoundedMenu01,
-              size: (w * 0.056).clamp(20.0, 24.0),
-              color: AppColors.textPrimary,
-            ),
-          ),
-        ),
-        SizedBox(width: w * 0.03),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                greeting,
-                style: TextStyle(
-                  fontFamily: 'Mukta',
-                  fontSize: (w * 0.034).clamp(12.0, 15.0),
-                  color: AppColors.textSecondary,
-                  fontWeight: FontWeight.w400,
-                ),
-              ),
-              SizedBox(height: w * 0.005),
-              Text(
-                name,
-                style: TextStyle(
-                  fontFamily: 'Mukta',
-                  fontSize: (w * 0.058).clamp(20.0, 28.0),
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.w800,
-                  height: 1.1,
-                ),
-              ),
-            ],
-          ),
-        ),
-        // Bell button
-        GestureDetector(
-          onTap: onBell,
-          child: Container(
-            width: (w * 0.11).clamp(40.0, 50.0),
-            height: (w * 0.11).clamp(40.0, 50.0),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceVariant,
-              borderRadius: BorderRadius.circular(w * 0.032),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                Icon(
-                  HugeIcons.strokeRoundedNotification01,
-                  size: (w * 0.056).clamp(20.0, 24.0),
-                  color: AppColors.textPrimary,
-                ),
-                if (unread > 0)
-                  Positioned(
-                    top: (w * 0.018).clamp(6.0, 9.0),
-                    right: (w * 0.018).clamp(6.0, 9.0),
-                    child: Container(
-                      width: (w * 0.022).clamp(7.0, 10.0),
-                      height: (w * 0.022).clamp(7.0, 10.0),
-                      decoration: const BoxDecoration(
-                        color: AppColors.error,
-                        shape: BoxShape.circle,
-                      ),
+        // Icon row — menu (left), bell + avatar (right)
+        Row(
+          children: [
+            GestureDetector(
+              onTap: onMenu,
+              behavior: HitTestBehavior.opaque,
+              child: Container(
+                padding: EdgeInsets.all(w * 0.022),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(w * 0.028),
+                  border:
+                      Border.all(color: AppColors.border.withValues(alpha: 0.6)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.02),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
                     ),
-                  ),
-              ],
+                  ],
+                ),
+                child: Icon(
+                  HugeIcons.strokeRoundedMenu02,
+                  color: AppColors.textPrimary,
+                  size: w * 0.052,
+                ),
+              ),
             ),
+            const Spacer(),
+            GestureDetector(
+              onTap: onBell,
+              behavior: HitTestBehavior.opaque,
+              child: Container(
+                padding: EdgeInsets.all(w * 0.022),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(w * 0.028),
+                  border:
+                      Border.all(color: AppColors.border.withValues(alpha: 0.6)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.02),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Stack(
+                  children: [
+                    Icon(
+                      HugeIcons.strokeRoundedNotification01,
+                      color: AppColors.textPrimary,
+                      size: w * 0.052,
+                    ),
+                    if (unread > 0)
+                      Positioned(
+                        top: 0,
+                        right: 0,
+                        child: Container(
+                          width: w * 0.018,
+                          height: w * 0.018,
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 1.5),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+            SizedBox(width: w * 0.03),
+            GestureDetector(
+              onTap: onAvatar,
+              child: Container(
+                padding: const EdgeInsets.all(2),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: AppColors.primary.withValues(alpha: 0.3),
+                    width: 1.5,
+                  ),
+                ),
+                child: CircleAvatar(
+                  radius: w * 0.045,
+                  backgroundColor: AppColors.primary,
+                  backgroundImage: (photoUrl != null && photoUrl!.isNotEmpty)
+                      ? NetworkImage(photoUrl!)
+                      : null,
+                  child: (photoUrl != null && photoUrl!.isNotEmpty)
+                      ? null
+                      : Text(
+                          initials,
+                          style: TextStyle(
+                            fontFamily: 'Mukta',
+                            color: Colors.white,
+                            fontSize: w * 0.032,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                ),
+              ),
+            ),
+          ],
+        ),
+
+        SizedBox(height: w * 0.05),
+
+        // Greeting + name
+        Text(
+          greeting,
+          style: TextStyle(
+            fontFamily: 'Mukta',
+            fontSize: (w * 0.034).clamp(12.0, 15.0),
+            color: AppColors.textSecondary,
+            fontWeight: FontWeight.w400,
+          ),
+        ),
+        SizedBox(height: w * 0.005),
+        Text(
+          name,
+          style: TextStyle(
+            fontFamily: 'Mukta',
+            fontSize: (w * 0.058).clamp(20.0, 28.0),
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.w800,
+            height: 1.1,
           ),
         ),
       ],

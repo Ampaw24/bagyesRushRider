@@ -62,6 +62,10 @@ class UserSessionManager {
 
   bool get isPhoneVerified => currentUser?['phone_verified'] == true;
 
+  String? get firstName => (currentUser?['profile'] as Map?)?['first_name'] as String?;
+
+  String? get lastName => (currentUser?['profile'] as Map?)?['last_name'] as String?;
+
   /// Human-readable name: `profile.first_name last_name`, falling back to
   /// the legacy flat `name` / `fullName` keys.
   String? get displayName {

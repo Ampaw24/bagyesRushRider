@@ -30,13 +30,16 @@ abstract class RiderAuthRepository {
 
     /// Must be one of `VehicleType::selectable()` — currently only
     /// `motorbike`.
-    required String vehicleType,
+    required int vehicleTypeId,
 
     /// Non-nullable on purpose: the backend exempts bicycles, but bicycle
     /// isn't selectable, so a rider always needs a plate. Relax to `String?`
     /// only if that changes. `unique:riders,plate_number`, max 32.
     required String plateNumber,
   });
+
+
+
 
   ResultFuture<AuthResult> login({
     required String phone,

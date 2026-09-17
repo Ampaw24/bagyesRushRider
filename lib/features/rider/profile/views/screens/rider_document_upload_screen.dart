@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'package:dio/dio.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -9,26 +8,15 @@ import 'package:image_picker/image_picker.dart';
 import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/core/router/app_routes.dart';
 import 'package:delivery_boy/core/widgets/app_gradient_button.dart';
-import 'package:delivery_boy/core/widgets/status_badge.dart';
-import 'package:delivery_boy/features/rider/profile/providers/rider_profile_providers.dart';
+import 'package:delivery_boy/features/rider/profile/data/rider_document_types.dart';
+import 'package:delivery_boy/features/rider/profile/providers/rider_document_completion_providers.dart';
+import 'package:delivery_boy/features/rider/profile/providers/rider_me_profile_providers.dart';
+import 'package:delivery_boy/features/rider/profile/views/screens/rider_selfie_capture_screen.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 enum _DocStatus { pending, uploading, uploaded, failed }
 
-class _DocConfig {
-  final String key;
-  final String label;
-  final IconData icon;
-  const _DocConfig(this.key, this.label, this.icon);
-}
-
-const _docs = [
-  _DocConfig('selfie', 'Profile Selfie', HugeIcons.strokeRoundedFaceId),
-  _DocConfig('licenceFront', "Driver's Licence — Front", HugeIcons.strokeRoundedCreditCard),
-  _DocConfig('licenceBack', "Driver's Licence — Back", HugeIcons.strokeRoundedCreditCardNotAccept),
-  _DocConfig('motorIssurance', 'Motor Insurance', HugeIcons.strokeRoundedShield01),
-  _DocConfig('roadWorthy', 'Roadworthy Certificate', HugeIcons.strokeRoundedCheckmarkBadge01),
-];
+const _docs = riderDocumentTypes;
 
 class RiderDocumentUploadScreen extends ConsumerStatefulWidget {
   const RiderDocumentUploadScreen({super.key});
@@ -51,21 +39,29 @@ class _RiderDocumentUploadScreenState
   void initState() {
     super.initState();
     // Pre-fill status for already-uploaded docs
-    WidgetsBinding.instance.addPostFrameCallback((_) => _syncFromUser());
+    WidgetsBinding.instance.addPostFrameCallback((_) => _syncFromProfile());
   }
 
-  void _syncFromUser() {
-    final user = ref.read(riderProfileProvider).user;
-    if (user == null) return;
-    final map = user.toJson();
-    setState(() {
-      for (final doc in _docs) {
-        final val = map[doc.key];
-        if (val != null && val.toString().isNotEmpty) {
-          _statuses[doc.key] = _DocStatus.uploaded;
-        }
+  Future<void> _syncFromProfile() async {
+    final notifier = ref.read(riderMeProfileProvider.notifier);
+    await notifier.load();
+    if (!mounted) return;
+
+    final profile = ref.read(riderMeProfileProvider).profile;
+    if (profile == null) return;
+
+    if (profile.photoUrl != null && profile.photoUrl!.isNotEmpty) {
+      setState(() => _statuses['selfie'] = _DocStatus.uploaded);
+    }
+
+    for (final doc in _docs) {
+      if (doc.key == 'selfie') continue;
+      final result = await notifier.getDocument(doc.key);
+      if (!mounted) return;
+      if (result?.url != null && result!.url!.isNotEmpty) {
+        setState(() => _statuses[doc.key] = _DocStatus.uploaded);
       }
-    });
+    }
   }
 
   int get _uploadedCount =>
@@ -73,69 +69,58 @@ class _RiderDocumentUploadScreenState
 
   @override
   Widget build(BuildContext context) {
-    final user = ref.watch(riderProfileProvider).user;
-    final isComplete = user?.isProfileComplete ?? false;
+    final isComplete = _uploadedCount == _docs.length;
+    final w = MediaQuery.sizeOf(context).width;
+    final h = MediaQuery.sizeOf(context).height;
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
 
     return Scaffold(
       backgroundColor: AppColors.scaffold,
       appBar: AppBar(
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
+        backgroundColor: Colors.white,
         elevation: 0,
+        surfaceTintColor: Colors.white,
+        leading: IconButton(
+          icon: const Icon(HugeIcons.strokeRoundedArrowLeft01,
+              color: AppColors.textPrimary, size: 20),
+          onPressed: () => context.pop(),
+        ),
         title: const Text(
           'Upload Documents',
           style: TextStyle(
             fontFamily: 'Roboto',
-            fontWeight: FontWeight.w600,
-            fontSize: 18,
+            fontSize: 17,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textPrimary,
           ),
         ),
+        centerTitle: true,
       ),
-      body: Column(
-        children: [
-          // ── Progress header ────────────────────────────────────────────────
-          Container(
-            color: AppColors.primary,
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '$_uploadedCount of ${_docs.length} documents uploaded',
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.85),
-                    fontSize: 13,
-                    fontFamily: 'Roboto',
-                  ),
-                ),
-                const SizedBox(height: 8),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: LinearProgressIndicator(
-                    value: _uploadedCount / _docs.length,
-                    backgroundColor: Colors.white.withValues(alpha: 0.3),
-                    valueColor:
-                        const AlwaysStoppedAnimation<Color>(Colors.white),
-                    minHeight: 6,
-                  ),
-                ),
-              ],
+      body: SafeArea(
+        top: false,
+        child: Column(
+          children: [
+            Padding(
+              padding: EdgeInsets.fromLTRB(
+                  w * 0.05, h * 0.02, w * 0.05, h * 0.005),
+              child: _buildProgressCard(w),
             ),
-          ),
-
-          // ── Document cards ─────────────────────────────────────────────────
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
-              itemCount: _docs.length,
-              itemBuilder: (_, i) => _buildDocCard(_docs[i]),
+            Expanded(
+              child: ListView.separated(
+                padding: EdgeInsets.fromLTRB(
+                    w * 0.05, h * 0.012, w * 0.05, h * 0.16),
+                itemCount: _docs.length,
+                separatorBuilder: (_, __) => SizedBox(height: h * 0.014),
+                itemBuilder: (_, i) => _buildDocCard(_docs[i], w),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
       bottomSheet: Container(
         color: Colors.white,
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+        padding: EdgeInsets.fromLTRB(
+            w * 0.05, h * 0.014, w * 0.05, bottomInset + h * 0.018),
         child: AppGradientButton(
           label: isComplete
               ? 'Continue to Dashboard'
@@ -151,162 +136,259 @@ class _RiderDocumentUploadScreenState
     );
   }
 
-  Widget _buildDocCard(_DocConfig doc) {
-    final status = _statuses[doc.key]!;
-    final localFile = _files[doc.key];
-    final isUploading = status == _DocStatus.uploading;
-
-    final borderColor = switch (status) {
-      _DocStatus.uploaded => AppColors.success,
-      _DocStatus.uploading => AppColors.primary,
-      _DocStatus.failed => AppColors.error,
-      _DocStatus.pending => Colors.grey.shade300,
-    };
-
-    final badge = switch (status) {
-      _DocStatus.uploaded =>
-        StatusBadge(label: 'Uploaded', color: AppColors.success),
-      _DocStatus.uploading =>
-        StatusBadge(label: 'Uploading...', color: AppColors.primary),
-      _DocStatus.failed =>
-        StatusBadge(label: 'Failed', color: AppColors.error),
-      _DocStatus.pending =>
-        StatusBadge(label: 'Pending', color: Colors.grey.shade400),
-    };
+  Widget _buildProgressCard(double w) {
+    final total = _docs.length;
+    final progress = total == 0 ? 0.0 : _uploadedCount / total;
+    final allDone = _uploadedCount == total;
+    final tint = allDone ? AppColors.success : AppColors.primary;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      width: double.infinity,
+      padding: EdgeInsets.all(w * 0.04),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border(
-          left: BorderSide(color: borderColor, width: 4),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+        borderRadius: BorderRadius.circular(w * 0.035),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Verification progress',
+                style: TextStyle(
+                  fontFamily: 'Roboto',
+                  fontSize: (w * 0.036).clamp(13.0, 15.0),
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              Text(
+                '$_uploadedCount/$total',
+                style: TextStyle(
+                  fontFamily: 'Roboto',
+                  fontSize: (w * 0.036).clamp(13.0, 15.0),
+                  fontWeight: FontWeight.w700,
+                  color: tint,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: w * 0.025),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(w * 0.02),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: w * 0.016,
+              backgroundColor: AppColors.surfaceVariant,
+              valueColor: AlwaysStoppedAnimation<Color>(tint),
+            ),
+          ),
+          SizedBox(height: w * 0.022),
+          Text(
+            allDone
+                ? 'All documents verified — you\'re ready to go!'
+                : 'Upload clear photos to get verified and start accepting orders.',
+            style: TextStyle(
+              fontFamily: 'Roboto',
+              fontSize: (w * 0.032).clamp(11.5, 13.0),
+              color: AppColors.textSecondary,
+              height: 1.3,
+            ),
           ),
         ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(14),
+    );
+  }
+
+  Widget _buildDocCard(RiderDocumentType doc, double w) {
+    final status = _statuses[doc.key]!;
+    final localFile = _files[doc.key];
+    final isUploading = status == _DocStatus.uploading;
+    final isUploaded = status == _DocStatus.uploaded;
+    final isFailed = status == _DocStatus.failed;
+
+    final accent = switch (status) {
+      _DocStatus.uploaded => AppColors.success,
+      _DocStatus.uploading => AppColors.primary,
+      _DocStatus.failed => AppColors.error,
+      _DocStatus.pending => AppColors.textHint,
+    };
+
+    final statusIcon = switch (status) {
+      _DocStatus.uploaded => HugeIcons.strokeRoundedCheckmarkCircle01,
+      _DocStatus.uploading => HugeIcons.strokeRoundedRefresh,
+      _DocStatus.failed => HugeIcons.strokeRoundedAlert01,
+      _DocStatus.pending => HugeIcons.strokeRoundedCameraAdd01,
+    };
+
+    final statusText = switch (status) {
+      _DocStatus.uploaded => 'Verified',
+      _DocStatus.uploading => 'Uploading…',
+      _DocStatus.failed => 'Upload failed — tap to retry',
+      _DocStatus.pending => 'Tap to upload',
+    };
+
+    return GestureDetector(
+      onTap: isUploading ? null : () => _pick(doc),
+      child: Container(
+        padding: EdgeInsets.all(w * 0.035),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(w * 0.035),
+          border: Border.all(
+            color: isUploaded || isFailed
+                ? accent.withValues(alpha: 0.35)
+                : AppColors.border,
+            width: isUploaded || isFailed ? 1.2 : 1,
+          ),
+        ),
         child: Row(
           children: [
-            // Icon
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: borderColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(10),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(w * 0.025),
+              child: SizedBox(
+                width: w * 0.16,
+                height: w * 0.16,
+                child: _buildDocVisual(doc, status, localFile, w),
               ),
-              child: Icon(doc.icon, color: borderColor, size: 22),
             ),
-            const SizedBox(width: 12),
-
-            // Label + badge
+            SizedBox(width: w * 0.035),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     doc.label,
-                    style: const TextStyle(
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
                       fontFamily: 'Roboto',
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
+                      fontSize: (w * 0.037).clamp(13.0, 15.0),
+                      fontWeight: FontWeight.w600,
                       color: AppColors.textPrimary,
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  badge,
-                ],
-              ),
-            ),
-
-            // Preview thumbnail or pick button
-            const SizedBox(width: 8),
-            GestureDetector(
-              onTap: isUploading ? null : () => _pick(doc),
-              child: isUploading
-                  ? const SizedBox(
-                      width: 44,
-                      height: 44,
-                      child: Center(
-                        child: SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: AppColors.primary,
+                  SizedBox(height: w * 0.014),
+                  Row(
+                    children: [
+                      Icon(statusIcon, size: w * 0.033, color: accent),
+                      SizedBox(width: w * 0.014),
+                      Expanded(
+                        child: Text(
+                          statusText,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontFamily: 'Roboto',
+                            fontSize: (w * 0.031).clamp(11.0, 12.5),
+                            fontWeight: FontWeight.w500,
+                            color: accent,
                           ),
                         ),
                       ),
-                    )
-                  : localFile != null || status == _DocStatus.uploaded
-                      ? ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: localFile != null
-                              ? Image.file(localFile,
-                                  width: 44, height: 44, fit: BoxFit.cover)
-                              : Container(
-                                  width: 44,
-                                  height: 44,
-                                  color: AppColors.success
-                                      .withValues(alpha: 0.1),
-                                  child: const Icon(HugeIcons.strokeRoundedCheckmarkCircle01,
-                                      color: AppColors.success),
-                                ),
-                        )
-                      : DottedBorder(
-                          borderType: BorderType.RRect,
-                          radius: const Radius.circular(8),
-                          color: Colors.grey.shade400,
-                          strokeWidth: 1.5,
-                          dashPattern: const [4, 3],
-                          child: Container(
-                            width: 44,
-                            height: 44,
-                            alignment: Alignment.center,
-                            child: Icon(HugeIcons.strokeRoundedCameraAdd01,
-                                color: Colors.grey.shade500, size: 20),
-                          ),
-                        ),
+                    ],
+                  ),
+                ],
+              ),
             ),
+            SizedBox(width: w * 0.02),
+            Icon(HugeIcons.strokeRoundedArrowRight01,
+                size: w * 0.045, color: AppColors.textHint),
           ],
         ),
       ),
     );
   }
 
-  Future<void> _pick(_DocConfig doc) async {
-    final file = await ImagePicker()
-        .pickImage(source: ImageSource.gallery, imageQuality: 80);
-    if (file == null || !mounted) return;
+  Widget _buildDocVisual(
+      RiderDocumentType doc, _DocStatus status, File? localFile, double w) {
+    if (status == _DocStatus.uploading) {
+      return Container(
+        color: AppColors.primary.withValues(alpha: 0.06),
+        alignment: Alignment.center,
+        child: SizedBox(
+          width: w * 0.055,
+          height: w * 0.055,
+          child: const CircularProgressIndicator(
+            strokeWidth: 2,
+            color: AppColors.primary,
+          ),
+        ),
+      );
+    }
 
-    final f = File(file.path);
+    if (localFile != null) {
+      return Image.file(localFile, fit: BoxFit.cover);
+    }
+
+    if (status == _DocStatus.uploaded) {
+      return Container(
+        color: AppColors.success.withValues(alpha: 0.08),
+        alignment: Alignment.center,
+        child: Icon(HugeIcons.strokeRoundedCheckmarkCircle01,
+            color: AppColors.success, size: w * 0.07),
+      );
+    }
+
+    if (status == _DocStatus.failed) {
+      return Container(
+        color: AppColors.error.withValues(alpha: 0.08),
+        alignment: Alignment.center,
+        child: Icon(HugeIcons.strokeRoundedAlert01,
+            color: AppColors.error, size: w * 0.065),
+      );
+    }
+
+    return DottedBorder(
+      borderType: BorderType.RRect,
+      radius: Radius.circular(w * 0.025),
+      color: AppColors.border,
+      strokeWidth: 1.4,
+      dashPattern: const [5, 3],
+      child: Container(
+        color: AppColors.surfaceVariant,
+        alignment: Alignment.center,
+        child: Icon(doc.icon, color: AppColors.textHint, size: w * 0.065),
+      ),
+    );
+  }
+
+  Future<void> _pick(RiderDocumentType doc) async {
+    final File? f;
+    if (doc.key == 'selfie') {
+      f = await Navigator.of(context).push<File>(
+        MaterialPageRoute(builder: (_) => const RiderSelfieCaptureScreen()),
+      );
+    } else {
+      final file = await ImagePicker()
+          .pickImage(source: ImageSource.gallery, imageQuality: 80);
+      f = file == null ? null : File(file.path);
+    }
+    if (f == null || !mounted) return;
+
     setState(() {
-      _files[doc.key] = f;
+      _files[doc.key] = f!;
       _statuses[doc.key] = _DocStatus.uploading;
     });
 
-    final userId = ref.read(riderProfileProvider).user?.id ?? '';
-    final filename = f.path.split('/').last;
-    final formData = FormData.fromMap({
-      'id': userId,
-      doc.key: await MultipartFile.fromFile(f.path, filename: filename),
-    });
-
-    final ok = await ref.read(riderProfileProvider.notifier).uploadDoc(formData);
+    final notifier = ref.read(riderMeProfileProvider.notifier);
+    final ok = doc.key == 'selfie'
+        ? await notifier.uploadPhoto(f.path)
+        : (await notifier.uploadDocument(type: doc.key, filePath: f.path)) !=
+            null;
 
     if (mounted) {
       setState(() {
         _statuses[doc.key] =
             ok ? _DocStatus.uploaded : _DocStatus.failed;
       });
-      if (ok) HapticFeedback.lightImpact();
+      if (ok) {
+        HapticFeedback.lightImpact();
+        ref.read(riderDocumentCompletionProvider.notifier).refresh();
+      }
     }
   }
 }

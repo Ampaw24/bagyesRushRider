@@ -341,7 +341,7 @@ class _DrawerHeader extends StatelessWidget {
                   borderRadius: BorderRadius.circular(w * 0.025),
                 ),
                 child: Icon(
-                  HugeIcons.strokeRoundedCancelCircle,
+                  HugeIcons.strokeRoundedCancel01,
                   size: (w * 0.048).clamp(18.0, 22.0),
                   color: AppColors.textSecondary,
                 ),

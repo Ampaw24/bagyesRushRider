@@ -156,7 +156,7 @@ class _RiderVehicleDetailsScreenState
           firstName: c['first_name'] as String? ?? '',
           lastName: c['last_name'] as String? ?? '',
           city: c['city'] as String? ?? '',
-          vehicleType: c['vehicle_type'] as String? ?? _vehicleType.apiValue,
+          vehicleTypeId: int.tryParse(c['vehicle_type_id'] as String? ?? '') ?? 0,
           plateNumber: _regNumCtrl.text.trim(),
         );
 

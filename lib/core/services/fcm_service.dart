@@ -1,12 +1,9 @@
-import 'package:dio/dio.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:delivery_boy/core/network/api_endpoints.dart';
 
 /// Handles Firebase Cloud Messaging integration.
 /// Call [initialize] once at app startup (after Firebase.initializeApp()).
-/// Call [registerToken] after a successful login/signup.
 class FcmService {
   static const _tokenKey = 'fcm_token';
 
@@ -85,22 +82,6 @@ class FcmService {
     if (initial != null) {
       final route = _routeFromMessage(initial);
       onNotificationTap?.call(route);
-    }
-  }
-
-  /// Registers the stored FCM token with the backend for [userId].
-  /// Call this right after a successful login or signup.
-  static Future<void> registerToken(Dio dio, String userId) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString(_tokenKey);
-      if (token == null) return;
-      await dio.put(
-        ApiEndpoints.updateCourier,
-        data: {'id': userId, 'fcmToken': token},
-      );
-    } catch (_) {
-      // Non-critical — silently ignore token registration failures
     }
   }
 

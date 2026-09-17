@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/core/router/app_routes.dart';
 import 'package:delivery_boy/core/widgets/app_gradient_button.dart';
-import 'package:delivery_boy/features/rider/profile/providers/rider_profile_providers.dart';
+import 'package:delivery_boy/features/rider/profile/providers/rider_document_completion_providers.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 class RiderOnboardingScreen extends ConsumerStatefulWidget {
@@ -39,8 +39,9 @@ class _RiderOnboardingScreenState extends ConsumerState<RiderOnboardingScreen>
 
   @override
   Widget build(BuildContext context) {
+    final docStatus = ref.watch(riderDocumentCompletionProvider).valueOrNull;
     final isComplete =
-        ref.watch(riderProfileProvider).user?.isProfileComplete ?? false;
+        docStatus != null && docStatus.values.every((uploaded) => uploaded);
 
     return Scaffold(
       backgroundColor: AppColors.scaffold,

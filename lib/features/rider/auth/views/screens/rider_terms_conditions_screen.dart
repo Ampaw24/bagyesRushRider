@@ -98,7 +98,7 @@ class _RiderTermsConditionsScreenState
               firstName: c['first_name'] as String? ?? '',
               lastName: c['last_name'] as String? ?? '',
               city: c['city'] as String? ?? '',
-              vehicleType: c['vehicle_type'] as String? ?? '',
+              vehicleTypeId: int.tryParse(c['vehicle_type_id'] as String? ?? '') ?? 0,
               plateNumber: c['plate_number'] as String? ?? '',
               acceptTerms: _acceptTerms,
               consentToVerification: _consentToVerification,

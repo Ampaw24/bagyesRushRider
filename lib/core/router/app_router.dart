@@ -55,6 +55,10 @@ const _publicRoutes = {
   AppRoutes.forgotPassword,
 };
 
+// TODO(testing): disables the auth guard so the login screen's bypass button
+// can reach /dashboard without a real session. Set back to false before shipping.
+const _testBypassAuthGuard = true;
+
 GoRouter createAppRouter() {
   return GoRouter(
      //initialLocation: AppRoutes.intro,
@@ -62,6 +66,7 @@ GoRouter createAppRouter() {
     // Re-evaluates the guard when a 401 clears the session mid-session.
     refreshListenable: sessionRevision,
     redirect: (context, state) {
+      if (_testBypassAuthGuard) return null;
       final isLoggedIn = sl<UserSessionManager>().isLoggedIn;
       final location = state.matchedLocation;
 

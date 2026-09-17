@@ -1,12 +1,16 @@
 import 'dart:io';
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:delivery_boy/constant/app_theme.dart';
+import 'package:delivery_boy/core/di/service_locator.dart';
+import 'package:delivery_boy/core/services/user_session_manager.dart';
 import 'package:delivery_boy/core/widgets/app_gradient_button.dart';
-import 'package:delivery_boy/features/rider/profile/providers/rider_profile_providers.dart';
+import 'package:delivery_boy/features/rider/profile/providers/rider_document_completion_providers.dart';
+import 'package:delivery_boy/features/rider/profile/providers/rider_me_profile_providers.dart';
+import 'package:delivery_boy/features/rider/shared/rider_me_action_status.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 class RiderProfileEditScreen extends ConsumerStatefulWidget {
@@ -19,8 +23,8 @@ class RiderProfileEditScreen extends ConsumerStatefulWidget {
 
 class _RiderProfileEditScreenState
     extends ConsumerState<RiderProfileEditScreen> {
-  final _nameCtrl = TextEditingController();
-  final _emailCtrl = TextEditingController();
+  final _firstNameCtrl = TextEditingController();
+  final _lastNameCtrl = TextEditingController();
   final _plateCtrl = TextEditingController();
   File? _pickedImage;
   bool _isUploading = false;
@@ -32,33 +36,34 @@ class _RiderProfileEditScreenState
   }
 
   void _populate() {
-    final user = ref.read(riderProfileProvider).user;
-    if (user == null) return;
-    _nameCtrl.text = user.name ?? '';
-    _emailCtrl.text = user.email ?? '';
-    _plateCtrl.text = user.numberPlate ?? '';
+    final session = sl<UserSessionManager>();
+    final profile = ref.read(riderMeProfileProvider).profile;
+    _firstNameCtrl.text = profile?.firstName ?? session.firstName ?? '';
+    _lastNameCtrl.text = profile?.lastName ?? session.lastName ?? '';
+    _plateCtrl.text = profile?.plateNumber ?? '';
   }
 
   @override
   void dispose() {
-    _nameCtrl.dispose();
-    _emailCtrl.dispose();
+    _firstNameCtrl.dispose();
+    _lastNameCtrl.dispose();
     _plateCtrl.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final profileState = ref.watch(riderProfileProvider);
+    final profileState = ref.watch(riderMeProfileProvider);
     final isLoading =
-        profileState.status == ProfileStatus.loading || _isUploading;
+        profileState.actionStatus == RiderMeActionStatus.inProgress ||
+            _isUploading;
 
-    ref.listen(riderProfileProvider, (_, next) {
-      if (next.status == ProfileStatus.error &&
-          next.errorMessage != null) {
+    ref.listen(riderMeProfileProvider, (_, next) {
+      if (next.actionStatus == RiderMeActionStatus.error &&
+          next.actionMessage != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(next.errorMessage!),
+            content: Text(next.actionMessage!),
             backgroundColor: AppColors.error,
           ),
         );
@@ -106,13 +111,13 @@ class _RiderProfileEditScreenState
                       backgroundColor: Colors.grey.shade200,
                       backgroundImage: _pickedImage != null
                           ? FileImage(_pickedImage!) as ImageProvider
-                          : (profileState.user?.selfie != null &&
-                                  profileState.user!.selfie!.isNotEmpty
-                              ? NetworkImage(profileState.user!.selfie!)
+                          : (profileState.profile?.photoUrl != null &&
+                                  profileState.profile!.photoUrl!.isNotEmpty
+                              ? NetworkImage(profileState.profile!.photoUrl!)
                               : null),
                       child: (_pickedImage == null &&
-                              (profileState.user?.selfie == null ||
-                                  profileState.user!.selfie!.isEmpty))
+                              (profileState.profile?.photoUrl == null ||
+                                  profileState.profile!.photoUrl!.isEmpty))
                           ? Icon(HugeIcons.strokeRoundedUser,
                               size: 48, color: Colors.grey.shade400)
                           : null,
@@ -146,18 +151,17 @@ class _RiderProfileEditScreenState
 
             // ── Form fields ─────────────────────────────────────────────────
             _buildField(
-              controller: _nameCtrl,
-              label: 'Full Name',
-              hint: 'Enter your name',
+              controller: _firstNameCtrl,
+              label: 'First Name',
+              hint: 'Enter your first name',
               icon: HugeIcons.strokeRoundedUser,
             ),
             const SizedBox(height: 16),
             _buildField(
-              controller: _emailCtrl,
-              label: 'Email Address',
-              hint: 'Enter your email',
-              icon: HugeIcons.strokeRoundedMail01,
-              keyboardType: TextInputType.emailAddress,
+              controller: _lastNameCtrl,
+              label: 'Last Name',
+              hint: 'Enter your last name',
+              icon: HugeIcons.strokeRoundedUser,
             ),
             const SizedBox(height: 16),
             _buildField(
@@ -249,33 +253,33 @@ class _RiderProfileEditScreenState
   }
 
   Future<void> _save() async {
-    final notifier = ref.read(riderProfileProvider.notifier);
-    final userId =
-        ref.read(riderProfileProvider).user?.id ?? '';
+    final notifier = ref.read(riderMeProfileProvider.notifier);
 
     // 1. Upload selfie if a new one was picked
     if (_pickedImage != null) {
       setState(() => _isUploading = true);
-      final filename = _pickedImage!.path.split('/').last;
-      final formData = FormData.fromMap({
-        'id': userId,
-        'selfie': await MultipartFile.fromFile(
-          _pickedImage!.path,
-          filename: filename,
-        ),
-      });
-      final uploaded = await notifier.uploadDoc(formData);
+      final uploaded = await notifier.uploadPhoto(_pickedImage!.path);
       setState(() => _isUploading = false);
       if (!uploaded && mounted) return; // error shown via listener
+      ref.read(riderDocumentCompletionProvider.notifier).refresh();
     }
 
     // 2. Update text fields
-    final ok = await notifier.updateCourier({
-      'id': userId,
-      'name': _nameCtrl.text.trim(),
-      'email': _emailCtrl.text.trim(),
-      'numberPlate': _plateCtrl.text.trim(),
+    final ok = await notifier.updateProfile({
+      'first_name': _firstNameCtrl.text.trim(),
+      'last_name': _lastNameCtrl.text.trim(),
+      'plate_number': _plateCtrl.text.trim(),
     });
+
+    if (ok) {
+      await sl<UserSessionManager>().updateUser({
+        'profile': {
+          ...?sl<UserSessionManager>().currentUser?['profile'] as Map?,
+          'first_name': _firstNameCtrl.text.trim(),
+          'last_name': _lastNameCtrl.text.trim(),
+        },
+      });
+    }
 
     if (ok && mounted) {
       HapticFeedback.lightImpact();
@@ -285,7 +289,7 @@ class _RiderProfileEditScreenState
           backgroundColor: AppColors.success,
         ),
       );
-      Navigator.pop(context);
+      context.pop();
     }
   }
 }

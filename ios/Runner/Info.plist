@@ -25,7 +25,7 @@
 		<key>LSRequiresIPhoneOS</key>
 		<true/>
 		<key>NSCameraUsageDescription</key>
-		<string>Upload image from camera for screen background</string>
+		<string>BagyesRUSH uses your camera to capture documents and verify your identity with a live selfie.</string>
 		<key>NSPhotoLibraryUsageDescription</key>
 		<string>Photo Library Access Warning</string>
 		<key>UIApplicationSupportsIndirectInputEvents</key>

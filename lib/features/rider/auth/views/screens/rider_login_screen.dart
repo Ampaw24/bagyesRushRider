@@ -62,6 +62,7 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
 
   Future<void> _login() async {
     FocusManager.instance.primaryFocus?.unfocus();
+
     if (!_formKey.currentState!.validate()) return;
 
     final success = await ref.read(riderAuthProvider.notifier).login(
@@ -412,16 +413,19 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
                                 // ── Sign In Button ─────────────────────────────
                                 SizedBox(
                                   width: double.infinity,
-                                  height: 46,
+                                  height: (h * 0.058).clamp(46.0, 54.0),
                                   child: ElevatedButton(
-                                    onPressed: (isLoading || !_isFilled)
-                                        ? null
-                                        : _login,
+                                    onPressed:
+                                        isLoading || !_isFilled ? null : _login,
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: AppColors.primary,
                                       disabledBackgroundColor: AppColors.primary
                                           .withValues(alpha: 0.5),
                                       elevation: 0,
+                                      // The theme's default vertical padding (14+14) no
+                                      // longer fits this SizedBox's fixed height, which
+                                      // was clipping the label — let the box center it.
+                                      padding: EdgeInsets.zero,
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(12),
                                       ),
