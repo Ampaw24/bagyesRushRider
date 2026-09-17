@@ -92,7 +92,7 @@ class _IdleCard extends StatelessWidget {
               Text(
                 label,
                 style: TextStyle(
-                  fontFamily: 'Roboto',
+                  fontFamily: 'Mukta',
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
                   color: Colors.grey.shade600,
@@ -102,7 +102,7 @@ class _IdleCard extends StatelessWidget {
               Text(
                 'Tap to upload',
                 style: TextStyle(
-                  fontFamily: 'Roboto',
+                  fontFamily: 'Mukta',
                   fontSize: 11,
                   color: Colors.grey.shade400,
                 ),
@@ -151,7 +151,7 @@ class _UploadingCard extends StatelessWidget {
           Text(
             'Uploading $label…',
             style: TextStyle(
-              fontFamily: 'Roboto',
+              fontFamily: 'Mukta',
               fontSize: 12,
               color: Colors.grey.shade600,
             ),
@@ -222,7 +222,7 @@ class _DoneCard extends StatelessWidget {
                       child: Text(
                         label,
                         style: const TextStyle(
-                          fontFamily: 'Roboto',
+                          fontFamily: 'Mukta',
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                           color: AppColors.success,
@@ -262,14 +262,14 @@ class _DoneCard extends StatelessWidget {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Remove document?',
             style: TextStyle(
-                fontFamily: 'Roboto', fontWeight: FontWeight.w700)),
+                fontFamily: 'Mukta', fontWeight: FontWeight.w700)),
         content: Text('Remove the uploaded $label?',
-            style: const TextStyle(fontFamily: 'Roboto')),
+            style: const TextStyle(fontFamily: 'Mukta')),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: const Text('Cancel',
-                style: TextStyle(fontFamily: 'Roboto')),
+                style: TextStyle(fontFamily: 'Mukta')),
           ),
           TextButton(
             onPressed: () {
@@ -278,7 +278,7 @@ class _DoneCard extends StatelessWidget {
             },
             child: const Text('Remove',
                 style: TextStyle(
-                    fontFamily: 'Roboto', color: AppColors.error)),
+                    fontFamily: 'Mukta', color: AppColors.error)),
           ),
         ],
       ),
@@ -323,7 +323,7 @@ class _FailedCard extends StatelessWidget {
             Text(
               error ?? 'Upload failed',
               style: const TextStyle(
-                  fontFamily: 'Roboto',
+                  fontFamily: 'Mukta',
                   fontSize: 12,
                   color: AppColors.error),
               textAlign: TextAlign.center,
@@ -332,7 +332,7 @@ class _FailedCard extends StatelessWidget {
             Text(
               'Tap to retry',
               style: TextStyle(
-                  fontFamily: 'Roboto',
+                  fontFamily: 'Mukta',
                   fontSize: 11,
                   color: Colors.grey.shade500),
             ),
@@ -368,7 +368,7 @@ class _ActionChip extends StatelessWidget {
         child: Text(
           label,
           style: TextStyle(
-              fontFamily: 'Roboto',
+              fontFamily: 'Mukta',
               fontSize: 11,
               fontWeight: FontWeight.w600,
               color: color),

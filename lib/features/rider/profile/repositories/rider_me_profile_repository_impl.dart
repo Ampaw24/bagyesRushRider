@@ -69,11 +69,27 @@ class RiderMeProfileRepositoryImpl implements RiderMeProfileRepository {
   Future<Either<Failure, void>> updateLocation({
     required double latitude,
     required double longitude,
+    double? heading,
+    double? speedKph,
+    int? accuracyM,
   }) =>
-      _run(() => _api.updateLocation(latitude: latitude, longitude: longitude));
+      _run(() => _api.updateLocation(
+            latitude: latitude,
+            longitude: longitude,
+            heading: heading,
+            speedKph: speedKph,
+            accuracyM: accuracyM,
+          ));
+
+  @override
+  Future<Either<Failure, void>> updateLocationBatch(
+    List<RiderMeLocationPing> pings,
+  ) =>
+      _run(() => _api.updateLocationBatch(pings));
 
   @override
   Future<Either<Failure, RiderMeProfileModel>> updatePayout({
+    required String currentPassword,
     int? payoutProviderId,
     String? accountNumber,
     String? accountName,
@@ -82,6 +98,7 @@ class RiderMeProfileRepositoryImpl implements RiderMeProfileRepository {
   }) =>
       _run(() async {
         final response = await _api.updatePayout(
+          currentPassword: currentPassword,
           payoutProviderId: payoutProviderId,
           accountNumber: accountNumber,
           accountName: accountName,

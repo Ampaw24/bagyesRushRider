@@ -14,6 +14,26 @@ abstract final class KycDocKey {
   static const List<String> required = [
     idFront, idBack, selfie, licensePhoto, vehicleRegDoc,
   ];
+
+  /// Maps each local doc key to the `:type` slug `POST/GET
+  /// rider/me/documents/:type` expects. `selfie` maps to `null` because it
+  /// goes through the dedicated `POST rider/me/photo` endpoint instead.
+  ///
+  /// The backend's accepted `:type` set is **not documented** anywhere in
+  /// the "v1 / rider" Postman collection (the doc's own endpoint #5 note:
+  /// "confirm the exact strings with the backend"). Only `licence` and
+  /// `insurance` are directly implied by the `PUT rider/me` field list —
+  /// `ghana_card`, `ghana_card_back` and `vehicle_registration` below are
+  /// unconfirmed guesses. Verify against the real backend before relying on
+  /// them; this map is the only place that needs to change once confirmed.
+  static const Map<String, String?> riderMeTypeSlug = {
+    idFront: 'ghana_card',
+    idBack: 'ghana_card_back',
+    selfie: null,
+    licensePhoto: 'licence',
+    vehicleRegDoc: 'vehicle_registration',
+    vehicleInsurance: 'insurance',
+  };
 }
 
 // ── Sub-models ─────────────────────────────────────────────────────────────

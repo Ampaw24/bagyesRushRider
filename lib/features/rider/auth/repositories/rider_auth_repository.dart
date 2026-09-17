@@ -1,5 +1,6 @@
 import 'package:delivery_boy/constant/typedef.dart';
 import 'package:delivery_boy/features/rider/auth/models/auth_user_model.dart';
+import 'package:delivery_boy/features/rider/auth/models/rider_agreement_model.dart';
 
 /// [token] is nullable because `/register` does not always issue one —
 /// callers must handle the "registered but not yet authenticated" case.
@@ -74,4 +75,15 @@ abstract class RiderAuthRepository {
   ResultFuture<AuthUserModel> getProfile();
 
   ResultFuture<void> logout();
+
+  /// Records terms-of-service + background-verification consent
+  /// (`POST /rider/me/agreement`). Requires Bearer auth, so this can only
+  /// succeed once [register] (or [login]) has produced a session token —
+  /// see `RiderAuthNotifier.registerAndAcceptAgreement`, which sequences
+  /// the two correctly.
+  ResultFuture<RiderAgreementModel> acceptAgreement({
+    required bool acceptTerms,
+    required bool consentToVerification,
+    String? termsVersion,
+  });
 }

@@ -1,18 +1,22 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/core/di/service_locator.dart';
-import 'package:delivery_boy/core/services/user_session_manager.dart';
 import 'package:delivery_boy/core/widgets/animated_list_item.dart';
-import 'package:delivery_boy/core/widgets/app_gradient_button.dart';
 import 'package:delivery_boy/core/widgets/shimmer_list_placeholder.dart';
-import 'package:delivery_boy/features/rider/orders/models/rider_order_model.dart';
-import 'package:delivery_boy/features/rider/orders/providers/rider_orders_providers.dart';
-import 'package:delivery_boy/features/rider/orders/views/widgets/rider_order_card.dart';
-import 'package:delivery_boy/features/rider/orders/views/widgets/rider_order_detail_sheet.dart';
+import 'package:delivery_boy/features/rider/orders/models/rider_me_order_model.dart';
+import 'package:delivery_boy/features/rider/orders/providers/rider_me_order_providers.dart';
+import 'package:delivery_boy/features/rider/orders/views/widgets/reason_input_sheet.dart';
+import 'package:delivery_boy/features/rider/orders/views/widgets/rider_me_offer_card.dart';
+import 'package:delivery_boy/features/rider/orders/views/widgets/rider_me_offer_detail_sheet.dart';
 import 'package:hugeicons/hugeicons.dart';
+
+/// Push notifications are fully disabled app-wide (Firebase itself isn't
+/// initialized in main.dart), so this periodic poll is the stopgap for a
+/// rider learning about a new offer without pull-to-refreshing manually.
+const _pollInterval = Duration(seconds: 25);
 
 class RiderNewOrdersScreen extends ConsumerStatefulWidget {
   const RiderNewOrdersScreen({super.key});
@@ -23,133 +27,68 @@ class RiderNewOrdersScreen extends ConsumerStatefulWidget {
 }
 
 class _RiderNewOrdersScreenState extends ConsumerState<RiderNewOrdersScreen> {
+  Timer? _pollTimer;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(newOrdersProvider.notifier).load();
+      ref.read(riderMeOffersProvider.notifier).load();
+      _pollTimer = Timer.periodic(
+        _pollInterval,
+        (_) => ref.read(riderMeOffersProvider.notifier).load(silent: true),
+      );
     });
   }
 
-  String get _userId =>
-      sl<UserSessionManager>().userId ?? '';
+  @override
+  void dispose() {
+    _pollTimer?.cancel();
+    super.dispose();
+  }
 
-  void _openDetailSheet(RiderOrderModel order) {
+  void _openDetailSheet(RiderMeOfferModel offer) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => RiderOrderDetailSheet(
-        order: order,
-        actionButton: _AcceptRejectRow(
-          order: order,
-          userId: _userId,
-          onReject: () => _showRejectDialog(order),
-        ),
+      builder: (_) => RiderMeOfferDetailSheet(offer: offer),
+    );
+  }
+
+  void _showDeclineSheet(RiderMeOfferModel offer) {
+    showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => ReasonInputSheet(
+        title: 'Reason for Declining',
+        submitLabel: 'Submit',
+        onSubmit: (reason) => ref
+            .read(riderMeOffersProvider.notifier)
+            .decline(offer.id, reason: reason.isEmpty ? null : reason),
       ),
     );
   }
 
-  void _showRejectDialog(RiderOrderModel order) {
-    String reason = '';
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => Padding(
-        padding: EdgeInsets.only(
-            bottom: MediaQuery.of(ctx).viewInsets.bottom),
-        child: Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Reason for Rejection',
-                style: TextStyle(
-                  fontFamily: 'Roboto',
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                onChanged: (v) => reason = v,
-                maxLines: 3,
-                decoration: InputDecoration(
-                  hintText: 'Enter reason here...',
-                  hintStyle: TextStyle(
-                      color: Colors.grey.shade400, fontFamily: 'Roboto'),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide(color: Colors.grey.shade200),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide(color: Colors.grey.shade200),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(
-                        color: AppColors.primary, width: 1.5),
-                  ),
-                  filled: true,
-                  fillColor: Colors.grey.shade50,
-                ),
-              ),
-              const SizedBox(height: 16),
-              AppGradientButton(
-                label: 'Submit Rejection',
-                onPressed: () async {
-                  if (reason.isEmpty) return;
-                  Navigator.pop(ctx);
-                  final ok = await ref
-                      .read(newOrdersProvider.notifier)
-                      .rejectOrder(
-                        orderId: order.id,
-                        courierId: _userId,
-                        reason: reason,
-                      );
-                  if (ok && mounted) {
-                    HapticFeedback.lightImpact();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Order rejected'),
-                        backgroundColor: Colors.orange,
-                      ),
-                    );
-                  }
-                },
-              ),
-            ],
-          ),
+  Future<void> _quickAccept(RiderMeOfferModel offer) async {
+    final ok = await ref.read(riderMeOffersProvider.notifier).accept(offer.id);
+    if (ok && mounted) {
+      HapticFeedback.mediumImpact();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Order accepted!'),
+          backgroundColor: AppColors.success,
         ),
-      ),
-    );
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(newOrdersProvider);
+    final state = ref.watch(riderMeOffersProvider);
 
-    ref.listen<NewOrdersState>(newOrdersProvider, (_, next) {
+    ref.listen<RiderMeOffersState>(riderMeOffersProvider, (_, next) {
       if (next.errorMessage != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -157,16 +96,15 @@ class _RiderNewOrdersScreenState extends ConsumerState<RiderNewOrdersScreen> {
             backgroundColor: AppColors.error,
           ),
         );
-        ref.read(newOrdersProvider.notifier).clearError();
       }
     });
 
-    if (state.status == OrdersStatus.loading ||
-        state.status == OrdersStatus.initial) {
+    if (state.status == RiderMeOrdersStatus.loading ||
+        state.status == RiderMeOrdersStatus.initial) {
       return const ShimmerListPlaceholder(itemCount: 4, itemHeight: 110);
     }
 
-    if (state.orders.isEmpty) {
+    if (state.offers.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -206,26 +144,26 @@ class _RiderNewOrdersScreenState extends ConsumerState<RiderNewOrdersScreen> {
 
     return RefreshIndicator(
       color: AppColors.primary,
-      onRefresh: () => ref.read(newOrdersProvider.notifier).load(),
+      onRefresh: () => ref.read(riderMeOffersProvider.notifier).load(),
       child: ListView.builder(
-        itemCount: state.orders.length,
+        itemCount: state.offers.length,
         padding: const EdgeInsets.symmetric(vertical: 8),
         physics: const BouncingScrollPhysics(),
         itemBuilder: (_, i) {
-          final order = state.orders[i];
+          final offer = state.offers[i];
           return AnimatedListItem(
             index: i,
             child: Padding(
               padding:
                   const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
               child: Slidable(
-                key: ValueKey(order.id),
+                key: ValueKey(offer.id),
                 endActionPane: ActionPane(
                   motion: const DrawerMotion(),
                   extentRatio: 0.5,
                   children: [
                     SlidableAction(
-                      onPressed: (_) => _quickAccept(order),
+                      onPressed: (_) => _quickAccept(offer),
                       backgroundColor: AppColors.success,
                       foregroundColor: Colors.white,
                       icon: HugeIcons.strokeRoundedCheckmarkCircle01,
@@ -234,22 +172,22 @@ class _RiderNewOrdersScreenState extends ConsumerState<RiderNewOrdersScreen> {
                           left: Radius.circular(12)),
                     ),
                     SlidableAction(
-                      onPressed: (_) => _showRejectDialog(order),
+                      onPressed: (_) => _showDeclineSheet(offer),
                       backgroundColor: AppColors.error,
                       foregroundColor: Colors.white,
                       icon: HugeIcons.strokeRoundedCancelCircle,
-                      label: 'Reject',
+                      label: 'Decline',
                       borderRadius: const BorderRadius.horizontal(
                           right: Radius.circular(12)),
                     ),
                   ],
                 ),
                 child: GestureDetector(
-                  onTap: () => _openDetailSheet(order),
-                  child: RiderOrderCard(
-                    order: order,
+                  onTap: () => _openDetailSheet(offer),
+                  child: RiderMeOfferCard(
+                    offer: offer,
                     actionButton: GestureDetector(
-                      onTap: () => _openDetailSheet(order),
+                      onTap: () => _openDetailSheet(offer),
                       child: Container(
                         height: 34,
                         padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -279,102 +217,5 @@ class _RiderNewOrdersScreenState extends ConsumerState<RiderNewOrdersScreen> {
         },
       ),
     );
-  }
-
-  Future<void> _quickAccept(RiderOrderModel order) async {
-    final ok = await ref.read(newOrdersProvider.notifier).acceptOrder(
-          orderId: order.id,
-          courierId: _userId,
-        );
-    if (ok && mounted) {
-      HapticFeedback.mediumImpact();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Order accepted!'),
-          backgroundColor: AppColors.success,
-        ),
-      );
-    }
-  }
-}
-
-// ── Accept / Reject row shown inside the detail sheet ────────────────────────
-
-class _AcceptRejectRow extends ConsumerStatefulWidget {
-  final RiderOrderModel order;
-  final String userId;
-  final VoidCallback onReject;
-
-  const _AcceptRejectRow({
-    required this.order,
-    required this.userId,
-    required this.onReject,
-  });
-
-  @override
-  ConsumerState<_AcceptRejectRow> createState() => _AcceptRejectRowState();
-}
-
-class _AcceptRejectRowState extends ConsumerState<_AcceptRejectRow> {
-  bool _loading = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: GestureDetector(
-            onTap: _loading ? null : () {
-              Navigator.pop(context);
-              widget.onReject();
-            },
-            child: Container(
-              height: 50,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade200,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              alignment: Alignment.center,
-              child: const Text(
-                'Reject',
-                style: TextStyle(
-                  fontFamily: 'Roboto',
-                  fontWeight: FontWeight.w600,
-                  fontSize: 15,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: AppGradientButton(
-            label: 'Accept',
-            isLoading: _loading,
-            onPressed: _loading ? null : _accept,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Future<void> _accept() async {
-    setState(() => _loading = true);
-    final ok = await ref.read(newOrdersProvider.notifier).acceptOrder(
-          orderId: widget.order.id,
-          courierId: widget.userId,
-        );
-    setState(() => _loading = false);
-    if (ok && mounted) {
-      Navigator.pop(context);
-      HapticFeedback.mediumImpact();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Order accepted!'),
-          backgroundColor: AppColors.success,
-        ),
-      );
-    }
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:delivery_boy/constant/app_theme.dart';
 
 /// A shimmer effect widget built without any extra package.
 /// Wraps [child] with a cycling linear gradient shader mask.
@@ -47,9 +48,9 @@ class _AppShimmerState extends State<AppShimmer>
               begin: Alignment(v - 1, 0),
               end: Alignment(v + 1, 0),
               colors: const [
-                Color(0xFFE0E0E0),
-                Color(0xFFF5F5F5),
-                Color(0xFFE0E0E0),
+                AppColors.shimmerBase,
+                AppColors.shimmerHighlight,
+                AppColors.shimmerBase,
               ],
               stops: const [0.0, 0.5, 1.0],
             ).createShader(bounds);

@@ -45,30 +45,11 @@ abstract final class ApiEndpoints {
   static const updateCourier = '/couriers/update';
   static const uploadDoc = '/couriers/upload/doc';
 
-  // ── Orders ────────────────────────────────────────────────────────────────
-  static const getOrders = '/orders/get';
-  static String getRequested(String id) => '/orders/requested/$id';
-  static String getActiveOrders(String id) => '/orders/active/$id';
-  static const acceptOrder = '/orders/accept';
-  static const rejectOrder = '/orders/reject';
-  static const updateOrder = '/orders/update';
-  static const setTrip = '/orders/trip/set';
-  static const finishTrip = '/orders/trip/finish';
-  static const updateLocation = '/orders/location/update';
-
   // ── Wallet / Earnings ─────────────────────────────────────────────────────
   static String getEarnings(String id) => '/earnings/user/$id';
 
-  // ── History ───────────────────────────────────────────────────────────────
-  static String getHistory(String id) => '/orders/history/$id';
-
   // ── Notifications ─────────────────────────────────────────────────────────
   static String getNotifications(String id) => '/notifications/user/$id';
-
-  // ── KYC ───────────────────────────────────────────────────────────────────
-  static const submitKyc = '/couriers/kyc/submit';
-  static String getKycStatus(String id) => '/couriers/kyc/$id';
-  static const uploadKycDoc = '/couriers/kyc/upload';
 
   // ═══════════════════════════════════════════════════════════════════════
   // Rider "Me" API — /rider/me/*
@@ -82,6 +63,7 @@ abstract final class ApiEndpoints {
   static const riderMeAvailability = '/rider/me/availability';
   static String riderMeDocument(String type) => '/rider/me/documents/$type';
   static const riderMeLocation = '/rider/me/location';
+  static const riderMeLocationBatch = '/rider/me/location/batch';
   static const riderMePayout = '/rider/me/payout';
   static const riderMePhoto = '/rider/me/photo';
   static const riderMeSubmitReview = '/rider/me/submit-review';
@@ -95,8 +77,14 @@ abstract final class ApiEndpoints {
   static String riderMeOrderArrivedAtPickup(int id) =>
       '/rider/me/orders/$id/arrived-at-pickup';
   static String riderMeOrderPickUp(int id) => '/rider/me/orders/$id/pick-up';
+  static String riderMeOrderArrivedAtDropoff(int id) =>
+      '/rider/me/orders/$id/arrived-at-dropoff';
   static String riderMeOrderDeliver(int id) => '/rider/me/orders/$id/deliver';
   static String riderMeOrderRelease(int id) => '/rider/me/orders/$id/release';
+  static String riderMeOrderUnreachable(int id) =>
+      '/rider/me/orders/$id/unreachable';
+  static String riderMeOrderStopArrived(int id, int stopId) =>
+      '/rider/me/orders/$id/stops/$stopId/arrived';
   static String riderMeOrderStopDeliver(int id, int stopId) =>
       '/rider/me/orders/$id/stops/$stopId/deliver';
   static String riderMeOrderStopFail(int id, int stopId) =>

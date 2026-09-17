@@ -2,12 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/core/widgets/animated_list_item.dart';
-import 'package:delivery_boy/core/widgets/app_gradient_button.dart';
 import 'package:delivery_boy/core/widgets/shimmer_list_placeholder.dart';
-import 'package:delivery_boy/features/rider/orders/models/rider_order_model.dart';
-import 'package:delivery_boy/features/rider/orders/providers/rider_orders_providers.dart';
-import 'package:delivery_boy/features/rider/orders/views/widgets/rider_order_card.dart';
-import 'package:delivery_boy/features/rider/orders/views/widgets/rider_order_detail_sheet.dart';
+import 'package:delivery_boy/features/rider/orders/models/rider_me_order_model.dart';
+import 'package:delivery_boy/features/rider/orders/providers/rider_me_order_providers.dart';
+import 'package:delivery_boy/features/rider/orders/views/widgets/rider_me_order_card.dart';
+import 'package:delivery_boy/features/rider/orders/views/widgets/rider_me_order_detail_sheet.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 class RiderOrderHistoryScreen extends ConsumerStatefulWidget {
@@ -24,31 +23,28 @@ class _RiderOrderHistoryScreenState
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(orderHistoryProvider.notifier).load();
+      ref.read(riderMeOrderHistoryProvider.notifier).load();
     });
   }
 
-  void _openDetailSheet(RiderOrderModel order) {
+  void _openDetailSheet(RiderMeOrderModel order) {
+    // Same detail sheet as Active — its stage-driven body naturally shows
+    // no action panel for a delivered/closed order, only Release/
+    // Unreachable are hidden too since those also gate on stage.
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => RiderOrderDetailSheet(
-        order: order,
-        actionButton: AppGradientButton(
-          label: 'Close',
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
+      builder: (_) => RiderMeOrderDetailSheet(initialOrder: order),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(orderHistoryProvider);
+    final state = ref.watch(riderMeOrderHistoryProvider);
 
-    if (state.status == OrdersStatus.loading ||
-        state.status == OrdersStatus.initial) {
+    if (state.status == RiderMeOrdersStatus.loading ||
+        state.status == RiderMeOrdersStatus.initial) {
       return const ShimmerListPlaceholder(itemCount: 4, itemHeight: 110);
     }
 
@@ -92,7 +88,7 @@ class _RiderOrderHistoryScreenState
 
     return RefreshIndicator(
       color: AppColors.primary,
-      onRefresh: () => ref.read(orderHistoryProvider.notifier).load(),
+      onRefresh: () => ref.read(riderMeOrderHistoryProvider.notifier).load(),
       child: ListView.builder(
         itemCount: state.orders.length,
         padding: const EdgeInsets.symmetric(vertical: 8),
@@ -105,19 +101,11 @@ class _RiderOrderHistoryScreenState
               padding:
                   const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
               child: GestureDetector(
-                onTap: () {
-                  ref.read(orderHistoryProvider.notifier).selectOrder(order);
-                  _openDetailSheet(order);
-                },
-                child: RiderOrderCard(
+                onTap: () => _openDetailSheet(order),
+                child: RiderMeOrderCard(
                   order: order,
                   actionButton: GestureDetector(
-                    onTap: () {
-                      ref
-                          .read(orderHistoryProvider.notifier)
-                          .selectOrder(order);
-                      _openDetailSheet(order);
-                    },
+                    onTap: () => _openDetailSheet(order),
                     child: Container(
                       height: 34,
                       padding: const EdgeInsets.symmetric(horizontal: 12),

@@ -70,16 +70,6 @@ class RegistrationStepper extends StatelessWidget {
                                       : AppColors.border,
                               width: i == currentIndex ? 2.5 : 1.5,
                             ),
-                            boxShadow: i == currentIndex
-                                ? [
-                                    BoxShadow(
-                                      color: AppColors.primary
-                                          .withValues(alpha: 0.3),
-                                      blurRadius: 10,
-                                      offset: const Offset(0, 3),
-                                    ),
-                                  ]
-                                : null,
                           ),
                           child: Center(
                             child: AnimatedSwitcher(

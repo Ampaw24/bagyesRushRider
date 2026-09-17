@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:delivery_boy/core/network/api_endpoints.dart';
+import 'package:delivery_boy/features/rider/profile/models/rider_me_profile_model.dart';
 
 /// Raw Dio calls for the `/rider/me` profile API — see
 /// the "v1 / rider" Postman collection (profile #1-10).
@@ -49,13 +50,27 @@ class RiderMeProfileApiService {
   Future<Response<dynamic>> updateLocation({
     required double latitude,
     required double longitude,
+    double? heading,
+    double? speedKph,
+    int? accuracyM,
   }) =>
       _dio.post(ApiEndpoints.riderMeLocation, data: {
         'latitude': latitude,
         'longitude': longitude,
+        if (heading != null) 'heading': heading,
+        if (speedKph != null) 'speed_kph': speedKph,
+        if (accuracyM != null) 'accuracy_m': accuracyM,
+      });
+
+  Future<Response<dynamic>> updateLocationBatch(
+    List<RiderMeLocationPing> pings,
+  ) =>
+      _dio.post(ApiEndpoints.riderMeLocationBatch, data: {
+        'pings': pings.map((p) => p.toJson()).toList(),
       });
 
   Future<Response<dynamic>> updatePayout({
+    required String currentPassword,
     int? payoutProviderId,
     String? accountNumber,
     String? accountName,
@@ -63,6 +78,7 @@ class RiderMeProfileApiService {
     String? mobileMoneyNumber,
   }) =>
       _dio.put(ApiEndpoints.riderMePayout, data: {
+        'current_password': currentPassword,
         if (payoutProviderId != null) 'payout_provider_id': payoutProviderId,
         if (accountNumber != null) 'account_number': accountNumber,
         if (accountName != null) 'account_name': accountName,

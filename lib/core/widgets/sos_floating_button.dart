@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:delivery_boy/constant/app_theme.dart';
 
 /// A persistent SOS floating button shown during active deliveries.
 class SosFloatingButton extends StatelessWidget {
@@ -10,7 +11,7 @@ class SosFloatingButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return FloatingActionButton(
       onPressed: () => _callEmergency(context),
-      backgroundColor: Colors.red.shade600,
+      backgroundColor: AppColors.error,
       foregroundColor: Colors.white,
       tooltip: 'SOS Emergency',
       child: const Icon(HugeIcons.strokeRoundedAlert02, size: 28),
@@ -29,7 +30,7 @@ class SosFloatingButton extends StatelessWidget {
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('Call Now', style: TextStyle(color: Colors.white)),
           ),

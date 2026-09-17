@@ -68,4 +68,18 @@ class RiderAuthApiService {
   Future<Response<dynamic>> getProfile() => _dio.get(ApiEndpoints.profile);
 
   Future<Response<dynamic>> logout() => _dio.post(ApiEndpoints.logout);
+
+  /// Records terms-of-service + background-verification consent
+  /// (`POST /rider/me/agreement`). Requires Bearer auth — only reachable
+  /// once `register`/`login` has produced a session token.
+  Future<Response<dynamic>> acceptAgreement({
+    required bool acceptTerms,
+    required bool consentToVerification,
+    String? termsVersion,
+  }) =>
+      _dio.post(ApiEndpoints.riderMeAgreement, data: {
+        'accept_terms': acceptTerms,
+        'consent_to_verification': consentToVerification,
+        if (termsVersion != null) 'terms_version': termsVersion,
+      });
 }

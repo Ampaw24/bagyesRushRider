@@ -27,7 +27,7 @@ class StatusBadge extends StatelessWidget {
           color: textColor,
           fontSize: 11,
           fontWeight: FontWeight.w600,
-          fontFamily: 'Roboto',
+          fontFamily: 'Mukta',
           letterSpacing: 0.3,
         ),
       ),

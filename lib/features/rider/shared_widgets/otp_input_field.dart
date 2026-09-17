@@ -141,7 +141,7 @@ class _PinBox extends StatelessWidget {
           maxLength: 1,
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           style: const TextStyle(
-            fontFamily: 'Roboto',
+            fontFamily: 'Mukta',
             fontSize: 22,
             fontWeight: FontWeight.w700,
             color: AppColors.textPrimary,

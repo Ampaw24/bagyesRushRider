@@ -13,7 +13,8 @@ import 'package:delivery_boy/features/rider/auth/models/rider_user_model.dart';
 import 'package:delivery_boy/core/widgets/sos_floating_button.dart';
 import 'package:delivery_boy/features/rider/notifications/providers/rider_notifications_providers.dart';
 import 'package:delivery_boy/features/rider/profile/providers/rider_me_profile_providers.dart';
-import 'package:delivery_boy/features/rider/orders/providers/rider_orders_providers.dart';
+import 'package:delivery_boy/features/rider/orders/providers/rider_me_order_providers.dart';
+import 'package:delivery_boy/features/rider/tracking/providers/rider_tracking_providers.dart';
 import 'package:delivery_boy/features/rider/home/views/screens/rider_home_screen.dart';
 import 'package:delivery_boy/features/rider/orders/views/screens/rider_new_orders_screen.dart';
 import 'package:delivery_boy/features/rider/orders/views/screens/rider_active_orders_screen.dart';
@@ -131,6 +132,21 @@ class _RiderDashboardScreenState extends ConsumerState<RiderDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final isOnline = ref.watch(riderQueueProvider);
+
+    // Starts/stops the GPS ping loop centrally — this shell stays mounted
+    // across tabs, so it's the right place to react regardless of which
+    // tab the rider is on. Gated on shouldTrackLocationProvider (true once
+    // any order is past pickup), not on individual delivery actions, so it
+    // stays correct with more than one concurrent active order.
+    ref.listen<bool>(shouldTrackLocationProvider, (_, shouldTrack) {
+      final tracking = ref.read(riderTrackingProvider.notifier);
+      if (shouldTrack) {
+        tracking.startTracking();
+      } else {
+        tracking.stopTracking();
+      }
+    });
+
     final mq = MediaQuery.of(context);
     final w = mq.size.width;
     // Content bottom padding = inner bar height + its bottom margin
@@ -334,7 +350,7 @@ class _OrdersTab extends ConsumerWidget {
     final unreadCount =
         ref.watch(riderNotificationsProvider).unreadCount;
     final hasActiveOrders =
-        ref.watch(activeOrdersProvider).orders.isNotEmpty;
+        ref.watch(riderMeOrdersProvider).orders.isNotEmpty;
 
     return DefaultTabController(
       length: 3,

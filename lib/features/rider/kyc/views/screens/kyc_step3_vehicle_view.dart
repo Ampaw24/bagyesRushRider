@@ -118,9 +118,22 @@ class _KycStep3VehicleViewState extends ConsumerState<KycStep3VehicleView> {
               items: _vehicleTypes
                   .map((t) => DropdownMenuItem(value: t, child: Text(t)))
                   .toList(),
-              onChanged: (v) => setState(() => _vehicleType = v),
+              // Disabled: set atomically at registration, and the backend's
+              // vehicle_type field only ever accepts "motorbike" — none of
+              // these display options round-trip to it. Shown read-only so
+              // the rider can see what's on file rather than edit it here.
+              onChanged: null,
               validator: (v) =>
                   v == null ? 'Select your vehicle type' : null,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Set at registration — contact support to change.',
+              style: TextStyle(
+                fontFamily: 'Roboto',
+                fontSize: 11,
+                color: Colors.grey.shade500,
+              ),
             ),
             const SizedBox(height: 16),
 
@@ -151,8 +164,13 @@ class _KycStep3VehicleViewState extends ConsumerState<KycStep3VehicleView> {
             AppTextField(
               label: 'Plate Number',
               hint: 'e.g. GR-1234-22',
+              helperText: 'Set at registration — contact support to change.',
               prefixIcon: HugeIcons.strokeRoundedTicket01,
               controller: _plateCtrl,
+              // Disabled: already captured (and uniqueness-checked) at
+              // registration; resubmitting here would re-run that check
+              // against the rider's own row for no benefit.
+              enabled: false,
               textCapitalization: TextCapitalization.characters,
               validator: (v) => (v == null || v.trim().isEmpty)
                   ? 'Enter plate number'

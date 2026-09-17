@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 import 'package:delivery_boy/core/errors/failures.dart';
+import 'package:delivery_boy/core/network/api_error_parser.dart';
 import 'package:delivery_boy/features/rider/orders/models/rider_me_order_model.dart';
 import 'package:delivery_boy/features/rider/orders/repositories/rider_me_order_repository.dart';
 import 'package:delivery_boy/features/rider/orders/services/rider_me_order_api_service.dart';
@@ -57,13 +58,19 @@ class RiderMeOrderRepositoryImpl implements RiderMeOrderRepository {
       _run(() => _api.pickUpOrder(orderId));
 
   @override
+  Future<Either<Failure, void>> arrivedAtDropoff(int orderId) =>
+      _run(() => _api.arrivedAtDropoff(orderId));
+
+  @override
   Future<Either<Failure, void>> deliverOrder(
     int orderId, {
+    required String deliveryPin,
     String? deliveredToName,
     String? proofPhotoPath,
   }) =>
       _run(() => _api.deliverOrder(
             orderId,
+            deliveryPin: deliveryPin,
             deliveredToName: deliveredToName,
             proofPhotoPath: proofPhotoPath,
           ));
@@ -73,15 +80,26 @@ class RiderMeOrderRepositoryImpl implements RiderMeOrderRepository {
       _run(() => _api.releaseOrder(orderId, reason: reason));
 
   @override
+  Future<Either<Failure, void>> markUnreachable(int orderId,
+          {String? reason}) =>
+      _run(() => _api.markUnreachable(orderId, reason: reason));
+
+  @override
+  Future<Either<Failure, void>> arriveAtStop(int orderId, int stopId) =>
+      _run(() => _api.arriveAtStop(orderId, stopId));
+
+  @override
   Future<Either<Failure, void>> deliverStop(
     int orderId,
     int stopId, {
+    required String deliveryPin,
     String? deliveredToName,
     String? proofPhotoPath,
   }) =>
       _run(() => _api.deliverStop(
             orderId,
             stopId,
+            deliveryPin: deliveryPin,
             deliveredToName: deliveredToName,
             proofPhotoPath: proofPhotoPath,
           ));
@@ -116,9 +134,16 @@ class RiderMeOrderRepositoryImpl implements RiderMeOrderRepository {
     try {
       return Right(await action());
     } on DioException catch (e) {
-      final msg = e.response?.data?['message'] as String? ??
-          e.message ??
-          'Request failed';
+      final data = e.response?.data;
+      // apiMessageFrom prefers the per-field message over the boilerplate
+      // top-level one, and is Map-safe — indexing `data['message']` directly
+      // threw on an HTML error body.
+      final msg = apiMessageFrom(data) ?? e.message ?? 'Request failed';
+
+      final fieldErrors = apiFieldErrorsFrom(data);
+      if (fieldErrors != null) {
+        return Left(ValidationFailure(msg, fieldErrors));
+      }
       return Left(ServerFailure(msg));
     } catch (e) {
       return Left(ServerFailure(e.toString()));

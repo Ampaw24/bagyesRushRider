@@ -7,9 +7,9 @@ abstract final class AppRoutes {
   static const forgotPassword = '/forgot-password';
   static const vehicleInfo = '/vehicle-info';
   static const vehicleDetails = '/vehicle-details';
+  static const termsAndConditions = '/terms-and-conditions';
   static const onboarding = '/onboarding';
   static const dashboard = '/dashboard';
-  static const map = '/dashboard/map';
   static const editProfile = '/dashboard/profile/edit';
   static const documentUpload = '/dashboard/profile/documents';
   static const notifications = '/dashboard/notifications';

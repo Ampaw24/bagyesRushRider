@@ -83,7 +83,7 @@ class _AppDatePickerFieldState extends State<AppDatePickerField> {
             return null;
           },
       style: const TextStyle(
-        fontFamily: 'Roboto',
+        fontFamily: 'Mukta',
         fontSize: 15,
         fontWeight: FontWeight.w500,
         color: AppColors.textPrimary,
@@ -99,12 +99,12 @@ class _AppDatePickerFieldState extends State<AppDatePickerField> {
         suffixIcon: Icon(HugeIcons.strokeRoundedArrowDown01,
             size: 20, color: Colors.grey.shade400),
         labelStyle: TextStyle(
-          fontFamily: 'Roboto',
+          fontFamily: 'Mukta',
           fontSize: 14,
           color: Colors.grey.shade500,
         ),
         hintStyle: TextStyle(
-          fontFamily: 'Roboto',
+          fontFamily: 'Mukta',
           fontSize: 14,
           color: Colors.grey.shade400,
         ),

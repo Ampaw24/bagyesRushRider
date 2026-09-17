@@ -1,27 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/features/rider/orders/models/rider_order_model.dart';
+import 'package:delivery_boy/features/rider/orders/models/rider_me_order_model.dart';
 import 'package:hugeicons/hugeicons.dart';
 
-class RiderOrderCard extends StatelessWidget {
-  final RiderOrderModel order;
+/// Card for a `RiderMeOfferModel` — a delivery offer awaiting accept/decline.
+/// Distinct from `RiderMeOrderCard` since offers carry a different field
+/// set (no `status`/`stops`, but `distanceKm`/`estimatedFare`/`expiresAt`).
+class RiderMeOfferCard extends StatelessWidget {
+  final RiderMeOfferModel offer;
   final Widget actionButton;
 
-  const RiderOrderCard({
+  const RiderMeOfferCard({
     super.key,
-    required this.order,
+    required this.offer,
     required this.actionButton,
   });
-
-  Color get _statusColor {
-    return switch (order.status) {
-      'delivered' => AppColors.success,
-      'en_route' || 'picked_up' => AppColors.primary,
-      'heading_to_pickup' || 'arrived_at_pickup' => Colors.orange,
-      'accepted' => Colors.blue,
-      _ => Colors.grey.shade400,
-    };
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,13 +22,10 @@ class RiderOrderCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border(
-          left: BorderSide(color: _statusColor, width: 4),
-        ),
+        border: const Border(left: BorderSide(color: AppColors.primary, width: 4)),
         boxShadow: [
           BoxShadow(
             blurRadius: 8,
-            spreadRadius: 0,
             color: Colors.black.withValues(alpha: 0.06),
             offset: const Offset(0, 2),
           ),
@@ -43,7 +33,6 @@ class RiderOrderCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // ── Header ──────────────────────────────────────────────────────────
           Padding(
             padding: const EdgeInsets.fromLTRB(14, 14, 14, 10),
             child: Row(
@@ -53,11 +42,11 @@ class RiderOrderCard extends StatelessWidget {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: _statusColor.withValues(alpha: 0.1),
+                    color: AppColors.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(HugeIcons.strokeRoundedDeliveryBox01,
-                      color: _statusColor, size: 20),
+                  child: const Icon(HugeIcons.strokeRoundedDeliveryBox01,
+                      color: AppColors.primary, size: 20),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
@@ -65,7 +54,7 @@ class RiderOrderCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '#${order.orderId}',
+                        offer.orderReference ?? '#${offer.id}',
                         style: const TextStyle(
                           fontFamily: 'Roboto',
                           fontSize: 14,
@@ -73,28 +62,17 @@ class RiderOrderCard extends StatelessWidget {
                           color: AppColors.textPrimary,
                         ),
                       ),
-                      const SizedBox(height: 3),
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 7, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: Colors.grey.shade100,
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              order.paymentMode,
-                              style: TextStyle(
-                                fontFamily: 'Roboto',
-                                fontSize: 11,
-                                color: Colors.grey.shade600,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
+                      if (offer.distanceKm != null) ...[
+                        const SizedBox(height: 3),
+                        Text(
+                          '${offer.distanceKm!.toStringAsFixed(1)} km away',
+                          style: TextStyle(
+                            fontFamily: 'Roboto',
+                            fontSize: 11,
+                            color: Colors.grey.shade600,
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -102,48 +80,44 @@ class RiderOrderCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     actionButton,
-                    const SizedBox(height: 6),
-                    Text(
-                      'GHS ${order.amount}',
-                      style: const TextStyle(
-                        fontFamily: 'Roboto',
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
+                    if (offer.estimatedFare != null) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        'GHS ${offer.estimatedFare!.toStringAsFixed(2)}',
+                        style: const TextStyle(
+                          fontFamily: 'Roboto',
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                        ),
                       ),
-                    ),
+                    ],
                   ],
                 ),
               ],
             ),
           ),
-
-          // ── Location footer ──────────────────────────────────────────────────
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
               color: Colors.grey.shade50,
-              borderRadius:
-                  const BorderRadius.vertical(bottom: Radius.circular(12)),
+              borderRadius: const BorderRadius.vertical(bottom: Radius.circular(12)),
             ),
             child: Row(
               children: [
                 Expanded(
                   child: Row(
                     children: [
-                      Icon(HugeIcons.strokeRoundedCheckmarkCircle01,
+                      const Icon(HugeIcons.strokeRoundedCheckmarkCircle01,
                           color: Colors.green, size: 14),
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
-                          order.pickUpLocation,
+                          offer.pickupAddress ?? '-',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
-                            fontFamily: 'Roboto',
-                            fontSize: 12,
-                            color: AppColors.textSecondary,
-                          ),
+                              fontFamily: 'Roboto', fontSize: 12, color: AppColors.textSecondary),
                         ),
                       ),
                     ],
@@ -162,14 +136,11 @@ class RiderOrderCard extends StatelessWidget {
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
-                          order.deliveryLocation,
+                          offer.dropoffAddress ?? '-',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
-                            fontFamily: 'Roboto',
-                            fontSize: 12,
-                            color: AppColors.textSecondary,
-                          ),
+                              fontFamily: 'Roboto', fontSize: 12, color: AppColors.textSecondary),
                         ),
                       ),
                     ],

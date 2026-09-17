@@ -29,8 +29,9 @@ class AppDropdownField<T> extends StatelessWidget {
       items: items,
       onChanged: onChanged,
       validator: validator,
+      isExpanded: true,
       style: const TextStyle(
-        fontFamily: 'Roboto',
+        fontFamily: 'Mukta',
         fontSize: 15,
         fontWeight: FontWeight.w500,
         color: AppColors.textPrimary,
@@ -44,12 +45,12 @@ class AppDropdownField<T> extends StatelessWidget {
             ? Icon(prefixIcon, size: 20, color: Colors.grey.shade400)
             : null,
         labelStyle: TextStyle(
-          fontFamily: 'Roboto',
+          fontFamily: 'Mukta',
           fontSize: 14,
           color: Colors.grey.shade500,
         ),
         hintStyle: TextStyle(
-          fontFamily: 'Roboto',
+          fontFamily: 'Mukta',
           fontSize: 14,
           color: Colors.grey.shade400,
         ),

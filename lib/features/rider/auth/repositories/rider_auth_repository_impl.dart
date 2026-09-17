@@ -4,6 +4,7 @@ import 'package:delivery_boy/core/errors/failures.dart';
 import 'package:delivery_boy/core/network/api_endpoints.dart';
 import 'package:delivery_boy/core/network/api_error_parser.dart';
 import 'package:delivery_boy/features/rider/auth/models/auth_user_model.dart';
+import 'package:delivery_boy/features/rider/auth/models/rider_agreement_model.dart';
 import 'package:delivery_boy/features/rider/auth/repositories/rider_auth_repository.dart';
 import 'package:delivery_boy/features/rider/auth/services/rider_auth_api_service.dart';
 
@@ -108,6 +109,28 @@ class RiderAuthRepositoryImpl implements RiderAuthRepository {
 
   @override
   Future<Either<Failure, void>> logout() => _run(() => _api.logout());
+
+  @override
+  Future<Either<Failure, RiderAgreementModel>> acceptAgreement({
+    required bool acceptTerms,
+    required bool consentToVerification,
+    String? termsVersion,
+  }) =>
+      _run(() async {
+        final response = await _api.acceptAgreement(
+          acceptTerms: acceptTerms,
+          consentToVerification: consentToVerification,
+          termsVersion: termsVersion,
+        );
+        final raw = (response.data as Map?)?.cast<String, dynamic>() ?? {};
+        final payload = (raw['data'] as Map?)?.cast<String, dynamic>() ?? raw;
+        return RiderAgreementModel.fromJson(
+          payload,
+          fallbackAcceptTerms: acceptTerms,
+          fallbackConsentToVerification: consentToVerification,
+          fallbackTermsVersion: termsVersion,
+        );
+      });
 
   // ── Parsing ─────────────────────────────────────────────────────────────
 

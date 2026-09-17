@@ -11,8 +11,9 @@ import 'package:delivery_boy/features/rider/auth/models/rider_user_model.dart';
 import 'package:delivery_boy/features/rider/dashboard/views/screens/rider_dashboard_screen.dart';
 import 'package:delivery_boy/features/rider/home/views/widgets/customer_drawer.dart';
 import 'package:delivery_boy/features/rider/notifications/providers/rider_notifications_providers.dart';
-import 'package:delivery_boy/features/rider/orders/models/rider_order_model.dart';
-import 'package:delivery_boy/features/rider/orders/providers/rider_orders_providers.dart';
+import 'package:delivery_boy/features/rider/orders/models/rider_me_order_model.dart';
+import 'package:delivery_boy/features/rider/orders/providers/rider_me_order_providers.dart';
+import 'package:delivery_boy/features/rider/orders/views/widgets/rider_me_order_status.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Data models (local / mock)
@@ -116,7 +117,7 @@ class _RiderHomeScreenState extends ConsumerState<RiderHomeScreen>
     _startStagger();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(orderHistoryProvider.notifier).load();
+      ref.read(riderMeOrderHistoryProvider.notifier).load();
     });
   }
 
@@ -181,7 +182,8 @@ class _RiderHomeScreenState extends ConsumerState<RiderHomeScreen>
 
     final isOnline = ref.watch(riderQueueProvider);
     final unread = ref.watch(riderNotificationsProvider).unreadCount;
-    final historyOrders = ref.watch(orderHistoryProvider).orders.take(2).toList();
+    final historyOrders =
+        ref.watch(riderMeOrderHistoryProvider).orders.take(2).toList();
 
     return Scaffold(
       backgroundColor: AppColors.scaffold,
@@ -769,7 +771,7 @@ class _AnnouncementCard extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _RecentOrdersSection extends StatelessWidget {
-  final List<RiderOrderModel> orders;
+  final List<RiderMeOrderModel> orders;
   final VoidCallback onShowAll;
   final double w;
   final double h;
@@ -885,7 +887,7 @@ class _EmptyOrders extends StatelessWidget {
 }
 
 class _MiniOrderCard extends StatelessWidget {
-  final RiderOrderModel order;
+  final RiderMeOrderModel order;
   final double w;
   final double h;
 
@@ -895,23 +897,9 @@ class _MiniOrderCard extends StatelessWidget {
     required this.h,
   });
 
-  Color get _statusColor => switch (order.status) {
-        'delivered' => AppColors.success,
-        'en_route' || 'picked_up' => AppColors.primary,
-        'heading_to_pickup' || 'arrived_at_pickup' => const Color(0xFFF59E0B),
-        'accepted' => const Color(0xFF3182CE),
-        _ => AppColors.textHint,
-      };
+  Color get _statusColor => riderMeOrderStatusColor(order.status);
 
-  String get _statusLabel => switch (order.status) {
-        'delivered' => 'Delivered',
-        'en_route' => 'En Route',
-        'picked_up' => 'Picked Up',
-        'heading_to_pickup' => 'Heading to Pickup',
-        'arrived_at_pickup' => 'At Pickup',
-        'accepted' => 'Accepted',
-        _ => order.status ?? 'Unknown',
-      };
+  String get _statusLabel => riderMeOrderStatusLabel(order.status);
 
   @override
   Widget build(BuildContext context) {
@@ -957,7 +945,7 @@ class _MiniOrderCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '#${order.orderId}',
+                  order.reference ?? '#${order.id}',
                   style: TextStyle(
                     fontFamily: 'Mukta',
                     fontSize: (w * 0.036).clamp(12.0, 15.0),
@@ -976,7 +964,9 @@ class _MiniOrderCard extends StatelessWidget {
                     SizedBox(width: w * 0.01),
                     Expanded(
                       child: Text(
-                        order.deliveryLocation,
+                        order.isMultiStop
+                            ? '${order.stops.length} stops'
+                            : (order.dropoffAddress ?? '-'),
                         style: TextStyle(
                           fontFamily: 'Mukta',
                           fontSize: (w * 0.029).clamp(10.0, 12.0),
@@ -999,7 +989,7 @@ class _MiniOrderCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                order.totalFormatted,
+                order.amountFormatted,
                 style: TextStyle(
                   fontFamily: 'Mukta',
                   fontSize: (w * 0.036).clamp(12.0, 15.0),

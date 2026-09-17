@@ -15,6 +15,7 @@ import 'package:delivery_boy/features/rider/auth/views/screens/rider_otp_screen.
 import 'package:delivery_boy/features/rider/auth/views/screens/rider_forgot_password_screen.dart';
 import 'package:delivery_boy/features/rider/auth/views/screens/rider_vehicle_info_screen.dart';
 import 'package:delivery_boy/features/rider/auth/views/screens/rider_vehicle_details_screen.dart';
+import 'package:delivery_boy/features/rider/auth/views/screens/rider_terms_conditions_screen.dart';
 // ── Dashboard ─────────────────────────────────────────────────────────────────
 import 'package:delivery_boy/features/rider/dashboard/views/screens/rider_dashboard_screen.dart';
 // ── Profile ───────────────────────────────────────────────────────────────────
@@ -28,16 +29,20 @@ import 'package:delivery_boy/features/rider/settings/views/screens/rider_setting
 import 'package:delivery_boy/features/rider/onboarding/views/screens/rider_onboarding_screen.dart';
 // ── KYC ───────────────────────────────────────────────────────────────────────
 import 'package:delivery_boy/features/rider/kyc/views/screens/kyc_screen.dart';
-// ── Tracking ──────────────────────────────────────────────────────────────────
-import 'package:delivery_boy/features/rider/tracking/views/screens/rider_map_screen.dart';
 
 /// Routes reachable while signed out.
 ///
-/// The whole signup flow is public: registration only fires on the vehicle
-/// details screen (the first point at which `POST /register` has every field
-/// it requires for a rider), so screens 1-3 always run unauthenticated, and
-/// `/otp` may run either side of a token depending on whether registration
+/// The whole signup flow is public. `RiderSignupScreen` is a self-contained
+/// 4-step wizard (Personal/Account/Vehicle/Details) that hands off to
+/// `/terms-and-conditions` — the first point that calls `POST /register`,
+/// since that's also where the rider's terms/verification consent is
+/// captured for `POST /rider/me/agreement` — and from there to `/otp`, which
+/// may run either side of a token depending on whether registration
 /// returned one.
+///
+/// `/vehicle-info` and `/vehicle-details` are an earlier, unused split of
+/// the same steps: nothing currently navigates to them, but their routes
+/// and screens are left in place rather than deleted here.
 const _publicRoutes = {
   AppRoutes.splash,
   AppRoutes.intro,
@@ -46,6 +51,7 @@ const _publicRoutes = {
   AppRoutes.otp,
   AppRoutes.vehicleInfo,
   AppRoutes.vehicleDetails,
+  AppRoutes.termsAndConditions,
   AppRoutes.forgotPassword,
 };
 
@@ -155,6 +161,15 @@ GoRouter createAppRouter() {
         ),
       ),
       GoRoute(
+        path: AppRoutes.termsAndConditions,
+        pageBuilder: (_, state) => _slideRight(
+          state,
+          RiderTermsConditionsScreen(
+            credentials: (state.extra as Map<String, dynamic>?) ?? {},
+          ),
+        ),
+      ),
+      GoRoute(
         path: AppRoutes.forgotPassword,
         pageBuilder: (_, state) =>
             _slideRight(state, const RiderForgotPasswordScreen()),
@@ -172,11 +187,6 @@ GoRouter createAppRouter() {
         pageBuilder: (_, state) =>
             _fade(state, const RiderDashboardScreen()),
         routes: [
-          GoRoute(
-            path: 'map',
-            pageBuilder: (_, state) =>
-                _slideRight(state, const RiderMapScreen()),
-          ),
           GoRoute(
             path: 'profile/edit',
             pageBuilder: (_, state) =>

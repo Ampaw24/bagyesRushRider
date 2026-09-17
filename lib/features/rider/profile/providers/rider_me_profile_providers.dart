@@ -176,13 +176,28 @@ class RiderMeProfileNotifier extends Notifier<RiderMeProfileState> {
   Future<bool> updateLocation({
     required double latitude,
     required double longitude,
+    double? heading,
+    double? speedKph,
+    int? accuracyM,
   }) async {
-    final result =
-        await _repo.updateLocation(latitude: latitude, longitude: longitude);
+    final result = await _repo.updateLocation(
+      latitude: latitude,
+      longitude: longitude,
+      heading: heading,
+      speedKph: speedKph,
+      accuracyM: accuracyM,
+    );
+    return result.fold((_) => false, (_) => true);
+  }
+
+  /// Offline catch-up upload — chunk to at most 60 pings per call.
+  Future<bool> updateLocationBatch(List<RiderMeLocationPing> pings) async {
+    final result = await _repo.updateLocationBatch(pings);
     return result.fold((_) => false, (_) => true);
   }
 
   Future<bool> updatePayout({
+    required String currentPassword,
     int? payoutProviderId,
     String? accountNumber,
     String? accountName,
@@ -192,6 +207,7 @@ class RiderMeProfileNotifier extends Notifier<RiderMeProfileState> {
     state = state.copyWith(
         actionStatus: RiderMeActionStatus.inProgress, clearActionMessage: true);
     final result = await _repo.updatePayout(
+      currentPassword: currentPassword,
       payoutProviderId: payoutProviderId,
       accountNumber: accountNumber,
       accountName: accountName,

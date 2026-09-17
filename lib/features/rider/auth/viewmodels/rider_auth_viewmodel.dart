@@ -26,6 +26,11 @@ class RiderAuthState extends Equatable {
   final bool phoneVerified;
   final bool passwordReset;
 
+  /// The rider has accepted the terms/verification agreement — either
+  /// confirmed with the server already, or queued for the moment a session
+  /// token exists (see [RiderAuthNotifier.registerAndAcceptAgreement]).
+  final bool agreementAccepted;
+
   const RiderAuthState({
     this.status = AuthStatus.initial,
     this.user,
@@ -34,6 +39,7 @@ class RiderAuthState extends Equatable {
     this.codeSent = false,
     this.phoneVerified = false,
     this.passwordReset = false,
+    this.agreementAccepted = false,
   });
 
   bool get isLoading => status == AuthStatus.loading;
@@ -46,6 +52,7 @@ class RiderAuthState extends Equatable {
     bool? codeSent,
     bool? phoneVerified,
     bool? passwordReset,
+    bool? agreementAccepted,
     bool clearError = false,
   }) {
     return RiderAuthState(
@@ -58,6 +65,7 @@ class RiderAuthState extends Equatable {
       codeSent: codeSent ?? this.codeSent,
       phoneVerified: phoneVerified ?? this.phoneVerified,
       passwordReset: passwordReset ?? this.passwordReset,
+      agreementAccepted: agreementAccepted ?? this.agreementAccepted,
     );
   }
 
@@ -70,6 +78,7 @@ class RiderAuthState extends Equatable {
         codeSent,
         phoneVerified,
         passwordReset,
+        agreementAccepted,
       ];
 }
 
@@ -81,6 +90,12 @@ class RiderAuthNotifier extends Notifier<RiderAuthState> {
 
   RiderAuthRepository get _repo => sl<RiderAuthRepository>();
   UserSessionManager get _session => sl<UserSessionManager>();
+
+  /// Consent captured on the terms screen but not yet sent, because
+  /// `/register` deferred issuing a token. Flushed the moment a session
+  /// exists — see [registerAndAcceptAgreement] and [verifyPhoneAndEnsureSession].
+  ({bool acceptTerms, bool consentToVerification, String? termsVersion})?
+      _pendingAgreement;
 
   /// Persists tokens + user before the caller is allowed to navigate.
   ///
@@ -145,6 +160,132 @@ class RiderAuthNotifier extends Notifier<RiderAuthState> {
     await _persist(data);
     state = state.copyWith(status: AuthStatus.success, user: data.user);
     return true;
+  }
+
+  /// Orchestrates the terms screen's "Accept & Continue": creates the
+  /// account, then records the rider's consent.
+  ///
+  /// `/rider/me/agreement` requires Bearer auth, so it cannot fire before
+  /// `/register` the way the UI presents it — this runs `register` first
+  /// to obtain the session, then submits the consent the rider already
+  /// gave on the terms screen. If `/register` doesn't return a token
+  /// immediately, the consent is queued and sent the moment
+  /// [verifyPhoneAndEnsureSession] establishes one. Either way, the caller
+  /// can navigate to phone verification as soon as this returns true.
+  Future<bool> registerAndAcceptAgreement({
+    required String email,
+    required String phone,
+    required String password,
+    required String confirmPassword,
+    required String firstName,
+    required String lastName,
+    required String city,
+    required String vehicleType,
+    required String plateNumber,
+    required bool acceptTerms,
+    required bool consentToVerification,
+    String? termsVersion,
+  }) async {
+    final registered = await register(
+      email: email,
+      phone: phone,
+      password: password,
+      confirmPassword: confirmPassword,
+      firstName: firstName,
+      lastName: lastName,
+      city: city,
+      vehicleType: vehicleType,
+      plateNumber: plateNumber,
+    );
+    if (!registered) return false;
+
+    if (!_session.isLoggedIn) {
+      // register() already left state.status at AuthStatus.success.
+      _pendingAgreement = (
+        acceptTerms: acceptTerms,
+        consentToVerification: consentToVerification,
+        termsVersion: termsVersion,
+      );
+      return true;
+    }
+
+    // Best-effort from here: the rider is already registered, so a failure
+    // recording consent must not strand them mid-signup — they can accept
+    // again from their profile. Navigation to phone verification proceeds
+    // either way, hence the unconditional `return true` below.
+    await _submitAgreement(
+      acceptTerms: acceptTerms,
+      consentToVerification: consentToVerification,
+      termsVersion: termsVersion,
+    );
+    return true;
+  }
+
+  /// Records terms/verification consent directly and surfaces failure via
+  /// [RiderAuthState.errorMessage]. Requires an authenticated session.
+  /// Prefer [registerAndAcceptAgreement] from the terms screen, which
+  /// sequences this correctly against `/register` and never blocks
+  /// navigation on it.
+  Future<bool> acceptAgreement({
+    required bool acceptTerms,
+    required bool consentToVerification,
+    String? termsVersion,
+  }) async {
+    state = state.copyWith(status: AuthStatus.loading, clearError: true);
+    final accepted = await _submitAgreement(
+      acceptTerms: acceptTerms,
+      consentToVerification: consentToVerification,
+      termsVersion: termsVersion,
+    );
+    if (!accepted) {
+      state = state.copyWith(
+        status: AuthStatus.error,
+        errorMessage: _lastAgreementError,
+      );
+    }
+    return accepted;
+  }
+
+  /// Sends [_pendingAgreement] once a session exists. Best-effort: a
+  /// failure here must not block the rider, who is already past OTP.
+  Future<void> _flushPendingAgreement() async {
+    final pending = _pendingAgreement;
+    if (pending == null) return;
+    _pendingAgreement = null;
+    await _submitAgreement(
+      acceptTerms: pending.acceptTerms,
+      consentToVerification: pending.consentToVerification,
+      termsVersion: pending.termsVersion,
+    );
+  }
+
+  String? _lastAgreementError;
+
+  /// Shared call behind [acceptAgreement], [registerAndAcceptAgreement] and
+  /// [_flushPendingAgreement] — updates [RiderAuthState.agreementAccepted]
+  /// on success and stashes the message in [_lastAgreementError] on
+  /// failure, without touching [RiderAuthState.status] itself; callers
+  /// decide how loudly to surface a failure.
+  Future<bool> _submitAgreement({
+    required bool acceptTerms,
+    required bool consentToVerification,
+    String? termsVersion,
+  }) async {
+    final result = await _repo.acceptAgreement(
+      acceptTerms: acceptTerms,
+      consentToVerification: consentToVerification,
+      termsVersion: termsVersion,
+    );
+    return result.fold(
+      (f) {
+        _lastAgreementError = f.message;
+        return false;
+      },
+      (_) {
+        state = state.copyWith(agreementAccepted: true);
+        return true;
+      },
+    );
   }
 
   Future<bool> login({
@@ -240,8 +381,12 @@ class RiderAuthNotifier extends Notifier<RiderAuthState> {
 
     // Registration didn't return a token — obtain one now.
     if (!_session.isLoggedIn && password != null && password.isNotEmpty) {
-      return login(phone: phone, password: password);
+      final loggedIn = await login(phone: phone, password: password);
+      if (loggedIn) await _flushPendingAgreement();
+      return loggedIn;
     }
+
+    await _flushPendingAgreement();
     return true;
   }
 

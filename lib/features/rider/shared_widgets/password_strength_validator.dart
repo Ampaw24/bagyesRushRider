@@ -76,7 +76,7 @@ class PasswordStrengthValidator extends StatelessWidget {
                   _strengthLabel(strength),
                   key: ValueKey(strength),
                   style: TextStyle(
-                    fontFamily: 'Roboto',
+                    fontFamily: 'Mukta',
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
                     color: _strengthColor(strength),
@@ -167,7 +167,7 @@ class _CheckItem extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
-              fontFamily: 'Roboto',
+              fontFamily: 'Mukta',
               fontSize: 12,
               color: met ? AppColors.textPrimary : Colors.grey.shade500,
             ),

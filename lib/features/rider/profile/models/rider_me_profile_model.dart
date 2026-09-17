@@ -301,6 +301,43 @@ class RiderMeProfileModel extends Equatable {
       ];
 }
 
+/// A single buffered position ping for `POST /rider/me/location/batch`.
+///
+/// `heading` is omitted from [toJson] when null — platform location APIs
+/// return -1/NaN for an unknown heading, and sending that literally 422s
+/// against the `between:0,360` rule. `accuracyM` is rounded because the
+/// field is `integer` server-side.
+class RiderMeLocationPing extends Equatable {
+  final double latitude;
+  final double longitude;
+  final double? heading;
+  final double? speedKph;
+  final double? accuracyM;
+  final DateTime recordedAt;
+
+  const RiderMeLocationPing({
+    required this.latitude,
+    required this.longitude,
+    this.heading,
+    this.speedKph,
+    this.accuracyM,
+    required this.recordedAt,
+  });
+
+  Map<String, dynamic> toJson() => {
+        'latitude': latitude,
+        'longitude': longitude,
+        if (heading != null) 'heading': heading,
+        if (speedKph != null) 'speed_kph': speedKph,
+        if (accuracyM != null) 'accuracy_m': accuracyM!.round(),
+        'recorded_at': recordedAt.toIso8601String(),
+      };
+
+  @override
+  List<Object?> get props =>
+      [latitude, longitude, heading, speedKph, accuracyM, recordedAt];
+}
+
 /// A single uploaded rider document (licence, permit, insurance, etc.)
 /// from `POST|GET /rider/me/documents/:type`.
 class RiderMeDocumentModel extends Equatable {

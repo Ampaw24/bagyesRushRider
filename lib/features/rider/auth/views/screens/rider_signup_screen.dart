@@ -1,4 +1,3 @@
-import 'dart:math' show sin, pi;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,11 +8,13 @@ import 'package:hugeicons/hugeicons.dart';
 import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/core/router/app_routes.dart';
 import 'package:delivery_boy/core/widgets/app_gradient_button.dart';
+import 'package:delivery_boy/features/rider/auth/data/vehicle_catalog.dart';
 import 'package:delivery_boy/features/rider/auth/viewmodels/rider_auth_viewmodel.dart';
 import 'package:delivery_boy/features/rider/auth/views/screens/rider_vehicle_info_screen.dart';
 import 'package:delivery_boy/features/rider/auth/views/widgets/registration_stepper.dart';
 import 'package:delivery_boy/features/rider/shared_widgets/app_password_field.dart';
 import 'package:delivery_boy/features/rider/shared_widgets/app_phone_field.dart';
+import 'package:delivery_boy/features/rider/shared_widgets/app_select_field.dart';
 import 'package:delivery_boy/features/rider/shared_widgets/app_text_field.dart';
 import 'package:delivery_boy/features/rider/shared_widgets/password_strength_validator.dart';
 
@@ -36,15 +37,15 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
   late PageController _pageController;
   int _currentStep = 0;
 
-  // Step 0: Personal Info
+  // Step 0: Personal Info + Email + Operating City
   final _firstNameCtrl = TextEditingController();
   final _lastNameCtrl = TextEditingController();
   final _phoneDigitsCtrl = TextEditingController();
   String _phone = '';
-
-  // Step 1: Account Credentials & Region
   final _emailCtrl = TextEditingController();
   final _cityCtrl = TextEditingController();
+
+  // Step 1: Security (Password)
   final _passwordCtrl = TextEditingController();
   final _confirmCtrl = TextEditingController();
   String _password = '';
@@ -62,22 +63,41 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
   DateTime? _lastBackPress;
   Map<String, String> _serverErrors = {};
 
-  late AnimationController _floatCtrl;
   late AnimationController _fadeCtrl;
   late Animation<double> _fadeAnim;
 
   static const List<String> _stepTitles = [
     'Personal Profile',
-    'Account & Region',
+    'Secure Your Account',
     'Select Vehicle',
     'Vehicle Specs',
   ];
 
   static const List<String> _stepSubtitles = [
-    'Enter your full name and phone number',
-    'Setup your login credentials and operating city',
+    'Enter your name, phone, email and operating city',
+    'Create a strong password to protect your account',
     'Choose the vehicle type for your deliveries',
     'Provide your license plate and vehicle details',
+  ];
+
+  /// Placeholder list of major Ghanaian cities for the operating-city
+  /// picker. Swap for a live/searchable source once one exists.
+  static const List<String> _ghanaCities = [
+    'Accra',
+    'Kumasi',
+    'Tamale',
+    'Sekondi-Takoradi',
+    'Ashaiman',
+    'Sunyani',
+    'Cape Coast',
+    'Obuasi',
+    'Teshie',
+    'Tema',
+    'Madina',
+    'Koforidua',
+    'Wa',
+    'Ho',
+    'Techiman',
   ];
 
   @override
@@ -91,11 +111,6 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
     );
     _fadeAnim = CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeOut);
     _fadeCtrl.forward();
-
-    _floatCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 2200),
-    )..repeat();
 
     _passwordCtrl.addListener(() {
       setState(() => _password = _passwordCtrl.text);
@@ -139,7 +154,8 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
     _phone = fullPhone;
     _phoneDigitsCtrl.text = _localDigitsOf(fullPhone);
 
-    final vehicleTypeStr = p['vehicleType'] as String? ?? p['vehicle_type'] as String?;
+    final vehicleTypeStr =
+        p['vehicleType'] as String? ?? p['vehicle_type'] as String?;
     if (vehicleTypeStr != null) {
       _selectedVehicleType = VehicleType.values.firstWhere(
         (e) => e.name == vehicleTypeStr || e.apiValue == vehicleTypeStr,
@@ -148,7 +164,8 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
     }
 
     _plateCtrl.text = (p['plate_number'] as String?) ?? '';
-    if (p['vehicle_year'] != null) _yearCtrl.text = p['vehicle_year'].toString();
+    if (p['vehicle_year'] != null)
+      _yearCtrl.text = p['vehicle_year'].toString();
     _makeCtrl.text = (p['vehicle_make'] as String?) ?? '';
     _modelCtrl.text = (p['vehicle_model'] as String?) ?? '';
     _colorCtrl.text = (p['vehicle_colour'] as String?) ?? '';
@@ -156,11 +173,18 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
     final errors = (p['field_errors'] as Map?)?.cast<String, String>();
     if (errors != null && errors.isNotEmpty) {
       _serverErrors = Map.of(errors);
-      if (errors.containsKey('email') || errors.containsKey('city') || errors.containsKey('password')) {
+      if (errors.containsKey('email') || errors.containsKey('city')) {
+        _navigateToStep(0);
+      } else if (errors.containsKey('password')) {
         _navigateToStep(1);
-      } else if (errors.containsKey('plate_number') || errors.containsKey('vehicle_type')) {
+      } else if (errors.containsKey('plate_number') ||
+          errors.containsKey('vehicle_type')) {
         _navigateToStep(3);
       }
+    } else if (p['resume_step'] == 3) {
+      // The rider backed out of the terms screen — return them to Vehicle
+      // Specs rather than the first page of the wizard.
+      _navigateToStep(3);
     }
   }
 
@@ -181,7 +205,6 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
   void dispose() {
     _pageController.dispose();
     _fadeCtrl.dispose();
-    _floatCtrl.dispose();
     _firstNameCtrl.dispose();
     _lastNameCtrl.dispose();
     _phoneDigitsCtrl.dispose();
@@ -200,32 +223,47 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
   // ── Step Validation Getters ─────────────────────────────────────────────
 
   bool get _isStep0Valid {
+    final emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
     return _firstNameCtrl.text.trim().length >= 2 &&
         _lastNameCtrl.text.trim().length >= 2 &&
-        _phone.length >= 9;
+        _phone.length >= 9 &&
+        emailRegex.hasMatch(_emailCtrl.text.trim()) &&
+        _cityCtrl.text.trim().isNotEmpty;
   }
 
   bool get _isStep1Valid {
-    final emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
     final strength = evaluatePasswordStrength(_password);
-    return emailRegex.hasMatch(_emailCtrl.text.trim()) &&
-        _cityCtrl.text.trim().isNotEmpty &&
-        _password.length >= 8 &&
+    return _password.length >= 8 &&
         strength != PasswordStrength.weak &&
         _confirmCtrl.text == _password;
   }
 
   bool get _isStep2Valid => true; // Vehicle type is always selected
 
+  /// Makes available for the currently-selected vehicle category.
+  List<String> get _availableMakes =>
+      VehicleCatalog.makesFor(isElectric: _selectedVehicleType.isElectric);
+
+  /// Models for [_makeCtrl]'s current make, within the current category —
+  /// empty until a make is chosen.
+  List<String> get _availableModels => _makeCtrl.text.isEmpty
+      ? const []
+      : VehicleCatalog.modelsFor(
+          isElectric: _selectedVehicleType.isElectric,
+          make: _makeCtrl.text,
+        );
+
   bool get _isStep3Valid {
-    final currentYear = DateTime.now().year;
     final yearVal = int.tryParse(_yearCtrl.text.trim());
-    final yearValid = yearVal != null && yearVal >= 1980 && yearVal <= currentYear;
+    final validMake = _availableMakes.contains(_makeCtrl.text);
+    final validModel = validMake && _availableModels.contains(_modelCtrl.text);
+    final validYear =
+        yearVal != null && VehicleCatalog.years().contains(yearVal);
 
     return _plateCtrl.text.trim().isNotEmpty &&
-        yearValid &&
-        _makeCtrl.text.trim().isNotEmpty &&
-        _modelCtrl.text.trim().isNotEmpty &&
+        validMake &&
+        validModel &&
+        validYear &&
         _colorCtrl.text.trim().isNotEmpty;
   }
 
@@ -274,30 +312,16 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
     }
   }
 
-  Future<void> _submitRegistration() async {
+  /// Vehicle Specs is no longer where the account is created — it hands off
+  /// to the terms screen, which registers and records consent before OTP.
+  /// A register failure there sends the rider back here via `field_errors`
+  /// in `extra`, which [_restorePrefill] already knows how to place on the
+  /// right step, so this screen needs no failure-handling of its own.
+  void _proceedToTerms() {
     FocusManager.instance.primaryFocus?.unfocus();
     if (!_formKey3.currentState!.validate()) return;
 
     HapticFeedback.mediumImpact();
-
-    final ok = await ref.read(riderAuthProvider.notifier).register(
-          email: _emailCtrl.text.trim(),
-          phone: _phone,
-          password: _password,
-          confirmPassword: _confirmCtrl.text,
-          firstName: _firstNameCtrl.text.trim(),
-          lastName: _lastNameCtrl.text.trim(),
-          city: _cityCtrl.text.trim(),
-          vehicleType: _selectedVehicleType.apiValue,
-          plateNumber: _plateCtrl.text.trim().toUpperCase(),
-        );
-
-    if (!mounted) return;
-
-    if (!ok) {
-      _handleRegisterFailure();
-      return;
-    }
 
     final collected = {
       'first_name': _firstNameCtrl.text.trim(),
@@ -313,51 +337,9 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
       'vehicle_make': _makeCtrl.text.trim(),
       'vehicle_model': _modelCtrl.text.trim(),
       'vehicle_colour': _colorCtrl.text.trim(),
-      'registered': true,
     };
 
-    context.go(AppRoutes.otp, extra: collected);
-  }
-
-  void _handleRegisterFailure() {
-    final fieldErrors = ref.read(riderAuthProvider).fieldErrors;
-    if (fieldErrors.isEmpty) return;
-
-    String? first(String key) {
-      final list = fieldErrors[key];
-      return (list != null && list.isNotEmpty) ? list.first : null;
-    }
-
-    final plateMsg = first('plate_number') ?? first('vehicle_type');
-    if (plateMsg != null) {
-      setState(() => _serverErrors['plate_number'] = plateMsg);
-      _navigateToStep(3);
-      _formKey3.currentState?.validate();
-      return;
-    }
-
-    final phoneMsg = first('phone');
-    final emailMsg = first('email');
-    if (phoneMsg != null) {
-      setState(() => _serverErrors['phone'] = phoneMsg);
-      _navigateToStep(0);
-      _formKey0.currentState?.validate();
-      return;
-    }
-    if (emailMsg != null) {
-      setState(() => _serverErrors['email'] = emailMsg);
-      _navigateToStep(1);
-      _formKey1.currentState?.validate();
-      return;
-    }
-
-    final firstErr = fieldErrors.values.expand((e) => e).firstOrNull ?? 'Registration failed';
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(firstErr),
-        backgroundColor: AppColors.error,
-      ),
-    );
+    context.go(AppRoutes.termsAndConditions, extra: collected);
   }
 
   @override
@@ -451,46 +433,57 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
                   ),
                 ),
 
-                const SizedBox(height: 16),
+                SizedBox(height: h * 0.02),
 
                 // ── Active Step Subheader ───────────────────────────────────
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: hPad),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _stepTitles[_currentStep],
-                        style: TextStyle(
-                          fontFamily: 'Mukta',
-                          fontSize: (w * 0.068).clamp(22.0, 30.0),
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.textPrimary,
-                          letterSpacing: -0.5,
-                          height: 1.1,
+                // Wrapped in a full-width SizedBox because the parent Column
+                // has no crossAxisAlignment override (defaults to .center),
+                // which would otherwise shrink-wrap this block to its
+                // widest line and center it as a unit instead of letting the
+                // inner start-aligned Column read from the true left edge.
+                SizedBox(
+                  width: double.infinity,
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: hPad),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _stepTitles[_currentStep],
+                          textAlign: TextAlign.left,
+                          style: TextStyle(
+                            fontFamily: 'Mukta',
+                            fontSize: (w * 0.068).clamp(22.0, 30.0),
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.textPrimary,
+                            letterSpacing: -0.5,
+                            height: 1.1,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        _stepSubtitles[_currentStep],
-                        style: TextStyle(
-                          fontFamily: 'Mukta',
-                          fontSize: (w * 0.035).clamp(12.0, 15.0),
-                          color: AppColors.textSecondary,
+                        SizedBox(height: h * 0.005),
+                        Text(
+                          _stepSubtitles[_currentStep],
+                          textAlign: TextAlign.left,
+                          style: TextStyle(
+                            fontFamily: 'Mukta',
+                            fontSize: (w * 0.035).clamp(12.0, 15.0),
+                            color: AppColors.textSecondary,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
 
-                const SizedBox(height: 16),
+                SizedBox(height: h * 0.02),
 
                 // ── PageView Step Content ───────────────────────────────────
                 Expanded(
                   child: PageView(
                     controller: _pageController,
                     physics: const NeverScrollableScrollPhysics(),
-                    onPageChanged: (page) => setState(() => _currentStep = page),
+                    onPageChanged: (page) =>
+                        setState(() => _currentStep = page),
                     children: [
                       _buildStep0Personal(hPad, w, h),
                       _buildStep1Account(hPad, w, h),
@@ -510,7 +503,7 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
     );
   }
 
-  // ── Step 0: Personal Info ──────────────────────────────────────────────────
+  // ── Step 0: Personal Info + Email + Operating City ─────────────────────────
 
   Widget _buildStep0Personal(double hPad, double w, double h) {
     return SingleChildScrollView(
@@ -521,7 +514,6 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             SizedBox(height: h * 0.01),
-
             AppTextField(
               label: 'First Name',
               hint: 'Enter your first name',
@@ -536,9 +528,7 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
                 return null;
               },
             ),
-
             SizedBox(height: h * 0.02),
-
             AppTextField(
               label: 'Last Name',
               hint: 'Enter your last name',
@@ -553,9 +543,7 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
                 return null;
               },
             ),
-
             SizedBox(height: h * 0.02),
-
             Text(
               'Phone Number',
               style: TextStyle(
@@ -569,7 +557,8 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
             SizedBox(height: h * 0.008),
             AppPhoneField(
               digitController: _phoneDigitsCtrl,
-              initialDigits: _phoneDigitsCtrl.text.isEmpty ? null : _phoneDigitsCtrl.text,
+              initialDigits:
+                  _phoneDigitsCtrl.text.isEmpty ? null : _phoneDigitsCtrl.text,
               onChanged: (full) {
                 _clearServerError('phone');
                 setState(() => _phone = full);
@@ -583,26 +572,7 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
                 return null;
               },
             ),
-
-            SizedBox(height: h * 0.03),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ── Step 1: Account Credentials & Region ────────────────────────────────────
-
-  Widget _buildStep1Account(double hPad, double w, double h) {
-    return SingleChildScrollView(
-      padding: EdgeInsets.symmetric(horizontal: hPad),
-      child: Form(
-        key: _formKey1,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(height: h * 0.01),
-
+            SizedBox(height: h * 0.02),
             AppTextField(
               label: 'Email Address',
               hint: 'rider@example.com',
@@ -626,32 +596,47 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
                 return null;
               },
             ),
-
             SizedBox(height: h * 0.02),
-
-            AppTextField(
+            AppSelectField<String>(
               label: 'Operating City',
-              hint: 'e.g. Accra',
+              hint: 'Select your operating city',
+              sheetTitle: 'Select Operating City',
               prefixIcon: HugeIcons.strokeRoundedCity03,
-              controller: _cityCtrl,
-              textCapitalization: TextCapitalization.words,
-              inputFormatters: [LengthLimitingTextInputFormatter(255)],
-              onChanged: (_) {
+              value:
+                  _ghanaCities.contains(_cityCtrl.text) ? _cityCtrl.text : null,
+              options: _ghanaCities,
+              labelBuilder: (city) => city,
+              onChanged: (city) {
                 _clearServerError('city');
-                setState(() {});
+                setState(() => _cityCtrl.text = city ?? '');
               },
               validator: (v) {
                 final serverError = _takeServerError('city');
                 if (serverError != null) return serverError;
                 if (v == null || v.trim().isEmpty) {
-                  return 'Enter the city you will operate in';
+                  return 'Select the city you will operate in';
                 }
                 return null;
               },
             ),
+            SizedBox(height: h * 0.03),
+          ],
+        ),
+      ),
+    );
+  }
 
-            SizedBox(height: h * 0.02),
+  // ── Step 1: Security (Password) ─────────────────────────────────────────────
 
+  Widget _buildStep1Account(double hPad, double w, double h) {
+    return SingleChildScrollView(
+      padding: EdgeInsets.symmetric(horizontal: hPad),
+      child: Form(
+        key: _formKey1,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(height: h * 0.01),
             AppPasswordField(
               label: 'Password',
               hint: 'Create a strong password',
@@ -659,18 +644,16 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
               textInputAction: TextInputAction.next,
               validator: (v) {
                 if (v == null || v.isEmpty) return 'Please enter a password';
-                if (v.length < 8) return 'Password must be at least 8 characters';
+                if (v.length < 8)
+                  return 'Password must be at least 8 characters';
                 if (evaluatePasswordStrength(v) == PasswordStrength.weak) {
                   return 'Password is too weak';
                 }
                 return null;
               },
             ),
-
             PasswordStrengthValidator(password: _password),
-
             SizedBox(height: h * 0.02),
-
             AppPasswordField(
               label: 'Confirm Password',
               hint: 'Re-enter your password',
@@ -682,7 +665,6 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
                 return null;
               },
             ),
-
             SizedBox(height: h * 0.03),
           ],
         ),
@@ -699,7 +681,6 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(height: h * 0.01),
-
           ...VehicleType.values.map((type) {
             final isSelected = _selectedVehicleType == type;
             return Padding(
@@ -709,7 +690,7 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
                   HapticFeedback.selectionClick();
                   setState(() => _selectedVehicleType = type);
                 },
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(12),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 220),
                   padding: EdgeInsets.all(w * 0.04),
@@ -717,26 +698,11 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
                     color: isSelected
                         ? AppColors.primary.withValues(alpha: 0.04)
                         : Colors.white,
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: isSelected ? AppColors.primary : AppColors.border,
                       width: isSelected ? 2.0 : 1.0,
                     ),
-                    boxShadow: isSelected
-                        ? [
-                            BoxShadow(
-                              color: AppColors.primary.withValues(alpha: 0.12),
-                              blurRadius: 16,
-                              offset: const Offset(0, 4),
-                            ),
-                          ]
-                        : [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.03),
-                              blurRadius: 10,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
                   ),
                   child: Row(
                     children: [
@@ -751,13 +717,13 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
                         ),
                         child: Icon(
                           type.icon,
-                          color: isSelected ? AppColors.primary : AppColors.textSecondary,
+                          color: isSelected
+                              ? AppColors.primary
+                              : AppColors.textSecondary,
                           size: 26,
                         ),
                       ),
-
                       const SizedBox(width: 14),
-
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -786,18 +752,20 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
                           ],
                         ),
                       ),
-
                       const SizedBox(width: 8),
-
                       AnimatedContainer(
                         duration: const Duration(milliseconds: 200),
                         width: 24,
                         height: 24,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: isSelected ? AppColors.primary : Colors.transparent,
+                          color: isSelected
+                              ? AppColors.primary
+                              : Colors.transparent,
                           border: Border.all(
-                            color: isSelected ? AppColors.primary : AppColors.border,
+                            color: isSelected
+                                ? AppColors.primary
+                                : AppColors.border,
                             width: 1.5,
                           ),
                         ),
@@ -815,7 +783,6 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
               ),
             );
           }),
-
           SizedBox(height: h * 0.03),
         ],
       ),
@@ -825,8 +792,6 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
   // ── Step 3: Vehicle Specs & Details ────────────────────────────────────────
 
   Widget _buildStep3VehicleDetails(double hPad, double w, double h) {
-    final currentYear = DateTime.now().year;
-
     return SingleChildScrollView(
       padding: EdgeInsets.symmetric(horizontal: hPad),
       child: Form(
@@ -836,36 +801,27 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
           children: [
             SizedBox(height: h * 0.005),
 
-            // Animated Vehicle Icon Header
-            Center(
-              child: AnimatedBuilder(
-                animation: _floatCtrl,
-                builder: (context, child) {
-                  final floatOffset = sin(_floatCtrl.value * 2 * pi) * 6.0;
-                  return Transform.translate(
-                    offset: Offset(0, floatOffset),
-                    child: child,
-                  );
-                },
-                child: Container(
-                  width: 72,
-                  height: 72,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: AppColors.primary.withValues(alpha: 0.1),
-                    border: Border.all(
-                      color: AppColors.primary.withValues(alpha: 0.2),
-                      width: 1.5,
-                    ),
-                  ),
-                  child: Icon(
-                    _selectedVehicleType.icon,
-                    size: 34,
-                    color: AppColors.primary,
-                  ),
-                ),
-              ),
-            ),
+            ///["Not required for now "]
+            // Vehicle Icon Header
+            // Center(
+            //   child: Container(
+            //     width: 72,
+            //     height: 72,
+            //     decoration: BoxDecoration(
+            //       shape: BoxShape.circle,
+            //       color: AppColors.primary.withValues(alpha: 0.1),
+            //       border: Border.all(
+            //         color: AppColors.primary.withValues(alpha: 0.2),
+            //         width: 1.5,
+            //       ),
+            //     ),
+            //     child: Icon(
+            //       _selectedVehicleType.icon,
+            //       size: 34,
+            //       color: AppColors.primary,
+            //     ),
+            //   ),
+            // ),
 
             SizedBox(height: h * 0.02),
 
@@ -892,58 +848,67 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
 
             SizedBox(height: h * 0.018),
 
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: AppTextField(
-                    label: 'Year',
-                    hint: 'e.g. 2022',
-                    prefixIcon: HugeIcons.strokeRoundedCalendar01,
-                    controller: _yearCtrl,
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [
-                      FilteringTextInputFormatter.digitsOnly,
-                      LengthLimitingTextInputFormatter(4),
-                    ],
-                    onChanged: (_) => setState(() {}),
-                    validator: (v) {
-                      if (v == null || v.trim().isEmpty) return 'Required';
-                      final y = int.tryParse(v.trim());
-                      if (y == null || y < 1980 || y > currentYear) {
-                        return '1980–$currentYear';
-                      }
-                      return null;
-                    },
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: AppTextField(
-                    label: 'Make',
-                    hint: 'e.g. Honda',
-                    prefixIcon: HugeIcons.strokeRoundedCar01,
-                    controller: _makeCtrl,
-                    textCapitalization: TextCapitalization.words,
-                    onChanged: (_) => setState(() {}),
-                    validator: (v) =>
-                        (v == null || v.trim().isEmpty) ? 'Required' : null,
-                  ),
-                ),
-              ],
+            // Make/Model/Year are constrained to a known catalog (see
+            // VehicleCatalog) instead of free text, so a rider can't submit
+            // a model that doesn't exist for their vehicle category.
+            AppSelectField<String>(
+              label: 'Make',
+              hint: 'Select the manufacturer',
+              sheetTitle: 'Select Make',
+              prefixIcon: HugeIcons.strokeRoundedCar01,
+              value: _availableMakes.contains(_makeCtrl.text)
+                  ? _makeCtrl.text
+                  : null,
+              options: _availableMakes,
+              labelBuilder: (make) => make,
+              onChanged: (make) => setState(() {
+                _makeCtrl.text = make ?? '';
+                // Model depends on make — clear it so a stale model from a
+                // different manufacturer can't linger as "selected".
+                _modelCtrl.text = '';
+              }),
+              validator: (v) =>
+                  (v == null || v.isEmpty) ? 'Select the manufacturer' : null,
             ),
 
             SizedBox(height: h * 0.018),
 
-            AppTextField(
+            AppSelectField<String>(
+              // Forces a fresh FormField (and therefore an unselected value)
+              // whenever the make changes, since _availableModels depends on it.
+              key: ValueKey('model-${_makeCtrl.text}'),
               label: 'Model',
-              hint: 'e.g. CB150R',
+              hint: _makeCtrl.text.isEmpty
+                  ? 'Select a make first'
+                  : 'Select the model',
+              sheetTitle: 'Select Model',
               prefixIcon: HugeIcons.strokeRoundedMotorbike01,
-              controller: _modelCtrl,
-              textCapitalization: TextCapitalization.words,
-              onChanged: (_) => setState(() {}),
+              enabled: _makeCtrl.text.isNotEmpty,
+              value: _availableModels.contains(_modelCtrl.text)
+                  ? _modelCtrl.text
+                  : null,
+              options: _availableModels,
+              labelBuilder: (model) => model,
+              onChanged: (model) =>
+                  setState(() => _modelCtrl.text = model ?? ''),
               validator: (v) =>
-                  (v == null || v.trim().isEmpty) ? 'Please enter model' : null,
+                  (v == null || v.isEmpty) ? 'Select the model' : null,
+            ),
+
+            SizedBox(height: h * 0.018),
+
+            AppSelectField<int>(
+              label: 'Year',
+              hint: 'Select the registration year',
+              sheetTitle: 'Select Year',
+              prefixIcon: HugeIcons.strokeRoundedCalendar01,
+              value: int.tryParse(_yearCtrl.text),
+              options: VehicleCatalog.years(),
+              labelBuilder: (year) => year.toString(),
+              onChanged: (year) =>
+                  setState(() => _yearCtrl.text = year?.toString() ?? ''),
+              validator: (v) =>
+                  v == null ? 'Select the registration year' : null,
             ),
 
             SizedBox(height: h * 0.018),
@@ -971,15 +936,16 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF0EA5E9).withValues(alpha: 0.08),
+                  color: AppColors.info.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: const Color(0xFF0EA5E9).withValues(alpha: 0.3),
+                    color: AppColors.info.withValues(alpha: 0.3),
                   ),
                 ),
                 child: const Row(
                   children: [
-                    Icon(HugeIcons.strokeRoundedFlash, color: Color(0xFF0EA5E9), size: 18),
+                    Icon(HugeIcons.strokeRoundedFlash,
+                        color: AppColors.info, size: 18),
                     SizedBox(width: 10),
                     Expanded(
                       child: Text(
@@ -987,7 +953,7 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
                         style: TextStyle(
                           fontFamily: 'Mukta',
                           fontSize: 13,
-                          color: Color(0xFF0369A1),
+                          color: AppColors.info,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -1009,6 +975,9 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
   Widget _buildBottomControls(double hPad, double w, double h, bool isLoading) {
     final isLastStep = _currentStep == 3;
     final canProceed = _canProceedCurrentStep;
+    // Vehicle Specs only navigates to the terms screen now — no network
+    // call happens here, so this step never shows a loading state.
+    final busy = isLastStep ? false : isLoading;
 
     return Container(
       padding: EdgeInsets.symmetric(horizontal: hPad, vertical: 16),
@@ -1031,7 +1000,7 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
                 Expanded(
                   flex: 1,
                   child: OutlinedButton(
-                    onPressed: isLoading ? null : _previousStep,
+                    onPressed: busy ? null : _previousStep,
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
@@ -1055,18 +1024,15 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
               Expanded(
                 flex: 2,
                 child: AppGradientButton(
-                  label: isLastStep
-                      ? (isLoading ? 'Creating Account…' : 'Complete Registration')
-                      : 'Continue',
-                  isLoading: isLastStep ? isLoading : false,
-                  onPressed: (!canProceed || isLoading)
+                  label: isLastStep ? 'Review & Accept Terms' : 'Continue',
+                  isLoading: false,
+                  onPressed: (!canProceed || busy)
                       ? null
-                      : (isLastStep ? _submitRegistration : _nextStep),
+                      : (isLastStep ? _proceedToTerms : _nextStep),
                 ),
               ),
             ],
           ),
-
           if (_currentStep == 0) ...[
             const SizedBox(height: 14),
             Row(

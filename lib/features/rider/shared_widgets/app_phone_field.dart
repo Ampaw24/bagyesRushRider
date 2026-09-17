@@ -190,13 +190,6 @@ class _AppPhoneFieldState extends State<AppPhoneField> {
                 color: const Color(0xFFF8F9FB),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: borderColor, width: borderWidth),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Color(0x0A000000),
-                    blurRadius: 6,
-                    offset: Offset(0, 1),
-                  ),
-                ],
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,

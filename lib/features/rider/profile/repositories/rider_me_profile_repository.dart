@@ -28,9 +28,18 @@ abstract class RiderMeProfileRepository {
   ResultFuture<void> updateLocation({
     required double latitude,
     required double longitude,
+    double? heading,
+    double? speedKph,
+    int? accuracyM,
   });
 
+  /// Offline catch-up upload — chunk to at most 60 pings per call.
+  ResultFuture<void> updateLocationBatch(List<RiderMeLocationPing> pings);
+
+  /// `current_password` is required — validated against the password of the
+  /// user behind the current Sanctum token.
   ResultFuture<RiderMeProfileModel> updatePayout({
+    required String currentPassword,
     int? payoutProviderId,
     String? accountNumber,
     String? accountName,

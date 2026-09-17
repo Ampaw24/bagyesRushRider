@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:delivery_boy/constant/app_theme.dart';
 import 'app_shimmer.dart';
 
 /// A full-list shimmer placeholder shown while data is loading.
@@ -26,7 +27,7 @@ class ShimmerListPlaceholder extends StatelessWidget {
           child: Container(
             height: itemHeight,
             decoration: BoxDecoration(
-              color: const Color(0xFFE0E0E0),
+              color: AppColors.surfaceVariant,
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
@@ -36,7 +37,7 @@ class ShimmerListPlaceholder extends StatelessWidget {
                   width: 48,
                   height: 48,
                   decoration: const BoxDecoration(
-                    color: Color(0xFFD0D0D0),
+                    color: AppColors.shimmerBase,
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -50,7 +51,7 @@ class ShimmerListPlaceholder extends StatelessWidget {
                         height: 14,
                         width: double.infinity,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFD0D0D0),
+                          color: AppColors.shimmerBase,
                           borderRadius: BorderRadius.circular(7),
                         ),
                       ),
@@ -59,7 +60,7 @@ class ShimmerListPlaceholder extends StatelessWidget {
                         height: 12,
                         width: 140,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFD0D0D0),
+                          color: AppColors.shimmerBase,
                           borderRadius: BorderRadius.circular(6),
                         ),
                       ),
@@ -71,7 +72,7 @@ class ShimmerListPlaceholder extends StatelessWidget {
                   height: 32,
                   width: 60,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFD0D0D0),
+                    color: AppColors.shimmerBase,
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),

@@ -11,9 +11,14 @@ import 'kyc_step4_documents_view.dart';
 import 'kyc_step5_review_view.dart';
 import 'package:hugeicons/hugeicons.dart';
 
-class KycScreen extends ConsumerWidget {
+class KycScreen extends ConsumerStatefulWidget {
   const KycScreen({super.key});
 
+  @override
+  ConsumerState<KycScreen> createState() => _KycScreenState();
+}
+
+class _KycScreenState extends ConsumerState<KycScreen> {
   static const _stepLabels = [
     'Identity',
     'Licence',
@@ -23,7 +28,15 @@ class KycScreen extends ConsumerWidget {
   ];
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(kycProvider.notifier).initializeFromProfile();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final state = ref.watch(kycProvider);
 
     return Scaffold(
@@ -54,28 +67,31 @@ class KycScreen extends ConsumerWidget {
         ),
         centerTitle: true,
       ),
-      body: Column(
-        children: [
-          AnimatedStepper(
-            stepCount: 5,
-            currentStep: state.currentStep,
-            stepLabels: _stepLabels,
-          ),
-          const Divider(height: 1, thickness: 1, color: Color(0xFFF0F0F0)),
-          Expanded(
-            child: IndexedStack(
-              index: state.currentStep,
-              children: const [
-                KycStep1IdentityView(),
-                KycStep2LicenceView(),
-                KycStep3VehicleView(),
-                KycStep4DocumentsView(),
-                KycStep5ReviewView(),
+      body: state.isInitializing
+          ? const Center(child: CircularProgressIndicator())
+          : Column(
+              children: [
+                AnimatedStepper(
+                  stepCount: 5,
+                  currentStep: state.currentStep,
+                  stepLabels: _stepLabels,
+                ),
+                const Divider(
+                    height: 1, thickness: 1, color: Color(0xFFF0F0F0)),
+                Expanded(
+                  child: IndexedStack(
+                    index: state.currentStep,
+                    children: const [
+                      KycStep1IdentityView(),
+                      KycStep2LicenceView(),
+                      KycStep3VehicleView(),
+                      KycStep4DocumentsView(),
+                      KycStep5ReviewView(),
+                    ],
+                  ),
+                ),
               ],
             ),
-          ),
-        ],
-      ),
     );
   }
 }

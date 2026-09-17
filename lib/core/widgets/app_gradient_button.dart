@@ -40,24 +40,8 @@ class AppGradientButton extends StatelessWidget {
         width: width ?? double.infinity,
         height: height,
         decoration: BoxDecoration(
-          gradient: enabled
-              ? const LinearGradient(
-                  colors: [AppColors.primary, Color(0xFFCA445D)],
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
-                )
-              : null,
-          color: enabled ? null : Colors.grey.shade300,
+          color: enabled ? AppColors.primary : Colors.grey.shade300,
           borderRadius: BorderRadius.circular(borderRadius),
-          boxShadow: enabled
-              ? [
-                  BoxShadow(
-                    color: AppColors.primary.withValues(alpha: 0.35),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  )
-                ]
-              : [],
         ),
         child: Center(
           child: isLoading
@@ -70,7 +54,7 @@ class AppGradientButton extends StatelessWidget {
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                         letterSpacing: 0.4,
-                        fontFamily: 'Roboto',
+                        fontFamily: 'Mukta',
                       ),
                 ),
         ),

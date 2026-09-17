@@ -8,10 +8,6 @@ import 'package:delivery_boy/core/utils/network_utility.dart';
 import 'package:delivery_boy/features/rider/auth/repositories/rider_auth_repository.dart';
 import 'package:delivery_boy/features/rider/auth/repositories/rider_auth_repository_impl.dart';
 import 'package:delivery_boy/features/rider/auth/services/rider_auth_api_service.dart';
-// Phase 3: Orders
-import 'package:delivery_boy/features/rider/orders/repositories/rider_orders_repository.dart';
-import 'package:delivery_boy/features/rider/orders/repositories/rider_orders_repository_impl.dart';
-import 'package:delivery_boy/features/rider/orders/services/rider_orders_api_service.dart';
 // Phase 5: Wallet
 import 'package:delivery_boy/features/rider/wallet/repositories/rider_wallet_repository.dart';
 import 'package:delivery_boy/features/rider/wallet/repositories/rider_wallet_repository_impl.dart';
@@ -20,18 +16,10 @@ import 'package:delivery_boy/features/rider/wallet/services/rider_wallet_api_ser
 import 'package:delivery_boy/features/rider/profile/repositories/rider_profile_repository.dart';
 import 'package:delivery_boy/features/rider/profile/repositories/rider_profile_repository_impl.dart';
 import 'package:delivery_boy/features/rider/profile/services/rider_profile_api_service.dart';
-// Phase 7: Tracking
-import 'package:delivery_boy/features/rider/tracking/repositories/rider_tracking_repository.dart';
-import 'package:delivery_boy/features/rider/tracking/repositories/rider_tracking_repository_impl.dart';
-import 'package:delivery_boy/features/rider/tracking/services/rider_tracking_api_service.dart';
 // Notifications
 import 'package:delivery_boy/features/rider/notifications/repositories/rider_notifications_repository.dart';
 import 'package:delivery_boy/features/rider/notifications/repositories/rider_notifications_repository_impl.dart';
 import 'package:delivery_boy/features/rider/notifications/services/rider_notifications_api_service.dart';
-// Phase 8: KYC
-import 'package:delivery_boy/features/rider/kyc/services/kyc_api_service.dart';
-import 'package:delivery_boy/features/rider/kyc/repositories/kyc_repository.dart';
-import 'package:delivery_boy/features/rider/kyc/repositories/kyc_repository_impl.dart';
 // Rider "Me" API (/rider/me/* — see the "v1 / rider" Postman collection)
 import 'package:delivery_boy/features/rider/profile/services/rider_me_profile_api_service.dart';
 import 'package:delivery_boy/features/rider/profile/repositories/rider_me_profile_repository.dart';
@@ -71,12 +59,6 @@ Future<void> initServiceLocator() async {
     () => RiderAuthRepositoryImpl(sl<RiderAuthApiService>()),
   );
 
-  // ── Rider Orders ────────────────────────────────────────────────────────
-  sl.registerLazySingleton(() => RiderOrdersApiService(sl<Dio>()));
-  sl.registerLazySingleton<RiderOrdersRepository>(
-    () => RiderOrdersRepositoryImpl(sl<RiderOrdersApiService>()),
-  );
-
   // ── Rider Wallet ────────────────────────────────────────────────────────
   sl.registerLazySingleton(() => RiderWalletApiService(sl<Dio>()));
   sl.registerLazySingleton<RiderWalletRepository>(
@@ -89,22 +71,10 @@ Future<void> initServiceLocator() async {
     () => RiderProfileRepositoryImpl(sl<RiderProfileApiService>()),
   );
 
-  // ── Rider Tracking ──────────────────────────────────────────────────────
-  sl.registerLazySingleton(() => RiderTrackingApiService(sl<Dio>()));
-  sl.registerLazySingleton<RiderTrackingRepository>(
-    () => RiderTrackingRepositoryImpl(sl<RiderTrackingApiService>()),
-  );
-
   // ── Rider Notifications ──────────────────────────────────────────────────
   sl.registerLazySingleton(() => RiderNotificationsApiService(sl<Dio>()));
   sl.registerLazySingleton<RiderNotificationsRepository>(
     () => RiderNotificationsRepositoryImpl(sl<RiderNotificationsApiService>()),
-  );
-
-  // ── KYC ─────────────────────────────────────────────────────────────────
-  sl.registerLazySingleton(() => KycApiService(sl<Dio>()));
-  sl.registerLazySingleton<KycRepository>(
-    () => KycRepositoryImpl(sl<KycApiService>()),
   );
 
   // ── Rider "Me" API (/rider/me/* — see the "v1 / rider" Postman collection) ──────────

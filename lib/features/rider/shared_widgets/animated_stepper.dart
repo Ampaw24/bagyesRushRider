@@ -49,7 +49,7 @@ class AnimatedStepper extends StatelessWidget {
   }
 }
 
-class _StepCircle extends StatefulWidget {
+class _StepCircle extends StatelessWidget {
   final int stepIndex;
   final int currentStep;
   final String label;
@@ -61,110 +61,53 @@ class _StepCircle extends StatefulWidget {
   });
 
   @override
-  State<_StepCircle> createState() => _StepCircleState();
-}
-
-class _StepCircleState extends State<_StepCircle>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _pulseCtrl;
-  late Animation<double> _pulseAnim;
-
-  @override
-  void initState() {
-    super.initState();
-    _pulseCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 900),
-    );
-    _pulseAnim = Tween<double>(begin: 1.0, end: 1.15).animate(
-      CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut),
-    );
-    _updateAnimation();
-  }
-
-  @override
-  void didUpdateWidget(_StepCircle old) {
-    super.didUpdateWidget(old);
-    if (old.currentStep != widget.currentStep) {
-      _updateAnimation();
-    }
-  }
-
-  void _updateAnimation() {
-    if (widget.stepIndex == widget.currentStep) {
-      _pulseCtrl.repeat(reverse: true);
-    } else {
-      _pulseCtrl.stop();
-      _pulseCtrl.reset();
-    }
-  }
-
-  @override
-  void dispose() {
-    _pulseCtrl.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final isCompleted = widget.stepIndex < widget.currentStep;
-    final isActive = widget.stepIndex == widget.currentStep;
+    final isCompleted = stepIndex < currentStep;
+    final isActive = stepIndex == currentStep;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        ScaleTransition(
-          scale: isActive ? _pulseAnim : const AlwaysStoppedAnimation(1.0),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
-            width: 30,
-            height: 30,
-            decoration: BoxDecoration(
-              color: isCompleted
-                  ? AppColors.success
-                  : isActive
-                      ? AppColors.primary
-                      : Colors.grey.shade200,
-              shape: BoxShape.circle,
-              boxShadow: isActive
-                  ? [
-                      BoxShadow(
-                        color: AppColors.primary.withValues(alpha: 0.3),
-                        blurRadius: 8,
-                        spreadRadius: 1,
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          width: 30,
+          height: 30,
+          decoration: BoxDecoration(
+            color: isCompleted
+                ? AppColors.success
+                : isActive
+                    ? AppColors.primary
+                    : Colors.grey.shade200,
+            shape: BoxShape.circle,
+          ),
+          child: Center(
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              child: isCompleted
+                  ? const Icon(
+                      HugeIcons.strokeRoundedCheckmarkCircle01,
+                      key: ValueKey('check'),
+                      size: 16,
+                      color: Colors.white,
+                    )
+                  : Text(
+                      '${stepIndex + 1}',
+                      key: ValueKey(stepIndex),
+                      style: TextStyle(
+                        fontFamily: 'Mukta',
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: isActive ? Colors.white : Colors.grey.shade500,
                       ),
-                    ]
-                  : null,
-            ),
-            child: Center(
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 200),
-                child: isCompleted
-                    ? const Icon(
-                        HugeIcons.strokeRoundedCheckmarkCircle01,
-                        key: ValueKey('check'),
-                        size: 16,
-                        color: Colors.white,
-                      )
-                    : Text(
-                        '${widget.stepIndex + 1}',
-                        key: ValueKey(widget.stepIndex),
-                        style: TextStyle(
-                          fontFamily: 'Roboto',
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: isActive ? Colors.white : Colors.grey.shade500,
-                        ),
-                      ),
-              ),
+                    ),
             ),
           ),
         ),
         const SizedBox(height: 4),
         Text(
-          widget.label,
+          label,
           style: TextStyle(
-            fontFamily: 'Roboto',
+            fontFamily: 'Mukta',
             fontSize: 9,
             fontWeight:
                 isActive ? FontWeight.w600 : FontWeight.w400,
