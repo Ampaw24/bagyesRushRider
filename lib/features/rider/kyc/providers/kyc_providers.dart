@@ -37,7 +37,10 @@ const kycPhotoUploadKey = 'profile_photo';
 /// from `/rider/me`, which is reloaded after every successful upload.
 class KycUploadsNotifier extends Notifier<Map<String, UploadState>> {
   @override
-  Map<String, UploadState> build() => const {};
+  Map<String, UploadState> build() {
+    _resetWhenRiderChanges(ref);
+    return const {};
+  }
 
   RiderMeProfileRepository get _repo => sl<RiderMeProfileRepository>();
 
@@ -123,7 +126,10 @@ class KycActionsState extends Equatable {
 /// server's new view of what's outstanding.
 class KycActionsNotifier extends Notifier<KycActionsState> {
   @override
-  KycActionsState build() => const KycActionsState();
+  KycActionsState build() {
+    _resetWhenRiderChanges(ref);
+    return const KycActionsState();
+  }
 
   RiderMeProfileRepository get _repo => sl<RiderMeProfileRepository>();
 
@@ -178,6 +184,12 @@ class KycActionsNotifier extends Notifier<KycActionsState> {
     return failure;
   }
 }
+
+/// Rebuilds the calling notifier — clearing its state — when a different
+/// rider's profile loads, so one account's uploads or submission never show
+/// for the next person to sign in on the device.
+void _resetWhenRiderChanges(Ref ref) =>
+    ref.watch(riderMeProfileProvider.select((s) => s.profile?.id));
 
 final kycActionsProvider =
     NotifierProvider<KycActionsNotifier, KycActionsState>(

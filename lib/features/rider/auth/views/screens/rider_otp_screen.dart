@@ -131,7 +131,11 @@ class _RiderOtpScreenState extends ConsumerState<RiderOtpScreen>
     // Only the fields /register does NOT accept. vehicle_type and
     // plate_number were set atomically at registration; re-sending the plate
     // would re-run `unique:riders,plate_number` against the rider's own row.
+    // The ids are what /rider/me checks (`missing_profile_fields` lists
+    // vehicle_make_id / vehicle_model_id); the names alone don't satisfy it.
     const keys = [
+      'vehicle_make_id',
+      'vehicle_model_id',
       'vehicle_make',
       'vehicle_model',
       'vehicle_colour',

@@ -10,7 +10,6 @@ import 'package:delivery_boy/core/services/user_session_manager.dart';
 import 'package:delivery_boy/core/widgets/app_gradient_button.dart';
 import 'package:delivery_boy/core/widgets/custom_dialogs.dart';
 import 'package:delivery_boy/features/rider/profile/providers/rider_avatar_providers.dart';
-import 'package:delivery_boy/features/rider/profile/providers/rider_document_completion_providers.dart';
 import 'package:delivery_boy/features/rider/profile/providers/rider_me_profile_providers.dart';
 import 'package:delivery_boy/features/rider/shared/rider_me_action_status.dart';
 import 'package:delivery_boy/features/rider/shared_widgets/rider_avatar.dart';
@@ -267,7 +266,6 @@ class _RiderProfileEditScreenState
       final uploaded = await notifier.uploadPhoto(_pickedImage!.path);
       setState(() => _isUploading = false);
       if (!uploaded && mounted) return; // error shown via listener
-      ref.read(riderDocumentCompletionProvider.notifier).refresh();
     }
 
     // 2. Update text fields

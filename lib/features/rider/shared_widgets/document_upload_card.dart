@@ -5,6 +5,9 @@ import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/features/rider/kyc/models/upload_state.dart';
 import 'package:hugeicons/hugeicons.dart';
 
+/// Cards grow past this with large text rather than clipping.
+const _minCardHeight = 90.0;
+
 /// A reusable card for uploading a single KYC document.
 /// Shows different states: idle, uploading, done, failed.
 class DocumentUploadCard extends StatelessWidget {
@@ -71,7 +74,7 @@ class _IdleCard extends StatelessWidget {
         strokeWidth: 1.5,
         dashPattern: const [6, 4],
         child: Container(
-          height: 90,
+          constraints: const BoxConstraints(minHeight: _minCardHeight),
           width: double.infinity,
           decoration: BoxDecoration(
             color: Colors.grey.shade50,
@@ -125,7 +128,7 @@ class _UploadingCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 90,
+      constraints: const BoxConstraints(minHeight: _minCardHeight),
       width: double.infinity,
       decoration: BoxDecoration(
         color: AppColors.primary.withValues(alpha: 0.04),
@@ -180,7 +183,7 @@ class _DoneCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 90,
+      constraints: const BoxConstraints(minHeight: _minCardHeight),
       width: double.infinity,
       decoration: BoxDecoration(
         color: AppColors.success.withValues(alpha: 0.04),
@@ -304,7 +307,7 @@ class _FailedCard extends StatelessWidget {
     return GestureDetector(
       onTap: onRetry,
       child: Container(
-        height: 90,
+        constraints: const BoxConstraints(minHeight: _minCardHeight),
         width: double.infinity,
         decoration: BoxDecoration(
           color: AppColors.error.withValues(alpha: 0.04),

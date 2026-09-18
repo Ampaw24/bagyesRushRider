@@ -89,7 +89,10 @@ class KycContentWidth extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // heightFactor keeps it as tall as its child — a plain Center would
+    // expand to fill a bounded parent, e.g. a Scaffold's bottom bar.
     return Center(
+      heightFactor: 1,
       child: ConstrainedBox(
         constraints:
             const BoxConstraints(maxWidth: KycMetrics.maxContentWidth),

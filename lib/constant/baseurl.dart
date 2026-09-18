@@ -6,3 +6,4 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 /// getter is first read. Override per-environment by editing `.env` —
 /// never hardcode a host here.
 String get kBaseUrl => dotenv.env['DEV_BASE_URL']!;
+String get kAppVersion => dotenv.env['APP_VERSION']!;

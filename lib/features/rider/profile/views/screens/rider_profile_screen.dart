@@ -10,7 +10,7 @@ import 'package:delivery_boy/features/rider/auth/models/rider_user_model.dart';
 import 'package:delivery_boy/features/rider/auth/viewmodels/rider_auth_viewmodel.dart';
 import 'package:delivery_boy/features/rider/dashboard/views/screens/rider_dashboard_screen.dart';
 import 'package:delivery_boy/features/rider/profile/providers/rider_avatar_providers.dart';
-import 'package:delivery_boy/features/rider/profile/providers/rider_document_completion_providers.dart';
+import 'package:delivery_boy/features/rider/kyc/providers/kyc_providers.dart';
 import 'package:delivery_boy/features/rider/shared_widgets/rider_avatar.dart';
 import 'package:hugeicons/hugeicons.dart';
 
@@ -24,11 +24,12 @@ class RiderProfileScreen extends ConsumerWidget {
 
     final session = sl<UserSessionManager>();
     final kycStatus = ref.watch(riderKycStatusProvider);
-    final docStatus = ref.watch(riderDocumentCompletionProvider).valueOrNull;
-
-    final docCount = docStatus?.values.where((uploaded) => uploaded).length ?? 0;
-    final docTotal = docStatus?.length ?? 0;
-    final isComplete = docStatus != null && docCount == docTotal;
+    // Verification steps from /rider/me — the same checklist the home card
+    // and the verification screen show.
+    final kycProgress = ref.watch(kycProgressProvider);
+    final docCount = kycProgress?.completedCount ?? 0;
+    final docTotal = kycProgress?.totalCount ?? 0;
+    final isComplete = kycProgress?.isProfileComplete ?? false;
 
     final displayName = (session.displayName ?? '').trim();
     final name = displayName.isNotEmpty ? displayName : 'Rider';
@@ -101,7 +102,7 @@ class RiderProfileScreen extends ConsumerWidget {
               docTotal: docTotal,
               isComplete: isComplete,
               onEdit: () => context.push(AppRoutes.editProfile),
-              onTapDocuments: () => context.push(AppRoutes.documentUpload),
+              onTapDocuments: () => context.push(AppRoutes.kyc),
             ),
 
             // ── Scrollable sections ─────────────────────────────────────
@@ -124,15 +125,14 @@ class RiderProfileScreen extends ConsumerWidget {
                           w: w,
                           tiles: [
                             _ProfileTile(
-                              icon: HugeIcons.strokeRoundedFileUpload,
-                              label: 'Documents',
+                              icon: HugeIcons.strokeRoundedShieldUser,
+                              label: 'Verification',
                               trailing: _CountBadge(
                                 count: docCount,
                                 total: docTotal,
                                 isComplete: isComplete,
                               ),
-                              onTap: () =>
-                                  context.push(AppRoutes.documentUpload),
+                              onTap: () => context.push(AppRoutes.kyc),
                               w: w,
                             ),
                             _ProfileTile(
