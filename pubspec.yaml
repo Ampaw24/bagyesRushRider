@@ -56,6 +56,9 @@ dependencies:
   flutter_local_notifications: ^18.0.1
   flutter_dotenv: ^6.0.1
   package_info_plus: ^9.0.1
+  # Supplies the `device_name` sent to POST /device-tokens. Same version as
+  # the customer app so both register devices in an identical format.
+  device_info_plus: ^12.4.0
   flutter_html: ^3.0.0
   camera: ^0.12.1
   google_mlkit_face_detection: ^0.15.1

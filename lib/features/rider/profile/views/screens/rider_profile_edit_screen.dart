@@ -8,9 +8,12 @@ import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/core/di/service_locator.dart';
 import 'package:delivery_boy/core/services/user_session_manager.dart';
 import 'package:delivery_boy/core/widgets/app_gradient_button.dart';
+import 'package:delivery_boy/core/widgets/custom_dialogs.dart';
+import 'package:delivery_boy/features/rider/profile/providers/rider_avatar_providers.dart';
 import 'package:delivery_boy/features/rider/profile/providers/rider_document_completion_providers.dart';
 import 'package:delivery_boy/features/rider/profile/providers/rider_me_profile_providers.dart';
 import 'package:delivery_boy/features/rider/shared/rider_me_action_status.dart';
+import 'package:delivery_boy/features/rider/shared_widgets/rider_avatar.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 class RiderProfileEditScreen extends ConsumerStatefulWidget {
@@ -57,15 +60,19 @@ class _RiderProfileEditScreenState
     final isLoading =
         profileState.actionStatus == RiderMeActionStatus.inProgress ||
             _isUploading;
+    final avatarRadius =
+        (MediaQuery.sizeOf(context).width * 0.14).clamp(48.0, 72.0);
 
-    ref.listen(riderMeProfileProvider, (_, next) {
+    ref.listen(riderMeProfileProvider, (prev, next) {
+      // Only on the transition into an error, so a later emission (e.g. a
+      // profile reload) can't re-open the dialog for the same failure.
       if (next.actionStatus == RiderMeActionStatus.error &&
+          prev?.actionStatus != RiderMeActionStatus.error &&
           next.actionMessage != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(next.actionMessage!),
-            backgroundColor: AppColors.error,
-          ),
+        CustomDialog.showError(
+          context: context,
+          title: 'Profile Not Updated',
+          subtitle: next.actionMessage!,
         );
       }
     });
@@ -106,22 +113,21 @@ class _RiderProfileEditScreenState
                         ),
                       ],
                     ),
-                    child: CircleAvatar(
-                      radius: 54,
-                      backgroundColor: Colors.grey.shade200,
-                      backgroundImage: _pickedImage != null
-                          ? FileImage(_pickedImage!) as ImageProvider
-                          : (profileState.profile?.photoUrl != null &&
-                                  profileState.profile!.photoUrl!.isNotEmpty
-                              ? NetworkImage(profileState.profile!.photoUrl!)
-                              : null),
-                      child: (_pickedImage == null &&
-                              (profileState.profile?.photoUrl == null ||
-                                  profileState.profile!.photoUrl!.isEmpty))
-                          ? Icon(HugeIcons.strokeRoundedUser,
-                              size: 48, color: Colors.grey.shade400)
-                          : null,
-                    ),
+                    child: _pickedImage != null
+                        ? CircleAvatar(
+                            radius: avatarRadius,
+                            backgroundImage: FileImage(_pickedImage!),
+                          )
+                        : RiderAvatar(
+                            radius: avatarRadius,
+                            imageUrl: ref.watch(riderAvatarUrlProvider),
+                            backgroundColor: Colors.grey.shade200,
+                            placeholder: Icon(
+                              HugeIcons.strokeRoundedUser,
+                              size: avatarRadius * 0.9,
+                              color: Colors.grey.shade400,
+                            ),
+                          ),
                   ),
                   Positioned(
                     bottom: 0,

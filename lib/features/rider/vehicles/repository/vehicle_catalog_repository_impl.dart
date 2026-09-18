@@ -1,7 +1,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 import 'package:delivery_boy/core/errors/failures.dart';
-import 'package:delivery_boy/core/network/api_error_parser.dart';
+import 'package:delivery_boy/core/network/request_error_message.dart';
 import 'package:delivery_boy/features/rider/vehicles/model/vehicle_make_model.dart';
 import 'package:delivery_boy/features/rider/vehicles/model/vehicle_model_model.dart';
 import 'package:delivery_boy/features/rider/vehicles/model/vehicle_type_model.dart';
@@ -12,6 +12,8 @@ class VehicleCatalogRepositoryImpl implements VehicleCatalogRepository {
   final RiderVehicleCatalogApiService _api;
 
   VehicleCatalogRepositoryImpl(this._api);
+
+  static const _loadFailed = 'Failed to load vehicle catalogue';
 
   @override
   Future<Either<Failure, List<VehicleTypeModel>>> getVehicleTypes() =>
@@ -68,12 +70,11 @@ class VehicleCatalogRepositoryImpl implements VehicleCatalogRepository {
     try {
       return Right(await action());
     } on DioException catch (e) {
-      final msg = apiMessageFrom(e.response?.data) ??
-          e.message ??
-          'Failed to load vehicle catalogue';
-      return Left(ServerFailure(msg));
-    } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(ServerFailure(dioErrorMessage(e, fallback: _loadFailed)));
+    } catch (e, s) {
+      return Left(
+        ServerFailure(unexpectedErrorMessage(e, s, fallback: _loadFailed)),
+      );
     }
   }
 }

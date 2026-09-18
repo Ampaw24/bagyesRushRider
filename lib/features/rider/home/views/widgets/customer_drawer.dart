@@ -6,6 +6,7 @@ import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/core/di/service_locator.dart';
 import 'package:delivery_boy/core/router/app_routes.dart';
 import 'package:delivery_boy/core/services/user_session_manager.dart';
+import 'package:delivery_boy/features/rider/shared_widgets/rider_avatar.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Data model
@@ -40,6 +41,9 @@ class CustomerDrawer extends StatefulWidget {
   /// verification state lives on `GET /rider/me`, not in the session.
   final bool isVerified;
 
+  /// From `riderAvatarUrlProvider`; initials are shown when null.
+  final String? photoUrl;
+
   const CustomerDrawer({
     super.key,
     required this.onClose,
@@ -48,6 +52,7 @@ class CustomerDrawer extends StatefulWidget {
     required this.onLogout,
     required this.onDeleteAccount,
     this.isVerified = false,
+    this.photoUrl,
   });
 
   @override
@@ -220,6 +225,7 @@ class _CustomerDrawerState extends State<CustomerDrawer>
                             name: displayName,
                             email: email,
                             initials: initials,
+                            photoUrl: widget.photoUrl,
                             isVerified: isVerified,
                             onClose: _close,
                             w: w,
@@ -292,6 +298,7 @@ class _DrawerHeader extends StatelessWidget {
   final String name;
   final String email;
   final String initials;
+  final String? photoUrl;
   final bool isVerified;
   final VoidCallback onClose;
   final double w;
@@ -302,6 +309,7 @@ class _DrawerHeader extends StatelessWidget {
     required this.name,
     required this.email,
     required this.initials,
+    this.photoUrl,
     required this.isVerified,
     required this.onClose,
     required this.w,
@@ -358,10 +366,10 @@ class _DrawerHeader extends StatelessWidget {
               // Avatar — bouncy scale in
               ScaleTransition(
                 scale: avatarScale,
-                child: CircleAvatar(
+                child: RiderAvatar(
                   radius: w * 0.07,
-                  backgroundColor: AppColors.primary,
-                  child: Text(
+                  imageUrl: photoUrl,
+                  placeholder: Text(
                     initials,
                     style: TextStyle(
                       fontFamily: 'Mukta',

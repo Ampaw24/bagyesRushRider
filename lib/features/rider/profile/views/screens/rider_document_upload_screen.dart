@@ -8,6 +8,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/core/router/app_routes.dart';
 import 'package:delivery_boy/core/widgets/app_gradient_button.dart';
+import 'package:delivery_boy/core/widgets/custom_dialogs.dart';
 import 'package:delivery_boy/features/rider/profile/data/rider_document_types.dart';
 import 'package:delivery_boy/features/rider/profile/providers/rider_document_completion_providers.dart';
 import 'package:delivery_boy/features/rider/profile/providers/rider_me_profile_providers.dart';
@@ -388,6 +389,13 @@ class _RiderDocumentUploadScreenState
       if (ok) {
         HapticFeedback.lightImpact();
         ref.read(riderDocumentCompletionProvider.notifier).refresh();
+      } else {
+        CustomDialog.showError(
+          context: context,
+          title: 'Upload Failed',
+          subtitle: ref.read(riderMeProfileProvider).actionMessage ??
+              'Could not upload this document. Please try again.',
+        );
       }
     }
   }

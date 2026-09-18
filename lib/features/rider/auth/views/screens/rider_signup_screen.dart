@@ -8,6 +8,7 @@ import 'package:hugeicons/hugeicons.dart';
 import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/core/router/app_routes.dart';
 import 'package:delivery_boy/core/widgets/app_gradient_button.dart';
+import 'package:delivery_boy/core/widgets/custom_dialogs.dart';
 import 'package:delivery_boy/features/rider/auth/viewmodels/rider_auth_viewmodel.dart';
 import 'package:delivery_boy/features/rider/auth/views/widgets/registration_stepper.dart';
 import 'package:delivery_boy/features/rider/shared_widgets/app_password_field.dart';
@@ -415,11 +416,10 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
     ref.listen<RiderAuthState>(riderAuthProvider, (_, next) {
       if (!mounted) return;
       if (next.errorMessage != null && next.fieldErrors.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(next.errorMessage!),
-            backgroundColor: AppColors.error,
-          ),
+        CustomDialog.showError(
+          context: context,
+          title: 'Registration Failed',
+          subtitle: next.errorMessage!,
         );
         ref.read(riderAuthProvider.notifier).clearError();
       }

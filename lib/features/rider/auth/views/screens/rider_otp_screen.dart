@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/core/router/app_routes.dart';
 import 'package:delivery_boy/core/widgets/app_gradient_button.dart';
+import 'package:delivery_boy/core/widgets/custom_dialogs.dart';
 import 'package:delivery_boy/features/rider/auth/viewmodels/rider_auth_viewmodel.dart';
 import 'package:delivery_boy/features/rider/profile/providers/rider_me_profile_providers.dart';
 import 'package:delivery_boy/features/rider/shared_widgets/otp_input_field.dart';
@@ -168,11 +169,10 @@ class _RiderOtpScreenState extends ConsumerState<RiderOtpScreen>
     ref.listen<RiderAuthState>(riderAuthProvider, (_, next) {
       if (!mounted) return;
       if (next.errorMessage != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(next.errorMessage!),
-            backgroundColor: AppColors.error,
-          ),
+        CustomDialog.showError(
+          context: context,
+          title: 'Verification Failed',
+          subtitle: next.errorMessage!,
         );
         ref.read(riderAuthProvider.notifier).clearError();
       }

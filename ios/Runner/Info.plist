@@ -54,7 +54,11 @@
 		<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 		<string>This app requires location access to track your delivery route</string>
 		<key>NSLocationWhenInUseUsageDescription</key>
-		<string>This app requires location access to show your position on the map</string>
+		<string>BagyesRUSH uses your location to show your current area and to share your position with customers during a delivery.</string>
+		<key>UIBackgroundModes</key>
+		<array>
+			<string>remote-notification</string>
+		</array>
 		<key>UIStatusBarHidden</key>
 		<false/>
 	</dict>

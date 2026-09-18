@@ -1,5 +1,7 @@
 import 'package:equatable/equatable.dart';
 
+import 'package:delivery_boy/core/utils/json_utils.dart';
+
 /// The account returned by `/register`, `/login` and `/profile`.
 ///
 /// Role-agnostic — the same shape serves customer, vendor and rider
@@ -18,6 +20,11 @@ class AuthUserModel extends Equatable {
   /// undocumented, and an unexpected one must not be able to fail a login.
   final Map<String, dynamic>? profile;
 
+  /// `profile_photo_url` — null when the account has no photo. Top-level on
+  /// Laravel's User, but also accepted inside [profile], whose shape is
+  /// undocumented.
+  final String? profilePhotoUrl;
+
   const AuthUserModel({
     required this.id,
     this.email,
@@ -26,6 +33,7 @@ class AuthUserModel extends Equatable {
     this.status,
     this.phoneVerified = false,
     this.profile,
+    this.profilePhotoUrl,
   });
 
   String? get firstName => profile?['first_name'] as String?;
@@ -49,6 +57,8 @@ class AuthUserModel extends Equatable {
       status: json['status'] as String?,
       phoneVerified: json['phone_verified'] == true,
       profile: profile is Map ? profile.cast<String, dynamic>() : null,
+      profilePhotoUrl: nonEmptyString(json['profile_photo_url']) ??
+          (profile is Map ? nonEmptyString(profile['profile_photo_url']) : null),
     );
   }
 
@@ -60,6 +70,9 @@ class AuthUserModel extends Equatable {
         'status': status,
         'phone_verified': phoneVerified,
         'profile': profile,
+        // Written top-level so the session keeps it — toJson is what
+        // UserSessionManager persists, and it drops any key not listed here.
+        'profile_photo_url': profilePhotoUrl,
       };
 
   AuthUserModel copyWith({
@@ -70,6 +83,7 @@ class AuthUserModel extends Equatable {
     String? status,
     bool? phoneVerified,
     Map<String, dynamic>? profile,
+    String? profilePhotoUrl,
   }) {
     return AuthUserModel(
       id: id ?? this.id,
@@ -79,9 +93,11 @@ class AuthUserModel extends Equatable {
       status: status ?? this.status,
       phoneVerified: phoneVerified ?? this.phoneVerified,
       profile: profile ?? this.profile,
+      profilePhotoUrl: profilePhotoUrl ?? this.profilePhotoUrl,
     );
   }
 
   @override
-  List<Object?> get props => [id, email, phone, role, status, phoneVerified];
+  List<Object?> get props =>
+      [id, email, phone, role, status, phoneVerified, profilePhotoUrl];
 }

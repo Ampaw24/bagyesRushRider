@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:location/location.dart' as loc;
+import 'package:delivery_boy/core/services/rider_location_service.dart';
 import 'package:delivery_boy/features/rider/profile/providers/rider_me_profile_providers.dart';
 
 /// Plain lat/lng rather than `google_maps_flutter`'s `LatLng` — no map UI
@@ -50,17 +51,16 @@ class RiderTrackingNotifier extends Notifier<RiderTrackingState> {
 
     final location = loc.Location();
 
-    bool serviceEnabled = await location.serviceEnabled();
-    if (!serviceEnabled) {
-      serviceEnabled = await location.requestService();
-      if (!serviceEnabled) return;
-    }
+    // Routed through RiderLocationService rather than calling the plugin
+    // directly: it de-dupes in-flight permission/service requests. Android
+    // and iOS track only one at a time, and a second concurrent request
+    // never resolves — so a rider accepting an order while the launch
+    // bootstrap is still awaiting its own prompt would otherwise hang here
+    // and tracking would silently never start.
+    if (!await RiderLocationService.ensureServiceEnabled()) return;
 
-    loc.PermissionStatus permission = await location.hasPermission();
-    if (permission == loc.PermissionStatus.denied) {
-      permission = await location.requestPermission();
-      if (permission != loc.PermissionStatus.granted) return;
-    }
+    final permission = await RiderLocationService.ensurePermission();
+    if (!RiderLocationService.isGranted(permission)) return;
 
     await location.changeSettings(
       accuracy: loc.LocationAccuracy.high,

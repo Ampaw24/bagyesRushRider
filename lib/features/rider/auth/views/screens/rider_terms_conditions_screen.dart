@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/core/router/app_routes.dart';
 import 'package:delivery_boy/core/widgets/app_gradient_button.dart';
+import 'package:delivery_boy/core/widgets/custom_dialogs.dart';
 import 'package:delivery_boy/features/rider/auth/data/rider_agreement_content.dart';
 import 'package:delivery_boy/features/rider/auth/viewmodels/rider_auth_viewmodel.dart';
 import 'package:delivery_boy/features/rider/auth/views/widgets/registration_stepper.dart';
@@ -121,7 +122,7 @@ class _RiderTermsConditionsScreenState
   /// `field_errors` on the right step.
   void _handleRegisterFailure() {
     final fieldErrors = ref.read(riderAuthProvider).fieldErrors;
-    if (fieldErrors.isEmpty) return; // the ref.listen snackbar covers it
+    if (fieldErrors.isEmpty) return; // the ref.listen dialog covers it
 
     String? first(String key) {
       final list = fieldErrors[key];
@@ -141,17 +142,15 @@ class _RiderTermsConditionsScreenState
     };
 
     if (takenAccount) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(messages.values.first),
-          backgroundColor: AppColors.error,
-          duration: const Duration(seconds: 6),
-          action: SnackBarAction(
-            label: 'Sign in',
-            textColor: Colors.white,
-            onPressed: () => context.go(AppRoutes.login),
-          ),
-        ),
+      CustomDialog.showConfirmation(
+        context: context,
+        title: 'Account Already Exists',
+        subtitle: messages.values.first,
+        confirmText: 'Sign In',
+        cancelText: 'Not Now',
+        onConfirm: () {
+          if (mounted) context.go(AppRoutes.login);
+        },
       );
       return;
     }
@@ -171,11 +170,10 @@ class _RiderTermsConditionsScreenState
     ref.listen<RiderAuthState>(riderAuthProvider, (_, next) {
       if (!mounted) return;
       if (next.errorMessage != null && next.fieldErrors.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(next.errorMessage!),
-            backgroundColor: AppColors.error,
-          ),
+        CustomDialog.showError(
+          context: context,
+          title: 'Registration Failed',
+          subtitle: next.errorMessage!,
         );
         ref.read(riderAuthProvider.notifier).clearError();
       }

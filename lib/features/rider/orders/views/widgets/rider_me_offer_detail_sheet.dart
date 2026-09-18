@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/core/widgets/app_gradient_button.dart';
+import 'package:delivery_boy/core/widgets/custom_dialogs.dart';
 import 'package:delivery_boy/core/widgets/drag_handle.dart';
 import 'package:delivery_boy/features/rider/orders/models/rider_me_order_model.dart';
 import 'package:delivery_boy/features/rider/orders/providers/rider_me_order_providers.dart';
@@ -39,9 +40,11 @@ class _RiderMeOfferDetailSheetState
         const SnackBar(content: Text('Order accepted!'), backgroundColor: AppColors.success),
       );
     } else {
-      final msg = ref.read(riderMeOffersProvider).actionMessage ?? 'Could not accept this offer';
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(msg), backgroundColor: AppColors.error),
+      CustomDialog.showError(
+        context: context,
+        title: "Couldn't Accept Order",
+        subtitle: ref.read(riderMeOffersProvider).actionMessage ??
+            'Could not accept this offer',
       );
     }
   }

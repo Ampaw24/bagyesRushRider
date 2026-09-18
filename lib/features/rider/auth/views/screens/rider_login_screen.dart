@@ -11,7 +11,9 @@ import 'package:delivery_boy/constant/asset_images.dart';
 import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/constant/constant.dart';
 import 'package:delivery_boy/core/router/app_routes.dart';
+import 'package:delivery_boy/core/widgets/custom_dialogs.dart';
 import 'package:delivery_boy/features/rider/auth/viewmodels/rider_auth_viewmodel.dart';
+import 'package:delivery_boy/features/rider/auth/views/widgets/forgot_password_sheet.dart';
 
 class RiderLoginScreen extends ConsumerStatefulWidget {
   const RiderLoginScreen({super.key});
@@ -91,13 +93,15 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
     final isLoading = authState.status == AuthStatus.loading;
 
     ref.listen<RiderAuthState>(riderAuthProvider, (_, next) {
-      if (!mounted) return;
+      // Only this screen's own errors: the forgot-password sheet and the
+      // screens pushed over login report theirs, and clearing it here
+      // would race them for the message.
+      if (!mounted || ModalRoute.isCurrentOf(context) != true) return;
       if (next.errorMessage != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(next.errorMessage!),
-            backgroundColor: AppColors.error,
-          ),
+        CustomDialog.showError(
+          context: context,
+          title: 'Sign In Failed',
+          subtitle: next.errorMessage!,
         );
         ref.read(riderAuthProvider.notifier).clearError();
       }
@@ -151,75 +155,72 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
                                 SizedBox(height: h * 0.06),
 
                                 // ── Logo + Brand ───────────────────────────────
-                                Center(
-                                  child: Column(
-                                    children: [
-                                      Container(
-                                        width: (w * 0.22).clamp(72.0, 100.0),
-                                        height: (w * 0.22).clamp(72.0, 100.0),
-                                        decoration: BoxDecoration(
-                                          borderRadius:
-                                              BorderRadius.circular(22),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: AppColors.primary
-                                                  .withValues(alpha: 0.22),
-                                              blurRadius: 24,
-                                              offset: const Offset(0, 8),
-                                            ),
-                                          ],
-                                        ),
-                                        child: ClipRRect(
-                                          borderRadius:
-                                              BorderRadius.circular(22),
-                                          child: Image.asset(
-                                            AssetImages.bagyesLogo,
-                                            fit: BoxFit.cover,
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Container(
+                                      width: (w * 0.22).clamp(72.0, 100.0),
+                                      height: (w * 0.22).clamp(72.0, 100.0),
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(22),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: AppColors.primary
+                                                .withValues(alpha: 0.22),
+                                            blurRadius: 24,
+                                            offset: const Offset(0, 8),
                                           ),
+                                        ],
+                                      ),
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(22),
+                                        child: Image.asset(
+                                          AssetImages.bagyesLogo,
+                                          fit: BoxFit.cover,
                                         ),
                                       ),
-                                      SizedBox(height: h * 0.014),
-                                      RichText(
-                                        text: TextSpan(
-                                          children: [
-                                            TextSpan(
-                                              text: 'Bagyes',
-                                              style: TextStyle(
-                                                fontFamily: 'Mukta',
-                                                fontSize: (w * 0.058)
-                                                    .clamp(18.0, 26.0),
-                                                fontWeight: FontWeight.w900,
-                                                color: AppColors.textPrimary,
-                                                letterSpacing: -0.4,
-                                              ),
+                                    ),
+                                    SizedBox(height: h * 0.014),
+                                    RichText(
+                                      text: TextSpan(
+                                        children: [
+                                          TextSpan(
+                                            text: 'Bagyes',
+                                            style: TextStyle(
+                                              fontFamily: 'Mukta',
+                                              fontSize:
+                                                  (w * 0.058).clamp(18.0, 26.0),
+                                              fontWeight: FontWeight.w900,
+                                              color: AppColors.textPrimary,
+                                              letterSpacing: -0.4,
                                             ),
-                                            TextSpan(
-                                              text: 'RUSH',
-                                              style: TextStyle(
-                                                fontFamily: 'Mukta',
-                                                fontSize: (w * 0.058)
-                                                    .clamp(18.0, 26.0),
-                                                fontWeight: FontWeight.w900,
-                                                color: AppColors.primary,
-                                                letterSpacing: -0.4,
-                                              ),
+                                          ),
+                                          TextSpan(
+                                            text: 'RUSH',
+                                            style: TextStyle(
+                                              fontFamily: 'Mukta',
+                                              fontSize:
+                                                  (w * 0.058).clamp(18.0, 26.0),
+                                              fontWeight: FontWeight.w900,
+                                              color: AppColors.primary,
+                                              letterSpacing: -0.4,
                                             ),
-                                            TextSpan(
-                                              text: ' Rider',
-                                              style: TextStyle(
-                                                fontFamily: 'Mukta',
-                                                fontSize: (w * 0.042)
-                                                    .clamp(13.0, 18.0),
-                                                fontWeight: FontWeight.w500,
-                                                color: AppColors.textSecondary,
-                                                letterSpacing: 0,
-                                              ),
+                                          ),
+                                          TextSpan(
+                                            text: ' Rider',
+                                            style: TextStyle(
+                                              fontFamily: 'Mukta',
+                                              fontSize:
+                                                  (w * 0.042).clamp(13.0, 18.0),
+                                              fontWeight: FontWeight.w500,
+                                              color: AppColors.textSecondary,
+                                              letterSpacing: 0,
                                             ),
-                                          ],
-                                        ),
+                                          ),
+                                        ],
                                       ),
-                                    ],
-                                  ),
+                                    ),
+                                  ],
                                 ),
 
                                 SizedBox(height: h * 0.048),
@@ -249,7 +250,7 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
 
                                 SizedBox(height: h * 0.036),
 
-                                 // ── Phone Label ────────────────────────────────
+                                // ── Phone Label ────────────────────────────────
                                 Text(
                                   'Phone Number',
                                   style: TextStyle(
@@ -390,8 +391,7 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
                                   child: TextButton(
                                     onPressed: isLoading
                                         ? null
-                                        : () => context
-                                            .push(AppRoutes.forgotPassword),
+                                        : () => ForgotPasswordSheet.show(context),
                                     style: TextButton.styleFrom(
                                       padding: const EdgeInsets.symmetric(
                                           vertical: 6, horizontal: 0),

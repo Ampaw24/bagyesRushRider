@@ -8,6 +8,10 @@ import 'package:delivery_boy/core/utils/network_utility.dart';
 import 'package:delivery_boy/features/rider/auth/repositories/rider_auth_repository.dart';
 import 'package:delivery_boy/features/rider/auth/repositories/rider_auth_repository_impl.dart';
 import 'package:delivery_boy/features/rider/auth/services/rider_auth_api_service.dart';
+// Push / device tokens (shared /device-tokens route)
+import 'package:delivery_boy/features/rider/notifications/services/device_token_api_service.dart';
+import 'package:delivery_boy/features/rider/notifications/repositories/device_token_repository.dart';
+import 'package:delivery_boy/features/rider/notifications/repositories/device_token_repository_impl.dart';
 // Rider "Me" API (/rider/me/* — see the "v1 / rider" Postman collection)
 import 'package:delivery_boy/features/rider/profile/services/rider_me_profile_api_service.dart';
 import 'package:delivery_boy/features/rider/profile/repositories/rider_me_profile_repository.dart';
@@ -49,6 +53,13 @@ Future<void> initServiceLocator() async {
   sl.registerLazySingleton(() => RiderAuthApiService(sl<Dio>()));
   sl.registerLazySingleton<RiderAuthRepository>(
     () => RiderAuthRepositoryImpl(sl<RiderAuthApiService>()),
+  );
+
+  // ── Push / device tokens ────────────────────────────────────────────────
+  // Shared `/device-tokens` route — same contract as the customer app.
+  sl.registerLazySingleton(() => DeviceTokenApiService(sl<Dio>()));
+  sl.registerLazySingleton<DeviceTokenRepository>(
+    () => DeviceTokenRepositoryImpl(sl<DeviceTokenApiService>()),
   );
 
   // ── Rider "Me" API (/rider/me/* — see the "v1 / rider" Postman collection) ──────────

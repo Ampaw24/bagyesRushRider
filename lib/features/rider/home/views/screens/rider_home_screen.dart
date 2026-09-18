@@ -7,16 +7,19 @@ import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/core/di/service_locator.dart';
 import 'package:delivery_boy/core/router/app_routes.dart';
 import 'package:delivery_boy/core/services/user_session_manager.dart';
+import 'package:delivery_boy/core/widgets/app_loading_overlay.dart';
 import 'package:delivery_boy/features/rider/auth/models/rider_user_model.dart';
 import 'package:delivery_boy/features/rider/auth/viewmodels/rider_auth_viewmodel.dart';
 import 'package:delivery_boy/features/rider/dashboard/views/screens/rider_dashboard_screen.dart';
 import 'package:delivery_boy/features/rider/home/views/widgets/customer_drawer.dart';
+import 'package:delivery_boy/features/rider/home/views/widgets/rider_location_chip.dart';
 import 'package:delivery_boy/features/rider/notifications/providers/rider_notifications_providers.dart';
 import 'package:delivery_boy/features/rider/orders/models/rider_me_order_model.dart';
 import 'package:delivery_boy/features/rider/orders/providers/rider_me_order_providers.dart';
 import 'package:delivery_boy/features/rider/orders/views/widgets/rider_me_order_status.dart';
-import 'package:delivery_boy/features/rider/profile/providers/rider_document_completion_providers.dart';
-import 'package:delivery_boy/features/rider/profile/providers/rider_me_profile_providers.dart';
+import 'package:delivery_boy/features/rider/profile/providers/rider_avatar_providers.dart';
+import 'package:delivery_boy/features/rider/kyc/providers/kyc_providers.dart';
+import 'package:delivery_boy/features/rider/shared_widgets/rider_avatar.dart';
 import 'package:delivery_boy/features/rider/shared_widgets/rider_setup_progress_card.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -159,8 +162,10 @@ class _RiderHomeScreenState extends ConsumerState<RiderHomeScreen>
       );
 
   Future<void> _handleLogout() async {
+    AppLoadingOverlay.show(context, message: 'Logging out...');
     await ref.read(riderAuthProvider.notifier).logout();
     if (!mounted) return;
+    AppLoadingOverlay.hide(context);
     context.go(AppRoutes.login);
   }
 
@@ -194,22 +199,17 @@ class _RiderHomeScreenState extends ConsumerState<RiderHomeScreen>
     final unread = ref.watch(riderNotificationsProvider).unreadCount;
     final historyOrders =
         ref.watch(riderMeOrderHistoryProvider).orders.take(2).toList();
-    final photoUrl = ref.watch(riderMeProfileProvider).profile?.photoUrl;
+    final photoUrl = ref.watch(riderAvatarUrlProvider);
     final initials = _riderName.isNotEmpty
         ? _riderName[0].toUpperCase()
         : 'R';
 
     // Same technique as the vendor dashboard's "Finish Setup" card: show the
-    // checklist in place of the online toggle while verification documents
-    // are still outstanding, since the rider can't go online until then
-    // anyway (see _toggleQueue's KYC gate).
-    final docStatus = ref.watch(riderDocumentCompletionProvider).valueOrNull;
-    final setupSteps = buildRiderSetupSteps(
-      docStatus ?? const {},
-      onStart: () => context.push(AppRoutes.documentUpload),
-    );
+    // server's outstanding verification steps in place of the online toggle,
+    // since the rider can't go online until they're done anyway.
+    final kycProgress = ref.watch(kycProgressProvider);
     final setupIncomplete =
-        docStatus == null ? false : setupSteps.any((s) => !s.completed);
+        kycProgress?.sections.any((s) => s.needsAction) ?? false;
 
     return Scaffold(
       backgroundColor: AppColors.scaffold,
@@ -256,7 +256,11 @@ class _RiderHomeScreenState extends ConsumerState<RiderHomeScreen>
                                 1,
                                 setupIncomplete
                                     ? RiderSetupProgressCard(
-                                        steps: setupSteps)
+                                        progress: kycProgress!,
+                                        onOpen: (section) => context.push(
+                                          AppRoutes.kycSection(section.slug),
+                                        ),
+                                      )
                                     : _OnlineCard(
                                         isOnline: isOnline,
                                         onToggle: () {
@@ -322,6 +326,7 @@ class _RiderHomeScreenState extends ConsumerState<RiderHomeScreen>
               onDeleteAccount: _handleDeleteAccount,
               isVerified:
                   ref.watch(riderKycStatusProvider) == KycStatus.approved,
+              photoUrl: photoUrl,
             ),
         ],
       ),
@@ -445,23 +450,18 @@ class _HomeHeader extends StatelessWidget {
                     width: 1.5,
                   ),
                 ),
-                child: CircleAvatar(
+                child: RiderAvatar(
                   radius: w * 0.045,
-                  backgroundColor: AppColors.primary,
-                  backgroundImage: (photoUrl != null && photoUrl!.isNotEmpty)
-                      ? NetworkImage(photoUrl!)
-                      : null,
-                  child: (photoUrl != null && photoUrl!.isNotEmpty)
-                      ? null
-                      : Text(
-                          initials,
-                          style: TextStyle(
-                            fontFamily: 'Mukta',
-                            color: Colors.white,
-                            fontSize: w * 0.032,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
+                  imageUrl: photoUrl,
+                  placeholder: Text(
+                    initials,
+                    style: TextStyle(
+                      fontFamily: 'Mukta',
+                      color: Colors.white,
+                      fontSize: w * 0.032,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -491,6 +491,11 @@ class _HomeHeader extends StatelessWidget {
             height: 1.1,
           ),
         ),
+
+        // Current address. Watches riderLocationProvider itself, so a
+        // resolving fix repaints this row alone rather than the whole header.
+        SizedBox(height: w * 0.012),
+        const RiderLocationChip(),
       ],
     );
   }

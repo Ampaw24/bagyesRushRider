@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 import 'package:delivery_boy/core/errors/failures.dart';
+import 'package:delivery_boy/core/network/request_error_message.dart';
 import 'package:delivery_boy/features/rider/wallet/models/rider_me_wallet_model.dart';
 import 'package:delivery_boy/features/rider/wallet/repositories/rider_me_wallet_repository.dart';
 import 'package:delivery_boy/features/rider/wallet/services/rider_me_wallet_api_service.dart';
@@ -68,12 +69,9 @@ class RiderMeWalletRepositoryImpl implements RiderMeWalletRepository {
     try {
       return Right(await action());
     } on DioException catch (e) {
-      final msg = e.response?.data?['message'] as String? ??
-          e.message ??
-          'Request failed';
-      return Left(ServerFailure(msg));
-    } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(ServerFailure(dioErrorMessage(e)));
+    } catch (e, s) {
+      return Left(ServerFailure(unexpectedErrorMessage(e, s)));
     }
   }
 }

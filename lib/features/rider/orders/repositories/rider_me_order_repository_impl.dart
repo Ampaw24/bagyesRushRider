@@ -2,6 +2,7 @@ import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 import 'package:delivery_boy/core/errors/failures.dart';
 import 'package:delivery_boy/core/network/api_error_parser.dart';
+import 'package:delivery_boy/core/network/request_error_message.dart';
 import 'package:delivery_boy/features/rider/orders/models/rider_me_order_model.dart';
 import 'package:delivery_boy/features/rider/orders/repositories/rider_me_order_repository.dart';
 import 'package:delivery_boy/features/rider/orders/services/rider_me_order_api_service.dart';
@@ -121,10 +122,16 @@ class RiderMeOrderRepositoryImpl implements RiderMeOrderRepository {
     return (raw as Map?)?.cast<String, dynamic>() ?? const {};
   }
 
-  /// Unwraps a Laravel paginated/plain collection envelope
-  /// (`{"data": [...]}`); falls back to a bare JSON array.
+  /// Unwraps a Laravel collection envelope: a plain list (`{"data": [...]}`,
+  /// used by offers) or a paginated one (`{"data": {"items": [...],
+  /// "pagination": {...}}}`, used by orders); falls back to a bare JSON
+  /// array.
   List<Map<String, dynamic>> _asList(dynamic raw) {
-    final list = (raw is Map<String, dynamic> ? raw['data'] : raw) as List?;
+    dynamic data = raw is Map<String, dynamic> ? raw['data'] : raw;
+    if (data is Map<String, dynamic>) {
+      data = data['items'];
+    }
+    final list = data as List?;
     return (list ?? const [])
         .map((e) => (e as Map).cast<String, dynamic>())
         .toList();
@@ -135,18 +142,17 @@ class RiderMeOrderRepositoryImpl implements RiderMeOrderRepository {
       return Right(await action());
     } on DioException catch (e) {
       final data = e.response?.data;
-      // apiMessageFrom prefers the per-field message over the boilerplate
-      // top-level one, and is Map-safe — indexing `data['message']` directly
-      // threw on an HTML error body.
-      final msg = apiMessageFrom(data) ?? e.message ?? 'Request failed';
+      // The server's per-field message when there is one; never Dio's
+      // developer text (see dioErrorMessage).
+      final msg = dioErrorMessage(e);
 
       final fieldErrors = apiFieldErrorsFrom(data);
       if (fieldErrors != null) {
         return Left(ValidationFailure(msg, fieldErrors));
       }
       return Left(ServerFailure(msg));
-    } catch (e) {
-      return Left(ServerFailure(e.toString()));
+    } catch (e, s) {
+      return Left(ServerFailure(unexpectedErrorMessage(e, s)));
     }
   }
 }

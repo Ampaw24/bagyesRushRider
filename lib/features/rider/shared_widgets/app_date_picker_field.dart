@@ -50,11 +50,19 @@ class _AppDatePickerFieldState extends State<AppDatePickerField> {
 
   Future<void> _pick() async {
     final now = DateTime.now();
+    final first = widget.firstDate ?? DateTime(1900);
+    final last = widget.lastDate ?? now;
+    // showDatePicker asserts the initial date is in range — "today" isn't
+    // for a birth-date field, nor is an already-expired date for an expiry.
+    var initial = _selected ?? widget.initialDate ?? now;
+    if (initial.isBefore(first)) initial = first;
+    if (initial.isAfter(last)) initial = last;
+
     final picked = await showDatePicker(
       context: context,
-      initialDate: _selected ?? widget.initialDate ?? now,
-      firstDate: widget.firstDate ?? DateTime(1900),
-      lastDate: widget.lastDate ?? now,
+      initialDate: initial,
+      firstDate: first,
+      lastDate: last,
       builder: (ctx, child) => Theme(
         data: Theme.of(ctx).copyWith(
           colorScheme: const ColorScheme.light(primary: AppColors.primary),

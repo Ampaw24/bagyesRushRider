@@ -1,4 +1,5 @@
 import 'package:delivery_boy/constant/typedef.dart';
+import 'package:delivery_boy/features/rider/profile/models/payout_provider_model.dart';
 import 'package:delivery_boy/features/rider/profile/models/rider_me_profile_model.dart';
 
 /// Contract for the `/rider/me` profile API — see
@@ -50,4 +51,7 @@ abstract class RiderMeProfileRepository {
   ResultFuture<String?> uploadPhoto(String filePath);
 
   ResultFuture<void> submitForReview();
+
+  /// Active providers, in the server's display order.
+  ResultFuture<List<PayoutProviderModel>> getPayoutProviders();
 }

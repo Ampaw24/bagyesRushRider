@@ -38,6 +38,19 @@ class RiderAuthApiService {
   Future<Response<dynamic>> sendForgotPasswordCode(String phone) =>
       _dio.post(ApiEndpoints.passwordForgot, data: {'phone': phone});
 
+  /// Checks a code against a [purpose] from [OtpPurposes] without any
+  /// account side-effects.
+  Future<Response<dynamic>> verifyOtp({
+    required String phone,
+    required String code,
+    required String purpose,
+  }) =>
+      _dio.post(ApiEndpoints.otpVerify, data: {
+        'phone': phone,
+        'code': code,
+        'purpose': purpose,
+      });
+
   Future<Response<dynamic>> resetPassword({
     required String phone,
     required String code,

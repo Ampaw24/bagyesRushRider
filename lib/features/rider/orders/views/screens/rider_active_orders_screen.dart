@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/core/widgets/animated_list_item.dart';
+import 'package:delivery_boy/core/widgets/custom_dialogs.dart';
 import 'package:delivery_boy/core/widgets/shimmer_list_placeholder.dart';
 import 'package:delivery_boy/features/rider/orders/models/rider_me_order_model.dart';
 import 'package:delivery_boy/features/rider/orders/providers/rider_me_order_providers.dart';
@@ -46,13 +47,15 @@ class _RiderActiveOrdersScreenState
   Widget build(BuildContext context) {
     final state = ref.watch(riderMeOrdersProvider);
 
-    ref.listen<RiderMeOrdersState>(riderMeOrdersProvider, (_, next) {
-      if (next.errorMessage != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(next.errorMessage!),
-            backgroundColor: AppColors.error,
-          ),
+    ref.listen<RiderMeOrdersState>(riderMeOrdersProvider, (prev, next) {
+      // Only on a new error: the message stays set across later emissions
+      // (e.g. actions in the detail sheet), which would re-open the dialog.
+      if (next.errorMessage != null &&
+          next.errorMessage != prev?.errorMessage) {
+        CustomDialog.showError(
+          context: context,
+          title: "Couldn't Load Orders",
+          subtitle: next.errorMessage!,
         );
       }
     });

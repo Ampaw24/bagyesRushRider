@@ -1,45 +1,41 @@
+import 'dart:async';
+
 import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/core/di/service_locator.dart';
 import 'package:delivery_boy/core/router/app_router.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:delivery_boy/core/services/rider_app_bootstrap.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-/// Must be a top-level function to run in an isolate when the app is
-/// terminated or in the background.
-@pragma('vm:entry-point')
-Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  await Firebase.initializeApp();
-  // Background messages are displayed automatically by FCM on Android.
-  // No additional handling needed here for basic use.
-}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await dotenv.load(fileName: '.env');
 
-  // Firebase must be initialized before anything else
-  // await Firebase.initializeApp();
-  // FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-
   await initServiceLocator();
   await SystemChrome.setPreferredOrientations(
       [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
 
+  // Owned explicitly so the launch bootstrap can push results — the location
+  // fix, device-token registration — into the same Riverpod graph the widget
+  // tree reads from. Never disposed: this is the root container.
+  final container = ProviderContainer();
+
   runApp(
-    const ProviderScope(
-      child: BagyesRushApp(),
+    UncontrolledProviderScope(
+      container: container,
+      child: const BagyesRushApp(),
     ),
   );
-}
 
-/// Built once. Constructing a GoRouter inside `build()` would hand
-/// MaterialApp a fresh router on every rebuild, discarding navigation state.
-final _appRouter = createAppRouter();
+  // Fire-and-forget: permission dialogs, the first GPS fix and push
+  // registration must not gate the first frame. Firebase is initialized in
+  // here too, so a missing config file degrades to "no push" rather than a
+  // failure to boot.
+  unawaited(RiderAppBootstrap.run(container));
+}
 
 class BagyesRushApp extends StatelessWidget {
   const BagyesRushApp({super.key});
@@ -50,7 +46,7 @@ class BagyesRushApp extends StatelessWidget {
       title: 'BagyesRush Rider',
       theme: AppTheme.light,
       debugShowCheckedModeBanner: false,
-      routerConfig: _appRouter,
+      routerConfig: appRouter,
       builder: (context, child) {
         return GestureDetector(
           behavior: HitTestBehavior.translucent,

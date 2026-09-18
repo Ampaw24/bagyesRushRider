@@ -11,7 +11,7 @@
 ## Tech Stack
 
 - Flutter 3.x / Dart
-- Package: `com.example.delivery_boy`
+- Package: `com.bagye.bagyesrushrider` (iOS bundle ID + Android applicationId)
 - AGP 8.9.1, Kotlin 2.1.0, Gradle 8.11.1, compileSdk 36
 # Flutter Responsiveness Rules (STRICT)
 

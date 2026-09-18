@@ -6,6 +6,14 @@ abstract final class AuthRoles {
   static const rider = 'rider';
 }
 
+/// `purpose` values accepted by [ApiEndpoints.otpVerify].
+///
+/// Verified against the live backend — an unknown value returns
+/// `That is not a purpose a code can be requested for`.
+abstract final class OtpPurposes {
+  static const accountRecovery = 'account_recovery';
+}
+
 abstract final class ApiEndpoints {
   // ═══════════════════════════════════════════════════════════════════════
   // Auth — role-agnostic Laravel v1. The same endpoints serve customer,
@@ -29,6 +37,14 @@ abstract final class ApiEndpoints {
   /// Body: `{phone, code, password, password_confirmation}`.
   static const passwordReset = '/password/reset';
 
+  /// Purpose-scoped code check. Body: `{phone, code, purpose}`.
+  /// Confirms a [passwordForgot] code (purpose [OtpPurposes.accountRecovery])
+  /// before the rider picks a new password — the same step the customer and
+  /// vendor app takes. [passwordReset] re-validates the code, so it is still
+  /// sent there. Distinct from [phoneVerify], which marks a signed-up
+  /// account's phone as verified.
+  static const otpVerify = '/otp/verify';
+
   /// Changes the signed-in user's password using their current one —
   /// distinct from the OTP-based [passwordForgot]/[passwordReset] pair.
   /// Requires Bearer auth. Body:
@@ -40,6 +56,16 @@ abstract final class ApiEndpoints {
   // NOTE: this backend has no /auth/refresh-token route (verified: 404).
   // A refresh token is persisted when returned, but cannot be redeemed yet.
 
+  // ── Push notifications ──────────────────────────────────────────────────
+  /// FCM device registration, shared verbatim with the customer and vendor
+  /// apps on this same Laravel v1 backend — the route is role-agnostic and
+  /// associates the device with whoever the Bearer token belongs to.
+  ///
+  /// `POST` body: `{token, platform, device_name}` (the key is `token`, not
+  /// `device_token`). Accepts 200 or 201. `DELETE` takes no body and
+  /// deregisters the calling device.
+  static const deviceToken = '/device-tokens';
+
   // ── Vehicle catalogue (public reads — no auth required) ─────────────────────
   // Cascading reference data for the rider signup vehicle picker:
   // type -> make (filtered by vehicle_type_id) -> model (filtered by
@@ -48,6 +74,10 @@ abstract final class ApiEndpoints {
   static const vehicleTypes = '/vehicle-types';
   static const vehicleMakes = '/vehicle-makes';
   static const vehicleModels = '/vehicle-models';
+
+  /// Public list of bank and mobile-money payout providers, split by
+  /// `type` (`bank` | `mobile_money`).
+  static const payoutProviders = '/payout-providers';
 
   // ═══════════════════════════════════════════════════════════════════════
   // Rider "Me" API — /rider/me/*

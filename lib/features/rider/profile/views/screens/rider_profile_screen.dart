@@ -5,11 +5,13 @@ import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/core/di/service_locator.dart';
 import 'package:delivery_boy/core/router/app_routes.dart';
 import 'package:delivery_boy/core/services/user_session_manager.dart';
+import 'package:delivery_boy/core/widgets/app_loading_overlay.dart';
 import 'package:delivery_boy/features/rider/auth/models/rider_user_model.dart';
 import 'package:delivery_boy/features/rider/auth/viewmodels/rider_auth_viewmodel.dart';
 import 'package:delivery_boy/features/rider/dashboard/views/screens/rider_dashboard_screen.dart';
+import 'package:delivery_boy/features/rider/profile/providers/rider_avatar_providers.dart';
 import 'package:delivery_boy/features/rider/profile/providers/rider_document_completion_providers.dart';
-import 'package:delivery_boy/features/rider/profile/providers/rider_me_profile_providers.dart';
+import 'package:delivery_boy/features/rider/shared_widgets/rider_avatar.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 class RiderProfileScreen extends ConsumerWidget {
@@ -21,7 +23,6 @@ class RiderProfileScreen extends ConsumerWidget {
     final navClearance = MediaQuery.paddingOf(context).bottom;
 
     final session = sl<UserSessionManager>();
-    final profile = ref.watch(riderMeProfileProvider).profile;
     final kycStatus = ref.watch(riderKycStatusProvider);
     final docStatus = ref.watch(riderDocumentCompletionProvider).valueOrNull;
 
@@ -62,8 +63,10 @@ class RiderProfileScreen extends ConsumerWidget {
             TextButton(
               onPressed: () async {
                 Navigator.pop(ctx);
+                AppLoadingOverlay.show(context, message: 'Logging out...');
                 await ref.read(riderAuthProvider.notifier).logout();
                 if (!context.mounted) return;
+                AppLoadingOverlay.hide(context);
                 context.go(AppRoutes.login);
               },
               child: const Text(
@@ -92,7 +95,7 @@ class RiderProfileScreen extends ConsumerWidget {
               phone: session.phone ?? '',
               email: session.email,
               initials: initials,
-              selfieUrl: profile?.photoUrl,
+              selfieUrl: ref.watch(riderAvatarUrlProvider),
               kycStatus: kycStatus,
               docCount: docCount,
               docTotal: docTotal,
@@ -265,24 +268,18 @@ class _Header extends StatelessWidget {
                       width: w * 0.008,
                     ),
                   ),
-                  child: CircleAvatar(
+                  child: RiderAvatar(
                     radius: w * 0.13,
-                    backgroundColor: AppColors.primary,
-                    backgroundImage:
-                        (selfieUrl != null && selfieUrl!.isNotEmpty)
-                            ? NetworkImage(selfieUrl!)
-                            : null,
-                    child: (selfieUrl != null && selfieUrl!.isNotEmpty)
-                        ? null
-                        : Text(
-                            initials,
-                            style: TextStyle(
-                              fontFamily: 'Mukta',
-                              color: Colors.white,
-                              fontSize: w * 0.085,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
+                    imageUrl: selfieUrl,
+                    placeholder: Text(
+                      initials,
+                      style: TextStyle(
+                        fontFamily: 'Mukta',
+                        color: Colors.white,
+                        fontSize: w * 0.085,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ),
                 ),
                 Positioned(

@@ -1,11 +1,19 @@
+import 'dart:async';
+
 import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:delivery_boy/core/di/service_locator.dart';
 import 'package:delivery_boy/core/errors/failures.dart';
+import 'package:delivery_boy/core/services/fcm_service.dart';
+import 'package:delivery_boy/core/services/firebase_bootstrap.dart';
 import 'package:delivery_boy/core/services/user_session_manager.dart';
+import 'package:delivery_boy/core/utils/app_logger.dart';
+import 'package:delivery_boy/core/utils/device_info_utils.dart';
 import 'package:delivery_boy/features/rider/auth/models/auth_user_model.dart';
 import 'package:delivery_boy/features/rider/auth/repositories/rider_auth_repository.dart';
+import 'package:delivery_boy/features/rider/notifications/repositories/device_token_repository.dart';
 
 // ── State ─────────────────────────────────────────────────────────────────────
 
@@ -91,6 +99,16 @@ class RiderAuthNotifier extends Notifier<RiderAuthState> {
   RiderAuthRepository get _repo => sl<RiderAuthRepository>();
   UserSessionManager get _session => sl<UserSessionManager>();
 
+  /// Last FCM token successfully accepted by `POST /device-tokens`, so a
+  /// relaunch doesn't re-POST an unchanged one. Lives in SharedPreferences
+  /// rather than secure storage: a push token is an address, not a
+  /// credential, and reads need to be synchronous.
+  ///
+  /// Cleared on logout — see [logout]. Without that, the next rider to sign
+  /// in on this device is skipped as "already registered" and silently never
+  /// receives a notification.
+  static const _registeredTokenKey = 'registered_device_token';
+
   /// Consent captured on the terms screen but not yet sent, because
   /// `/register` deferred issuing a token. Flushed the moment a session
   /// exists — see [registerAndAcceptAgreement] and [verifyPhoneAndEnsureSession].
@@ -109,8 +127,56 @@ class RiderAuthNotifier extends Notifier<RiderAuthState> {
         refreshToken: data.refreshToken,
         user: data.user.toJson(),
       );
+      // The single point where this app gains an authenticated session, so
+      // the single place push registration belongs — it covers register(),
+      // login(), and verifyPhoneAndEnsureSession (which routes via login).
+      // Un-awaited: navigation must not wait on a push round-trip.
+      unawaited(registerDeviceToken());
     } else {
       await _session.saveUser(data.user.toJson());
+    }
+  }
+
+  /// Registers this device's FCM token against the signed-in rider.
+  ///
+  /// Safe to call repeatedly: it no-ops when Firebase is unavailable, when
+  /// there's no session, or when the token hasn't changed since last time.
+  Future<void> registerDeviceToken() async {
+    try {
+      if (!FirebaseBootstrap.isAvailable) return;
+      // Checked directly rather than inferred from the current route:
+      // `_testBypassAuthGuard` lets /dashboard be reached with no session.
+      if (!_session.isLoggedIn) return;
+
+      final token = await FcmService.getToken();
+      if (token == null || token.isEmpty) {
+        appLogger.w('[DeviceToken] no FCM token available');
+        return;
+      }
+
+      final prefs = sl<SharedPreferences>();
+      if (prefs.getString(_registeredTokenKey) == token) {
+        appLogger.d('[DeviceToken] already registered — skipping');
+        return;
+      }
+
+      final device = await DeviceInfoUtils.getDetails();
+      final result = await sl<DeviceTokenRepository>().register(
+        token: token,
+        platform: device.platform,
+        deviceName: device.deviceName,
+      );
+
+      await result.fold(
+        (f) async => appLogger.w('[DeviceToken] register failed: ${f.message}'),
+        (_) async {
+          await prefs.setString(_registeredTokenKey, token);
+          appLogger.i('[DeviceToken] registered (${device.platform})');
+        },
+      );
+    } catch (e, s) {
+      // Push is best-effort; never let it break a login.
+      appLogger.e('[DeviceToken] unexpected error', error: e, stackTrace: s);
     }
   }
 
@@ -352,6 +418,30 @@ class RiderAuthNotifier extends Notifier<RiderAuthState> {
     );
   }
 
+  /// Checks a [sendForgotPasswordCode] code before the rider chooses a new
+  /// password. No session side-effects — the same code is submitted again
+  /// with [resetPassword].
+  Future<bool> verifyPasswordResetCode({
+    required String phone,
+    required String code,
+  }) async {
+    state = state.copyWith(status: AuthStatus.loading, clearError: true);
+
+    final result =
+        await _repo.verifyPasswordResetCode(phone: phone, code: code);
+    return result.fold(
+      (f) {
+        state = state.copyWith(
+            status: AuthStatus.error, errorMessage: f.message);
+        return false;
+      },
+      (_) {
+        state = state.copyWith(status: AuthStatus.initial);
+        return true;
+      },
+    );
+  }
+
   /// Verifies the phone, then guarantees an authenticated session.
   ///
   /// If `/register` issued no token, this transparently logs in with
@@ -490,8 +580,28 @@ class RiderAuthNotifier extends Notifier<RiderAuthState> {
 
   /// Best-effort server logout; the local session is always cleared.
   Future<void> logout() async {
+    // Deregister BEFORE POST /logout, which revokes the Sanctum token
+    // server-side: a DELETE issued after it would 401, and
+    // RiderDioInterceptor turns a 401 into clearSession() + a
+    // sessionRevision bump that races this method's own teardown.
+    try {
+      final registeredToken =
+          sl<SharedPreferences>().getString(_registeredTokenKey);
+      if (registeredToken != null && registeredToken.isNotEmpty) {
+        await sl<DeviceTokenRepository>().unregister(token: registeredToken);
+      }
+    } catch (e) {
+      appLogger.w('[DeviceToken] deregister failed (ignored): $e');
+    }
+
     await _repo.logout();
     await _session.clearSession();
+
+    // clearSession() only wipes secure storage; the dedupe key lives in
+    // SharedPreferences and must be cleared explicitly so the next rider on
+    // this device registers their own token.
+    await sl<SharedPreferences>().remove(_registeredTokenKey);
+
     state = const RiderAuthState();
   }
 

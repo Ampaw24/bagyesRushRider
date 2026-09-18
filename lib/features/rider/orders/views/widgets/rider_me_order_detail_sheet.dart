@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/core/widgets/app_gradient_button.dart';
+import 'package:delivery_boy/core/widgets/custom_dialogs.dart';
 import 'package:delivery_boy/core/widgets/drag_handle.dart';
 import 'package:delivery_boy/core/widgets/status_badge.dart';
 import 'package:delivery_boy/features/rider/orders/models/rider_delivery_stage.dart';
@@ -56,9 +57,11 @@ class _RiderMeOrderDetailSheetState
     if (ok) {
       HapticFeedback.mediumImpact();
     } else {
-      final msg = ref.read(riderMeOrdersProvider).actionMessage ?? 'Action failed';
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(msg), backgroundColor: AppColors.error),
+      CustomDialog.showError(
+        context: context,
+        title: "Couldn't Update Order",
+        subtitle:
+            ref.read(riderMeOrdersProvider).actionMessage ?? 'Action failed',
       );
     }
   }

@@ -100,4 +100,7 @@ class RiderMeProfileApiService {
 
   Future<Response<dynamic>> submitForReview() =>
       _dio.post(ApiEndpoints.riderMeSubmitReview);
+
+  Future<Response<dynamic>> getPayoutProviders() =>
+      _dio.get(ApiEndpoints.payoutProviders);
 }

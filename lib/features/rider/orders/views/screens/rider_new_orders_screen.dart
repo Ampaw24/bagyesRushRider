@@ -6,6 +6,7 @@ import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/core/widgets/animated_list_item.dart';
 import 'package:delivery_boy/core/widgets/app_toast.dart';
+import 'package:delivery_boy/core/widgets/custom_dialogs.dart';
 import 'package:delivery_boy/core/widgets/shimmer_list_placeholder.dart';
 import 'package:delivery_boy/features/rider/orders/models/rider_me_order_model.dart';
 import 'package:delivery_boy/features/rider/orders/providers/rider_me_order_providers.dart';
@@ -74,13 +75,21 @@ class _RiderNewOrdersScreenState extends ConsumerState<RiderNewOrdersScreen> {
 
   Future<void> _quickAccept(RiderMeOfferModel offer) async {
     final ok = await ref.read(riderMeOffersProvider.notifier).accept(offer.id);
-    if (ok && mounted) {
+    if (!mounted) return;
+    if (ok) {
       HapticFeedback.mediumImpact();
       AppToast.show(
         context,
         isSuccess: true,
         title: 'Order Accepted',
         subtitle: 'This delivery has been added to your active orders.',
+      );
+    } else {
+      CustomDialog.showError(
+        context: context,
+        title: "Couldn't Accept Order",
+        subtitle: ref.read(riderMeOffersProvider).actionMessage ??
+            'Could not accept this offer',
       );
     }
   }

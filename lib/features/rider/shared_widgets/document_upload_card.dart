@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/features/rider/kyc/viewmodels/kyc_viewmodel.dart';
+import 'package:delivery_boy/features/rider/kyc/models/upload_state.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 /// A reusable card for uploading a single KYC document.

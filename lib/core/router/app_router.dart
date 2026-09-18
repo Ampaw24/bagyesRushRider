@@ -12,7 +12,8 @@ import 'package:delivery_boy/pages/unboardingscreen/onboarding_screen.dart';
 import 'package:delivery_boy/features/rider/auth/views/screens/rider_login_screen.dart';
 import 'package:delivery_boy/features/rider/auth/views/screens/rider_signup_screen.dart';
 import 'package:delivery_boy/features/rider/auth/views/screens/rider_otp_screen.dart';
-import 'package:delivery_boy/features/rider/auth/views/screens/rider_forgot_password_screen.dart';
+import 'package:delivery_boy/features/rider/auth/views/screens/rider_password_reset_otp_screen.dart';
+import 'package:delivery_boy/features/rider/auth/views/screens/rider_reset_password_screen.dart';
 import 'package:delivery_boy/features/rider/auth/views/screens/rider_vehicle_info_screen.dart';
 import 'package:delivery_boy/features/rider/auth/views/screens/rider_vehicle_details_screen.dart';
 import 'package:delivery_boy/features/rider/auth/views/screens/rider_terms_conditions_screen.dart';
@@ -20,15 +21,14 @@ import 'package:delivery_boy/features/rider/auth/views/screens/rider_terms_condi
 import 'package:delivery_boy/features/rider/dashboard/views/screens/rider_dashboard_screen.dart';
 // ── Profile ───────────────────────────────────────────────────────────────────
 import 'package:delivery_boy/features/rider/profile/views/screens/rider_profile_edit_screen.dart';
-import 'package:delivery_boy/features/rider/profile/views/screens/rider_document_upload_screen.dart';
 // ── Notifications ─────────────────────────────────────────────────────────────
 import 'package:delivery_boy/features/rider/notifications/views/screens/rider_notifications_screen.dart';
 // ── Settings ──────────────────────────────────────────────────────────────────
 import 'package:delivery_boy/features/rider/settings/views/screens/rider_settings_screen.dart';
-// ── Onboarding (profile setup stepper) ────────────────────────────────────────
-import 'package:delivery_boy/features/rider/onboarding/views/screens/rider_onboarding_screen.dart';
-// ── KYC ───────────────────────────────────────────────────────────────────────
-import 'package:delivery_boy/features/rider/kyc/views/screens/kyc_screen.dart';
+// ── Verification (KYC) ────────────────────────────────────────────────────────
+import 'package:delivery_boy/features/rider/kyc/models/kyc_section.dart';
+import 'package:delivery_boy/features/rider/kyc/views/screens/kyc_hub_screen.dart';
+import 'package:delivery_boy/features/rider/kyc/views/screens/kyc_section_screen.dart';
 
 /// Routes reachable while signed out.
 ///
@@ -52,12 +52,22 @@ const _publicRoutes = {
   AppRoutes.vehicleInfo,
   AppRoutes.vehicleDetails,
   AppRoutes.termsAndConditions,
-  AppRoutes.forgotPassword,
+  AppRoutes.forgotPasswordOtp,
+  AppRoutes.resetPassword,
 };
 
 // TODO(testing): disables the auth guard so the login screen's bypass button
 // can reach /dashboard without a real session. Set back to false before shipping.
 const _testBypassAuthGuard = true;
+
+/// The app's single router instance.
+///
+/// Built once at top level rather than inside `build()`: handing
+/// MaterialApp a fresh GoRouter on every rebuild would discard navigation
+/// state. Exposed (rather than kept private in `main.dart`) so services with
+/// no BuildContext — notably `FcmService`'s notification-tap callback — can
+/// navigate.
+final appRouter = createAppRouter();
 
 GoRouter createAppRouter() {
   return GoRouter(
@@ -174,16 +184,35 @@ GoRouter createAppRouter() {
           ),
         ),
       ),
+      // Both need what the previous step handed over; without it (e.g. a
+      // restored or deep-linked location) the flow restarts from login.
       GoRoute(
-        path: AppRoutes.forgotPassword,
-        pageBuilder: (_, state) =>
-            _slideRight(state, const RiderForgotPasswordScreen()),
+        path: AppRoutes.forgotPasswordOtp,
+        redirect: (_, state) => state.extra is String ? null : AppRoutes.login,
+        pageBuilder: (_, state) => _slideRight(
+          state,
+          RiderPasswordResetOtpScreen(phone: state.extra! as String),
+        ),
       ),
-
-      // ── Profile setup onboarding (stepper) — fade ─────────────────────────
       GoRoute(
-        path: AppRoutes.onboarding,
-        pageBuilder: (_, state) => _fade(state, const RiderOnboardingScreen()),
+        path: AppRoutes.resetPassword,
+        redirect: (_, state) {
+          final extra = state.extra;
+          final complete = extra is Map &&
+              extra['phone'] is String &&
+              extra['code'] is String;
+          return complete ? null : AppRoutes.login;
+        },
+        pageBuilder: (_, state) {
+          final extra = state.extra! as Map;
+          return _slideRight(
+            state,
+            RiderResetPasswordScreen(
+              phone: extra['phone'] as String,
+              code: extra['code'] as String,
+            ),
+          );
+        },
       ),
 
       // ── Dashboard (shell with nested routes) ──────────────────────────────
@@ -197,10 +226,11 @@ GoRouter createAppRouter() {
             pageBuilder: (_, state) =>
                 _slideRight(state, const RiderProfileEditScreen()),
           ),
+          // Documents now live inside their verification steps; kept so
+          // an old link still lands somewhere useful.
           GoRoute(
             path: 'profile/documents',
-            pageBuilder: (_, state) =>
-                _slideRight(state, const RiderDocumentUploadScreen()),
+            redirect: (_, __) => AppRoutes.kyc,
           ),
           GoRoute(
             path: 'notifications',
@@ -215,7 +245,23 @@ GoRouter createAppRouter() {
           GoRoute(
             path: 'kyc',
             pageBuilder: (_, state) =>
-                _slideRight(state, const KycScreen()),
+                _slideRight(state, const KycHubScreen()),
+            routes: [
+              GoRoute(
+                path: ':section',
+                redirect: (_, state) =>
+                    KycSection.fromSlug(state.pathParameters['section']) == null
+                        ? AppRoutes.kyc
+                        : null,
+                pageBuilder: (_, state) => _slideRight(
+                  state,
+                  KycSectionScreen(
+                    section:
+                        KycSection.fromSlug(state.pathParameters['section'])!,
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),

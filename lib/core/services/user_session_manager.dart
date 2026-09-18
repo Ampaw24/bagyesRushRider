@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
+import 'package:delivery_boy/core/utils/json_utils.dart';
+
 /// Persists the signed-in session (tokens + the raw user JSON) in the
 /// platform keychain/keystore via [FlutterSecureStorage].
 ///
@@ -85,6 +87,12 @@ class UserSessionManager {
     if (legacy != null && legacy.trim().isNotEmpty) return legacy;
     return null;
   }
+
+  /// The account photo, or null when there is none. Top-level (as
+  /// [AuthUserModel.toJson] writes it) or inside `profile`.
+  String? get profilePhotoUrl =>
+      nonEmptyString(currentUser?['profile_photo_url']) ??
+      nonEmptyString((currentUser?['profile'] as Map?)?['profile_photo_url']);
 
   // ── Mutations ───────────────────────────────────────────────────────────
 

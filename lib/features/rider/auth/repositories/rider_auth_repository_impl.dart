@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:delivery_boy/core/errors/failures.dart';
 import 'package:delivery_boy/core/network/api_endpoints.dart';
 import 'package:delivery_boy/core/network/api_error_parser.dart';
+import 'package:delivery_boy/core/network/request_error_message.dart';
 import 'package:delivery_boy/features/rider/auth/models/auth_user_model.dart';
 import 'package:delivery_boy/features/rider/auth/models/rider_agreement_model.dart';
 import 'package:delivery_boy/features/rider/auth/repositories/rider_auth_repository.dart';
@@ -70,6 +71,17 @@ class RiderAuthRepositoryImpl implements RiderAuthRepository {
     required String phone,
   }) =>
       _run(() => _api.sendForgotPasswordCode(phone));
+
+  @override
+  Future<Either<Failure, void>> verifyPasswordResetCode({
+    required String phone,
+    required String code,
+  }) =>
+      _run(() => _api.verifyOtp(
+            phone: phone,
+            code: code,
+            purpose: OtpPurposes.accountRecovery,
+          ));
 
   @override
   Future<Either<Failure, void>> resetPassword({
@@ -154,7 +166,7 @@ class RiderAuthRepositoryImpl implements RiderAuthRepository {
       return Right(await action());
     } on DioException catch (e) {
       final data = e.response?.data;
-      final msg = apiMessageFrom(data) ?? e.message ?? 'Request failed';
+      final msg = dioErrorMessage(e);
 
       // Keep the field keys when the server rejected specific inputs, so the
       // view can place each message on the field that caused it.
@@ -163,8 +175,8 @@ class RiderAuthRepositoryImpl implements RiderAuthRepository {
         return Left(ValidationFailure(msg, fieldErrors));
       }
       return Left(ServerFailure(msg));
-    } catch (e) {
-      return Left(ServerFailure(e.toString()));
+    } catch (e, s) {
+      return Left(ServerFailure(unexpectedErrorMessage(e, s)));
     }
   }
 }

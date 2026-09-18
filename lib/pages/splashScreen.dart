@@ -2,6 +2,7 @@ import 'package:delivery_boy/constant/asset_images.dart';
 import 'package:delivery_boy/constant/colors.dart';
 import 'package:delivery_boy/core/di/service_locator.dart';
 import 'package:delivery_boy/core/router/app_routes.dart';
+import 'package:delivery_boy/core/services/fcm_service.dart';
 import 'package:delivery_boy/core/services/user_session_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -77,6 +78,16 @@ class _SplashScreenState extends State<SplashScreen>
     if (!mounted) return;
 
     context.go(isLoggedIn ? AppRoutes.dashboard : AppRoutes.intro);
+
+    // A notification that launched the app from terminated parks its route
+    // on FcmService (there is no navigator yet when getInitialMessage
+    // resolves). Drain it now that the base route is settled — but only for
+    // a signed-in rider, since every push target lives behind /dashboard.
+    final pending = FcmService.pendingRoute;
+    FcmService.pendingRoute = null;
+    if (pending != null && isLoggedIn && mounted) {
+      context.push(pending);
+    }
   }
 
   @override

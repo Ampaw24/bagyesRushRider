@@ -11,8 +11,11 @@ import 'package:delivery_boy/core/router/app_routes.dart';
 import 'package:delivery_boy/core/services/user_session_manager.dart';
 import 'package:delivery_boy/features/rider/auth/models/rider_user_model.dart';
 import 'package:delivery_boy/core/widgets/sos_floating_button.dart';
+import 'package:delivery_boy/core/widgets/custom_dialogs.dart';
 import 'package:delivery_boy/features/rider/notifications/providers/rider_notifications_providers.dart';
+import 'package:delivery_boy/features/rider/profile/providers/rider_avatar_providers.dart';
 import 'package:delivery_boy/features/rider/profile/providers/rider_me_profile_providers.dart';
+import 'package:delivery_boy/features/rider/shared_widgets/rider_avatar.dart';
 import 'package:delivery_boy/features/rider/orders/providers/rider_me_order_providers.dart';
 import 'package:delivery_boy/features/rider/tracking/providers/rider_tracking_providers.dart';
 import 'package:delivery_boy/features/rider/home/views/screens/rider_home_screen.dart';
@@ -57,14 +60,28 @@ KycStatus kycStatusFrom(String? raw) {
   }
 }
 
-/// Current verification status, preferring the server value and falling
-/// back to the optimistic local echo written after a KYC submission.
+/// Current verification status from `/rider/me`, falling back to the local
+/// echo in the session until the profile has loaded.
+///
+/// `pending_review` is reported from registration onwards — before the
+/// profile is even complete — so it only reads as "under review" once the
+/// server says nothing is left to fill in.
 final riderKycStatusProvider = Provider<KycStatus>((ref) {
-  final remote = ref.watch(riderMeProfileProvider).profile?.verificationStatus;
-  if (remote != null) return kycStatusFrom(remote);
-  return kycStatusFrom(
-    sl<UserSessionManager>().currentUser?['kycStatus'] as String?,
-  );
+  final profile = ref.watch(riderMeProfileProvider.select((s) => s.profile));
+  if (profile == null) {
+    return kycStatusFrom(
+      sl<UserSessionManager>().currentUser?['kycStatus'] as String?,
+    );
+  }
+  if (profile.canGoOnline) return KycStatus.approved;
+
+  final status = kycStatusFrom(profile.status);
+  if (status == KycStatus.approved || status == KycStatus.rejected) {
+    return status;
+  }
+  return profile.isProfileComplete
+      ? KycStatus.pendingReview
+      : KycStatus.notStarted;
 });
 
 class RiderDashboardScreen extends ConsumerStatefulWidget {
@@ -92,17 +109,13 @@ class _RiderDashboardScreenState extends ConsumerState<RiderDashboardScreen> {
   Future<void> _toggleQueue() async {
     final currentQueue = ref.read(riderQueueProvider);
 
-    // Block going online until identity verification is approved.
-    if (!currentQueue &&
-        ref.read(riderKycStatusProvider) != KycStatus.approved) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Complete identity verification to go online'),
-          backgroundColor: AppColors.warning,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+    // The server's own gate (`can_go_online`) decides; the local status is
+    // only a fallback until /rider/me has loaded.
+    final profile = ref.read(riderMeProfileProvider).profile;
+    final canGoOnline = profile?.canGoOnline ??
+        ref.read(riderKycStatusProvider) == KycStatus.approved;
+    if (!currentQueue && !canGoOnline) {
+      _explainOnlineBlock();
       return;
     }
 
@@ -116,14 +129,42 @@ class _RiderDashboardScreenState extends ConsumerState<RiderDashboardScreen> {
         .setAvailability(!currentQueue);
 
     if (!ok && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Could not update your availability'),
-          backgroundColor: AppColors.error,
-          behavior: SnackBarBehavior.floating,
-        ),
+      CustomDialog.showError(
+        context: context,
+        title: 'Status Not Updated',
+        subtitle: ref.read(riderMeProfileProvider).actionMessage ??
+            'Could not update your availability. Please try again.',
       );
     }
+  }
+
+  /// Tells the rider why they can't go online, with a way to fix it.
+  void _explainOnlineBlock() {
+    final kycStatus = ref.read(riderKycStatusProvider);
+    if (kycStatus == KycStatus.pendingReview) {
+      CustomDialog.showInfo(
+        context: context,
+        title: 'Under Review',
+        subtitle: "Your profile is with our team. You'll be able to go "
+            'online as soon as it is approved.',
+      );
+      return;
+    }
+    CustomDialog.showConfirmation(
+      context: context,
+      title: kycStatus == KycStatus.rejected
+          ? 'Changes Needed'
+          : 'Finish Verification',
+      subtitle: kycStatus == KycStatus.rejected
+          ? 'Update your profile and submit it again to go online.'
+          : 'Complete your profile so we can verify you. Your progress is '
+              'saved as you go.',
+      confirmText: 'Continue',
+      cancelText: 'Later',
+      onConfirm: () {
+        if (mounted) context.push(AppRoutes.kyc);
+      },
+    );
   }
 
   void _goToOrders() => setState(() => _currentIndex = 1);
@@ -210,6 +251,7 @@ class _RiderDashboardScreenState extends ConsumerState<RiderDashboardScreen> {
                 currentIndex: _currentIndex,
                 onTap: (i) => setState(() => _currentIndex = i),
                 items: _navItems,
+                avatarUrl: ref.watch(riderAvatarUrlProvider),
               ),
             ),
           ],
@@ -226,14 +268,26 @@ class _RiderDashboardScreenState extends ConsumerState<RiderDashboardScreen> {
 class NavItem {
   final IconData icon;
   final String label;
-  const NavItem({required this.icon, required this.label});
+
+  /// Shows the rider's photo in place of [icon] when they have one.
+  final bool showsAvatar;
+
+  const NavItem({
+    required this.icon,
+    required this.label,
+    this.showsAvatar = false,
+  });
 }
 
 const _navItems = [
   NavItem(icon: HugeIcons.strokeRoundedHome01,        label: 'Home'),
   NavItem(icon: HugeIcons.strokeRoundedDeliveryBox01, label: 'Orders'),
   NavItem(icon: HugeIcons.strokeRoundedWallet01,      label: 'Wallet'),
-  NavItem(icon: HugeIcons.strokeRoundedUser,          label: 'Profile'),
+  NavItem(
+    icon: HugeIcons.strokeRoundedUser,
+    label: 'Profile',
+    showsAvatar: true,
+  ),
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -244,11 +298,13 @@ class _FloatingNavBar extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
   final List<NavItem> items;
+  final String? avatarUrl;
 
   const _FloatingNavBar({
     required this.currentIndex,
     required this.onTap,
     required this.items,
+    this.avatarUrl,
   });
 
   @override
@@ -294,6 +350,10 @@ class _FloatingNavBar extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: List.generate(items.length, (i) {
                 final selected = i == currentIndex;
+                final iconColor = selected
+                    ? Colors.white
+                    : Colors.white.withValues(alpha: 0.45);
+                final photoUrl = items[i].showsAvatar ? avatarUrl : null;
                 return GestureDetector(
                   behavior: HitTestBehavior.opaque,
                   onTap: () => onTap(i),
@@ -307,13 +367,18 @@ class _FloatingNavBar extends StatelessWidget {
                           scale: selected ? 1.15 : 1.0,
                           duration: const Duration(milliseconds: 200),
                           curve: Curves.easeOutCubic,
-                          child: HugeIcon(
-                            icon: items[i].icon,
-                            size: w * 0.06,
-                            color: selected
-                                ? Colors.white
-                                : Colors.white.withValues(alpha: 0.45),
-                          ),
+                          child: photoUrl != null
+                              ? _NavAvatar(
+                                  url: photoUrl,
+                                  fallbackIcon: items[i].icon,
+                                  size: w * 0.06,
+                                  color: iconColor,
+                                )
+                              : HugeIcon(
+                                  icon: items[i].icon,
+                                  size: w * 0.06,
+                                  color: iconColor,
+                                ),
                         ),
                         SizedBox(height: w * 0.015),
                         // Dot indicator
@@ -334,6 +399,47 @@ class _FloatingNavBar extends StatelessWidget {
               }),
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A nav tab's photo, ringed in the tab's current colour so selection reads
+/// the same as on the glyph tabs. Falls back to [fallbackIcon] if the photo
+/// fails to load.
+class _NavAvatar extends StatelessWidget {
+  final String url;
+  final IconData fallbackIcon;
+  final double size;
+  final Color color;
+
+  const _NavAvatar({
+    required this.url,
+    required this.fallbackIcon,
+    required this.size,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final ring = size * 0.08;
+    return Container(
+      width: size,
+      height: size,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(color: color, width: ring),
+      ),
+      child: RiderAvatar(
+        radius: size / 2 - ring,
+        imageUrl: url,
+        backgroundColor: Colors.transparent,
+        placeholder: HugeIcon(
+          icon: fallbackIcon,
+          size: size * 0.7,
+          color: color,
         ),
       ),
     );

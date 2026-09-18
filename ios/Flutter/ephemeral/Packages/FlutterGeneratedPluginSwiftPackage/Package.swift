@@ -16,6 +16,7 @@ let package = Package(
     ],
     dependencies: [
         .package(name: "camera_avfoundation", path: "../.packages/camera_avfoundation-0.10.3"),
+        .package(name: "device_info_plus", path: "../.packages/device_info_plus-12.4.0"),
         .package(name: "firebase_core", path: "../.packages/firebase_core-3.15.2"),
         .package(name: "firebase_messaging", path: "../.packages/firebase_messaging-15.2.10"),
         .package(name: "geocoding_ios", path: "../.packages/geocoding_ios-3.1.0"),
@@ -31,6 +32,7 @@ let package = Package(
             name: "FlutterGeneratedPluginSwiftPackage",
             dependencies: [
                 .product(name: "camera-avfoundation", package: "camera_avfoundation"),
+                .product(name: "device-info-plus", package: "device_info_plus"),
                 .product(name: "firebase-core", package: "firebase_core"),
                 .product(name: "firebase-messaging", package: "firebase_messaging"),
                 .product(name: "geocoding-ios", package: "geocoding_ios"),

@@ -2,6 +2,9 @@ import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 import 'package:delivery_boy/core/errors/failures.dart';
 import 'package:delivery_boy/core/network/api_error_parser.dart';
+import 'package:delivery_boy/core/network/request_error_message.dart';
+import 'package:delivery_boy/core/utils/json_utils.dart';
+import 'package:delivery_boy/features/rider/profile/models/payout_provider_model.dart';
 import 'package:delivery_boy/features/rider/profile/models/rider_me_profile_model.dart';
 import 'package:delivery_boy/features/rider/profile/repositories/rider_me_profile_repository.dart';
 import 'package:delivery_boy/features/rider/profile/services/rider_me_profile_api_service.dart';
@@ -113,12 +116,28 @@ class RiderMeProfileRepositoryImpl implements RiderMeProfileRepository {
       _run(() async {
         final response = await _api.uploadPhoto(filePath);
         final body = _asMap(response.data);
-        return body['photo_url'] as String? ?? body['url'] as String?;
+        return nonEmptyString(body['profile_photo_url']) ??
+            nonEmptyString(body['photo_url']) ??
+            nonEmptyString(body['url']);
       });
 
   @override
   Future<Either<Failure, void>> submitForReview() =>
       _run(() => _api.submitForReview());
+
+  @override
+  Future<Either<Failure, List<PayoutProviderModel>>> getPayoutProviders() =>
+      _run(() async {
+        final response = await _api.getPayoutProviders();
+        final raw = response.data;
+        final list = raw is Map ? raw['data'] : raw;
+        if (list is! List) return const <PayoutProviderModel>[];
+        return list
+            .whereType<Map>()
+            .map((e) => PayoutProviderModel.fromJson(e.cast<String, dynamic>()))
+            .toList()
+          ..sort((a, b) => a.displayOrder.compareTo(b.displayOrder));
+      });
 
   /// Unwraps a Laravel API Resource envelope (`{"data": {...}}`); falls
   /// back to the raw body if it isn't wrapped.
@@ -134,18 +153,17 @@ class RiderMeProfileRepositoryImpl implements RiderMeProfileRepository {
       return Right(await action());
     } on DioException catch (e) {
       final data = e.response?.data;
-      // apiMessageFrom prefers the per-field message over the boilerplate
-      // top-level one, and is Map-safe — indexing `data['message']` directly
-      // threw on an HTML error body.
-      final msg = apiMessageFrom(data) ?? e.message ?? 'Request failed';
+      // The server's per-field message when there is one; never Dio's
+      // developer text (see dioErrorMessage).
+      final msg = dioErrorMessage(e);
 
       final fieldErrors = apiFieldErrorsFrom(data);
       if (fieldErrors != null) {
         return Left(ValidationFailure(msg, fieldErrors));
       }
       return Left(ServerFailure(msg));
-    } catch (e) {
-      return Left(ServerFailure(e.toString()));
+    } catch (e, s) {
+      return Left(ServerFailure(unexpectedErrorMessage(e, s)));
     }
   }
 }

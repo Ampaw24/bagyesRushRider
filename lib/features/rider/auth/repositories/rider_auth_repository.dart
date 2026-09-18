@@ -58,6 +58,14 @@ abstract class RiderAuthRepository {
   /// endpoint from [sendPhoneCode]; they are not interchangeable.
   ResultFuture<void> sendForgotPasswordCode({required String phone});
 
+  /// Confirms a [sendForgotPasswordCode] code (`/otp/verify`, purpose
+  /// `account_recovery`) so a wrong code is caught before the rider types a
+  /// new password. [resetPassword] still needs the same code.
+  ResultFuture<void> verifyPasswordResetCode({
+    required String phone,
+    required String code,
+  });
+
   ResultFuture<void> resetPassword({
     required String phone,
     required String code,

@@ -3,12 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:delivery_boy/constant/app_theme.dart';
+import 'package:delivery_boy/core/widgets/custom_dialogs.dart';
 import 'package:delivery_boy/features/rider/auth/viewmodels/rider_auth_viewmodel.dart';
 import 'package:delivery_boy/features/rider/shared_widgets/password_strength_validator.dart';
 
 /// Modal sheet for changing the signed-in rider's password.
 ///
-/// Distinct from the OTP-based forgot-password flow (`AppRoutes.forgotPassword`):
+/// Distinct from the OTP-based forgot-password flow (`ForgotPasswordSheet`):
 /// this one keeps the rider signed in and just needs their current password.
 class ChangePasswordSheet extends ConsumerStatefulWidget {
   const ChangePasswordSheet({super.key});
@@ -67,11 +68,12 @@ class _ChangePasswordSheetState extends ConsumerState<ChangePasswordSheet> {
     } else {
       final message =
           ref.read(riderAuthProvider).errorMessage ?? 'Update failed';
-      Fluttertoast.showToast(
-        msg: message,
-        backgroundColor: AppColors.error,
-      );
       ref.read(riderAuthProvider.notifier).clearError();
+      CustomDialog.showError(
+        context: context,
+        title: 'Password Not Updated',
+        subtitle: message,
+      );
     }
   }
 

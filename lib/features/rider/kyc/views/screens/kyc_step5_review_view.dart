@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/core/router/app_routes.dart';
 import 'package:delivery_boy/core/widgets/app_gradient_button.dart';
+import 'package:delivery_boy/core/widgets/custom_dialogs.dart';
 import 'package:delivery_boy/features/rider/kyc/models/kyc_form_data.dart';
 import 'package:delivery_boy/features/rider/kyc/viewmodels/kyc_viewmodel.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -20,11 +21,10 @@ class KycStep5ReviewView extends ConsumerWidget {
     ref.listen<KycState>(kycProvider, (_, next) {
       if (next.submitStatus == KycSubmitStatus.error &&
           next.errorMessage != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(next.errorMessage!),
-            backgroundColor: AppColors.error,
-          ),
+        CustomDialog.showError(
+          context: context,
+          title: 'Submission Failed',
+          subtitle: next.errorMessage!,
         );
         ref.read(kycProvider.notifier).clearError();
       }
