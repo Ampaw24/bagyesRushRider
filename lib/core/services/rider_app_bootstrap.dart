@@ -2,6 +2,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:delivery_boy/core/di/service_locator.dart';
+import 'package:delivery_boy/core/realtime/realtime_service.dart';
 import 'package:delivery_boy/core/router/app_router.dart';
 import 'package:delivery_boy/core/services/fcm_service.dart';
 import 'package:delivery_boy/core/services/firebase_bootstrap.dart';
@@ -37,6 +38,7 @@ class RiderAppBootstrap {
     await _initPush(container);
     await _initLocation(container);
     await _registerTokenIfSessionRestored(container);
+    await _initRealtime();
   }
 
   /// Notifications first: a single binary prompt, whereas location can chain
@@ -79,6 +81,18 @@ class RiderAppBootstrap {
     } catch (e, s) {
       appLogger.e('[Bootstrap] device token registration failed',
           error: e, stackTrace: s);
+    }
+  }
+
+  /// A session restored from secure storage at cold start has no
+  /// login/register call to hang this off (unlike a fresh sign-in — see
+  /// `RiderAuthNotifier._persist`), so it's connected here instead.
+  static Future<void> _initRealtime() async {
+    if (!sl<UserSessionManager>().isLoggedIn) return;
+    try {
+      await sl<RealtimeService>().connect();
+    } catch (e, s) {
+      appLogger.e('[Bootstrap] realtime connect failed', error: e, stackTrace: s);
     }
   }
 }

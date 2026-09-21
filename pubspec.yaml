@@ -63,12 +63,31 @@ dependencies:
   camera: ^0.12.1
   google_mlkit_face_detection: ^0.15.1
   permission_handler: ^11.3.1
+  # Realtime (WebSocket) layer — connects to the Laravel Reverb server via
+  # the Pusher protocol. NOT pusher_channels_flutter: that plugin only
+  # accepts a Pusher-hosted `cluster` and has no host/port override, so it
+  # can't reach a self-hosted Reverb instance. This is a pure-Dart client
+  # built for exactly that (custom host/port, async auth headers).
+  pusher_client_socket: ^0.0.8
+  # Client-generated client_uuid on outgoing chat messages — the send-retry
+  # dedupe key the chat API contract requires.
+  uuid: ^4.5.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_launcher_icons: ^0.14.1
   flutter_native_splash: ^2.4.8
+
+# fluttertoast and geocoding_android (latest on pub.dev) hardcode compileSdk 33
+# in their own android/build.gradle, which fails AAR metadata checks now that
+# other AndroidX deps require compileSdk 34+. Vendored copies in third_party/
+# bump that to 36; remove these overrides if upstream ever fixes them.
+dependency_overrides:
+  fluttertoast:
+    path: third_party/fluttertoast
+  geocoding_android:
+    path: third_party/geocoding_android
 
 flutter_launcher_icons:
   android: "launcher_icon"

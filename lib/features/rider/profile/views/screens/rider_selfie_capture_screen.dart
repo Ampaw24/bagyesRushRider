@@ -540,8 +540,8 @@ class _RiderSelfieCaptureScreenState extends State<RiderSelfieCaptureScreen>
             SizedBox(height: w * 0.02),
             Text(
               _permissionPermanentlyDenied
-                  ? 'Camera permission was denied. Enable it for BagyesRUSH in your device settings to continue.'
-                  : 'BagyesRUSH needs camera access to verify your identity with a live selfie.',
+                  ? 'Camera permission was denied. Enable it for BagyesRIDER in your device settings to continue.'
+                  : 'BagyesRIDER needs camera access to verify your identity with a live selfie.',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontFamily: 'Roboto',

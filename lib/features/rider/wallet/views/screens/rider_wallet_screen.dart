@@ -1,66 +1,49 @@
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
+import 'package:go_router/go_router.dart';
+import 'package:hugeicons/hugeicons.dart';
+
 import 'package:delivery_boy/constant/app_theme.dart';
+import 'package:delivery_boy/core/router/app_routes.dart';
 import 'package:delivery_boy/core/widgets/animated_list_item.dart';
 import 'package:delivery_boy/core/widgets/shimmer_list_placeholder.dart';
 import 'package:delivery_boy/features/rider/wallet/models/rider_me_wallet_model.dart';
 import 'package:delivery_boy/features/rider/wallet/providers/rider_me_wallet_providers.dart';
-import 'package:hugeicons/hugeicons.dart';
+import 'package:delivery_boy/features/rider/wallet/providers/rider_me_wallet_transactions_providers.dart';
+import 'package:delivery_boy/features/rider/wallet/views/widgets/rider_wallet_balance_card.dart';
+import 'package:delivery_boy/features/rider/wallet/views/widgets/rider_wallet_transaction_tile.dart';
 
 enum WalletPeriod { all, today, thisWeek, thisMonth }
 
-// ─── Dummy data ───────────────────────────────────────────────────────────────
-
-const _weeklyBars = [42.5, 65.0, 38.0, 80.0, 55.0, 92.0, 47.0];
-const _weekLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-const _todayDummy = 92.0;
-const _weekDummy = 419.5;
-const _monthDummy = 1248.75;
-const _totalDummy = 4830.20;
-const _weekGoal = 500.0;
-const _streakDays = 5;
-const _deliveriesThisMonth = 38;
-
-final _txDummy = [
-  _Tx('Delivery #4821', 'Accra Central', 18.50, '2:45 PM', true),
-  _Tx('Delivery #4820', 'Osu', 12.00, '1:10 PM', true),
-  _Tx('Delivery #4819', 'Labadi', 15.75, '11:30 AM', true),
-  _Tx('Withdrawal', 'MTN Mobile Money', -200.00, 'Yesterday', false),
-  _Tx('Delivery #4818', 'Airport Res.', 22.00, 'Yesterday', true),
-  _Tx('Bonus', 'Weekend surge reward', 25.00, 'Sat, 17 May', true),
-  _Tx('Delivery #4815', 'Dzorwulu', 9.50, 'Sat, 17 May', true),
-  _Tx('Withdrawal', 'Vodafone Cash', -150.00, 'Fri, 16 May', false),
-];
-
-class _Tx {
-  final String title, place;
-  final double amount;
-  final String time;
-  final bool credit;
-  const _Tx(this.title, this.place, this.amount, this.time, this.credit);
-}
-
-// ─── Screen ───────────────────────────────────────────────────────────────────
-
+/// Wallet overview tab — real balance, real stats, a real weekly chart
+/// bucketed from already-fetched transactions, and entry points to the
+/// dedicated Transactions and Withdrawals pages. No dummy fallback at any
+/// status.
 class RiderWalletScreen extends ConsumerStatefulWidget {
   const RiderWalletScreen({super.key});
 
   @override
-  ConsumerState<RiderWalletScreen> createState() => _State();
+  ConsumerState<RiderWalletScreen> createState() => _RiderWalletScreenState();
 }
 
-class _State extends ConsumerState<RiderWalletScreen> {
-  WalletPeriod _period = WalletPeriod.all;
+class _RiderWalletScreenState extends ConsumerState<RiderWalletScreen> {
+  static const _recentPreviewCount = 5;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(riderMeWalletProvider.notifier).load();
+      ref.read(riderMeWalletTransactionsProvider.notifier).load();
     });
   }
+
+  Future<void> _refresh() => Future.wait([
+        ref.read(riderMeWalletProvider.notifier).load(),
+        ref.read(riderMeWalletTransactionsProvider.notifier).load(),
+      ]);
 
   DateTime? _txDate(RiderMeWalletTransactionModel tx) =>
       tx.createdAt == null ? null : DateTime.tryParse(tx.createdAt!);
@@ -78,122 +61,159 @@ class _State extends ConsumerState<RiderWalletScreen> {
   }
 
   double _subtotal(List<RiderMeWalletTransactionModel> txs, WalletPeriod p) {
-    return txs.where((t) => t.isCredit).fold(0.0, (sum, t) {
+    return txs
+        .where((t) => t.direction == RiderMeWalletTxDirection.credit)
+        .fold(0.0, (sum, t) {
       return _matchesPeriod(_txDate(t), p)
           ? sum + (t.amount?.toDouble() ?? 0)
           : sum;
     });
   }
 
-  List<RiderMeWalletTransactionModel> _filtered(
-      List<RiderMeWalletTransactionModel> txs) {
-    if (_period == WalletPeriod.all) return txs;
-    return txs.where((t) => _matchesPeriod(_txDate(t), _period)).toList();
+  /// Buckets real credit transactions from the last 7 days by weekday.
+  /// Legitimate reuse of the already-fetched full list (no per-day
+  /// breakdown endpoint exists to fabricate this from otherwise).
+  List<double> _weeklyBuckets(List<RiderMeWalletTransactionModel> txs) {
+    final now = DateTime.now();
+    final buckets = List<double>.filled(7, 0);
+    for (final t in txs) {
+      if (t.direction != RiderMeWalletTxDirection.credit) continue;
+      final d = _txDate(t);
+      if (d == null) continue;
+      final daysAgo = now.difference(d).inDays;
+      if (daysAgo < 0 || daysAgo >= 7) continue;
+      buckets[d.weekday - 1] += t.amount?.toDouble() ?? 0;
+    }
+    return buckets;
   }
-
-  String _formatTxDate(DateTime? d) =>
-      d == null ? '' : DateFormat('MMM d, h:mm a').format(d);
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(riderMeWalletProvider);
-    final w = MediaQuery.of(context).size.width;
-    final h = MediaQuery.of(context).size.height;
-    final top = MediaQuery.of(context).padding.top;
+    final size = MediaQuery.sizeOf(context);
+    final w = size.width;
+    final h = size.height;
+    final top = MediaQuery.paddingOf(context).top;
 
-    final isLoaded = state.status == RiderMeWalletStatus.loaded;
-    final today = isLoaded ? _subtotal(state.transactions, WalletPeriod.today) : _todayDummy;
-    final week = isLoaded ? _subtotal(state.transactions, WalletPeriod.thisWeek) : _weekDummy;
-    final month = isLoaded ? _subtotal(state.transactions, WalletPeriod.thisMonth) : _monthDummy;
-    final total = isLoaded ? (state.wallet?.balance.toDouble() ?? 0) : _totalDummy;
+    final walletState = ref.watch(riderMeWalletProvider);
+    final txState = ref.watch(riderMeWalletTransactionsProvider);
+
+    final wallet = walletState.wallet;
+    final currency = wallet?.currency ?? 'GHS';
+    final transactions = txState.transactions;
+
+    final today = _subtotal(transactions, WalletPeriod.today);
+    final week = _subtotal(transactions, WalletPeriod.thisWeek);
+    final month = _subtotal(transactions, WalletPeriod.thisMonth);
+    final total = (wallet?.balance ?? 0).toDouble();
+    final pending = (wallet?.pendingBalance ?? 0).toDouble();
+    final recentTx = transactions.take(_recentPreviewCount).toList();
 
     return Scaffold(
       backgroundColor: AppColors.scaffold,
       body: RefreshIndicator(
         color: AppColors.primary,
-        onRefresh: () => ref.read(riderMeWalletProvider.notifier).load(),
+        onRefresh: _refresh,
         child: CustomScrollView(
           physics: const BouncingScrollPhysics(
               parent: AlwaysScrollableScrollPhysics()),
           slivers: [
-            // ── Top balance card ─────────────────────────────────────────────
             SliverToBoxAdapter(
-              child: _BalanceCard(
+              child: RiderWalletBalanceCard(
                 total: total,
                 today: today,
+                pending: pending,
+                currency: currency,
                 topPad: top,
                 w: w,
                 h: h,
               ),
             ),
-
-            // ── Stats row ────────────────────────────────────────────────────
+            if (walletState.status == RiderMeWalletStatus.error)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding:
+                      EdgeInsets.fromLTRB(w * 0.04, h * 0.012, w * 0.04, 0),
+                  child: _InlineErrorBanner(
+                    message: walletState.errorMessage ??
+                        "Couldn't load your balance.",
+                    onRetry: () =>
+                        ref.read(riderMeWalletProvider.notifier).load(),
+                    w: w,
+                  ),
+                ),
+              ),
             SliverToBoxAdapter(
               child: Padding(
                 padding: EdgeInsets.symmetric(
                     horizontal: w * 0.04, vertical: h * 0.014),
                 child: Row(
                   children: [
-                    _StatPill(label: 'Today', amount: today, w: w, h: h),
+                    _StatPill(
+                        label: 'Today',
+                        amount: today,
+                        currency: currency,
+                        w: w,
+                        h: h),
                     SizedBox(width: w * 0.025),
                     _StatPill(
-                        label: 'This Week', amount: week, w: w, h: h),
+                        label: 'This Week',
+                        amount: week,
+                        currency: currency,
+                        w: w,
+                        h: h),
                     SizedBox(width: w * 0.025),
                     _StatPill(
-                        label: 'This Month', amount: month, w: w, h: h),
+                        label: 'This Month',
+                        amount: month,
+                        currency: currency,
+                        w: w,
+                        h: h),
                   ],
                 ),
               ),
             ),
-
-            // ── Weekly chart ─────────────────────────────────────────────────
             SliverToBoxAdapter(
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: w * 0.04),
-                child: _WeeklyCard(w: w, h: h),
+                child: _WeeklyCard(
+                  buckets: _weeklyBuckets(transactions),
+                  weekTotal: week,
+                  currency: currency,
+                  w: w,
+                  h: h,
+                ),
               ),
             ),
-
-            SizedBox(height: h * 0.014).asSliver,
-
-            // ── Info tiles row ───────────────────────────────────────────────
+            SizedBox(height: h * 0.02).asSliver,
             SliverToBoxAdapter(
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: w * 0.04),
                 child: Row(
                   children: [
-                    _InfoTile(
-                      icon: HugeIcons.strokeRoundedDeliveryBox01,
-                      value: '$_deliveriesThisMonth',
-                      label: 'Deliveries',
-                      w: w,
-                      h: h,
+                    Expanded(
+                      child: _WalletActionButton(
+                        icon: HugeIcons.strokeRoundedMoneySend01,
+                        label: 'Withdraw',
+                        w: w,
+                        h: h,
+                        onTap: () => context.push(AppRoutes.walletWithdrawals),
+                      ),
                     ),
-                    SizedBox(width: w * 0.025),
-                    _InfoTile(
-                      icon: HugeIcons.strokeRoundedFire,
-                      value: '${_streakDays}d',
-                      label: 'Streak',
-                      w: w,
-                      h: h,
-                    ),
-                    SizedBox(width: w * 0.025),
-                    _InfoTile(
-                      icon: HugeIcons.strokeRoundedTarget01,
-                      value:
-                          '${((week / _weekGoal) * 100).clamp(0, 100).toInt()}%',
-                      label: 'Goal',
-                      w: w,
-                      h: h,
+                    SizedBox(width: w * 0.03),
+                    Expanded(
+                      child: _WalletActionButton(
+                        icon: HugeIcons.strokeRoundedListView,
+                        label: 'Transactions',
+                        w: w,
+                        h: h,
+                        onTap: () => context.push(AppRoutes.walletTransactions),
+                      ),
                     ),
                   ],
                 ),
               ),
             ),
-
             SizedBox(height: h * 0.025).asSliver,
-
-            // ── Transactions heading + filter ────────────────────────────────
             SliverToBoxAdapter(
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: w * 0.04),
@@ -201,7 +221,7 @@ class _State extends ConsumerState<RiderWalletScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Transactions',
+                      'Recent Transactions',
                       style: TextStyle(
                         fontFamily: 'Mukta',
                         fontSize: w * 0.044,
@@ -209,65 +229,58 @@ class _State extends ConsumerState<RiderWalletScreen> {
                         color: AppColors.textPrimary,
                       ),
                     ),
-                    _PeriodFilter(
-                      period: _period,
-                      onSelect: (p) => setState(() => _period = p),
+                    GestureDetector(
+                      onTap: () => context.push(AppRoutes.walletTransactions),
+                      child: Text(
+                        'View all',
+                        style: TextStyle(
+                          fontFamily: 'Mukta',
+                          fontSize: w * 0.033,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primary,
+                        ),
+                      ),
                     ),
                   ],
                 ),
               ),
             ),
-
             SizedBox(height: h * 0.01).asSliver,
-
-            // ── List ─────────────────────────────────────────────────────────
-            if (state.status == RiderMeWalletStatus.loading)
+            if (txState.status == RiderMeWalletTransactionsStatus.loading ||
+                txState.status == RiderMeWalletTransactionsStatus.initial)
               const SliverToBoxAdapter(
-                child: ShimmerListPlaceholder(
-                    itemCount: 5, itemHeight: 68),
+                child: ShimmerListPlaceholder(itemCount: 3, itemHeight: 68),
               )
-            else if (isLoaded && _filtered(state.transactions).isNotEmpty)
-              SliverPadding(
-                padding: EdgeInsets.fromLTRB(
-                    w * 0.04, 0, w * 0.04, h * 0.06),
-                sliver: SliverList.builder(
-                  itemCount: _filtered(state.transactions).length,
-                  itemBuilder: (_, i) {
-                    final item = _filtered(state.transactions)[i];
-                    return AnimatedListItem(
-                      index: i,
-                      child: _TxTile(
-                        title: item.description ?? 'Delivery',
-                        sub: _formatTxDate(_txDate(item)),
-                        amount: item.amount?.toDouble() ?? 0,
-                        credit: item.isCredit,
-                        w: w,
-                        h: h,
-                      ),
-                    );
-                  },
+            else if (txState.status == RiderMeWalletTransactionsStatus.error)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: w * 0.04),
+                  child: _InlineErrorBanner(
+                    message: txState.errorMessage ??
+                        "Couldn't load your transactions.",
+                    onRetry: () => ref
+                        .read(riderMeWalletTransactionsProvider.notifier)
+                        .load(),
+                    w: w,
+                  ),
                 ),
               )
+            else if (recentTx.isEmpty)
+              SliverToBoxAdapter(child: _RecentEmptyState(w: w, h: h))
             else
               SliverPadding(
-                padding: EdgeInsets.fromLTRB(
-                    w * 0.04, 0, w * 0.04, h * 0.06),
+                padding: EdgeInsets.fromLTRB(w * 0.04, 0, w * 0.04, h * 0.06),
                 sliver: SliverList.builder(
-                  itemCount: _txDummy.length,
-                  itemBuilder: (_, i) {
-                    final tx = _txDummy[i];
-                    return AnimatedListItem(
-                      index: i,
-                      child: _TxTile(
-                        title: tx.title,
-                        sub: '${tx.place} · ${tx.time}',
-                        amount: tx.amount,
-                        credit: tx.credit,
-                        w: w,
-                        h: h,
-                      ),
-                    );
-                  },
+                  itemCount: recentTx.length,
+                  itemBuilder: (_, i) => AnimatedListItem(
+                    index: i,
+                    child: RiderWalletTransactionTile(
+                      transaction: recentTx[i],
+                      currency: currency,
+                      w: w,
+                      h: h,
+                    ),
+                  ),
                 ),
               ),
           ],
@@ -277,178 +290,26 @@ class _State extends ConsumerState<RiderWalletScreen> {
   }
 }
 
-// ─── Balance Card ─────────────────────────────────────────────────────────────
-
-class _BalanceCard extends StatelessWidget {
-  final double total, today, topPad, w, h;
-  const _BalanceCard({
-    required this.total,
-    required this.today,
-    required this.topPad,
-    required this.w,
-    required this.h,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      margin: EdgeInsets.fromLTRB(w * 0.04, topPad + h * 0.012, w * 0.04, 0),
-      padding: EdgeInsets.all(w * 0.055),
-      decoration: BoxDecoration(
-        color: AppColors.primary,
-        borderRadius: BorderRadius.circular(w * 0.05),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Total Earnings',
-                style: TextStyle(
-                  fontFamily: 'Mukta',
-                  fontSize: w * 0.034,
-                  color: Colors.white.withValues(alpha: 0.75),
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              Container(
-                padding: EdgeInsets.symmetric(
-                    horizontal: w * 0.03, vertical: h * 0.005),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
-                  children: [
-                    Icon(HugeIcons.strokeRoundedWallet01,
-                        color: Colors.white, size: w * 0.038),
-                    SizedBox(width: w * 0.015),
-                    Text(
-                      'Wallet',
-                      style: TextStyle(
-                        fontFamily: 'Mukta',
-                        fontSize: w * 0.03,
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: h * 0.012),
-          TweenAnimationBuilder<double>(
-            key: ValueKey(total),
-            tween: Tween(begin: 0, end: total),
-            duration: const Duration(milliseconds: 900),
-            curve: Curves.easeOut,
-            builder: (_, v, __) => Text(
-              'GHS ${v.toStringAsFixed(2)}',
-              style: TextStyle(
-                fontFamily: 'Mukta',
-                fontSize: w * 0.095,
-                fontWeight: FontWeight.w800,
-                color: Colors.white,
-                height: 1,
-                letterSpacing: -1,
-              ),
-            ),
-          ),
-          SizedBox(height: h * 0.016),
-          Container(height: 0.8, color: Colors.white.withValues(alpha: 0.2)),
-          SizedBox(height: h * 0.016),
-          Row(
-            children: [
-              Expanded(
-                child: _BalanceFooterItem(
-                  label: 'Today',
-                  value: 'GHS ${today.toStringAsFixed(2)}',
-                  w: w,
-                  h: h,
-                ),
-              ),
-              Container(
-                  width: 0.8,
-                  height: h * 0.04,
-                  color: Colors.white.withValues(alpha: 0.2)),
-              Expanded(
-                child: _BalanceFooterItem(
-                  label: 'Pending',
-                  value: 'GHS 0.00',
-                  w: w,
-                  h: h,
-                  align: CrossAxisAlignment.end,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _BalanceFooterItem extends StatelessWidget {
-  final String label, value;
-  final double w, h;
-  final CrossAxisAlignment align;
-  const _BalanceFooterItem({
-    required this.label,
-    required this.value,
-    required this.w,
-    required this.h,
-    this.align = CrossAxisAlignment.start,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: align,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontFamily: 'Mukta',
-            fontSize: w * 0.03,
-            color: Colors.white.withValues(alpha: 0.65),
-          ),
-        ),
-        SizedBox(height: h * 0.003),
-        Text(
-          value,
-          style: TextStyle(
-            fontFamily: 'Mukta',
-            fontSize: w * 0.038,
-            fontWeight: FontWeight.w700,
-            color: Colors.white,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-// ─── Stat Pill ────────────────────────────────────────────────────────────────
+// ─── Stat Pill ──────────────────────────────────────────────────────────────
 
 class _StatPill extends StatelessWidget {
   final String label;
   final double amount, w, h;
-  const _StatPill(
-      {required this.label,
-      required this.amount,
-      required this.w,
-      required this.h});
+  final String currency;
+  const _StatPill({
+    required this.label,
+    required this.amount,
+    required this.currency,
+    required this.w,
+    required this.h,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Expanded(
       child: Container(
-        padding: EdgeInsets.symmetric(
-            horizontal: w * 0.03, vertical: h * 0.014),
+        padding:
+            EdgeInsets.symmetric(horizontal: w * 0.03, vertical: h * 0.014),
         decoration: BoxDecoration(
           color: AppColors.card,
           borderRadius: BorderRadius.circular(w * 0.035),
@@ -468,7 +329,7 @@ class _StatPill extends StatelessWidget {
             ),
             SizedBox(height: h * 0.004),
             Text(
-              'GHS ${amount.toStringAsFixed(0)}',
+              '$currency ${amount.toStringAsFixed(0)}',
               style: TextStyle(
                 fontFamily: 'Mukta',
                 fontSize: w * 0.038,
@@ -483,11 +344,21 @@ class _StatPill extends StatelessWidget {
   }
 }
 
-// ─── Weekly Chart Card ────────────────────────────────────────────────────────
+// ─── Weekly Chart Card ──────────────────────────────────────────────────────
+
+const _weekLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 class _WeeklyCard extends StatelessWidget {
-  final double w, h;
-  const _WeeklyCard({required this.w, required this.h});
+  final List<double> buckets;
+  final double weekTotal, w, h;
+  final String currency;
+  const _WeeklyCard({
+    required this.buckets,
+    required this.weekTotal,
+    required this.currency,
+    required this.w,
+    required this.h,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -514,7 +385,7 @@ class _WeeklyCard extends StatelessWidget {
                 ),
               ),
               Text(
-                'GHS ${_weekDummy.toStringAsFixed(2)}',
+                '$currency ${weekTotal.toStringAsFixed(2)}',
                 style: TextStyle(
                   fontFamily: 'Mukta',
                   fontSize: w * 0.038,
@@ -527,7 +398,7 @@ class _WeeklyCard extends StatelessWidget {
           SizedBox(height: h * 0.02),
           SizedBox(
             height: h * 0.14,
-            child: _SimpleBarChart(w: w, h: h),
+            child: _SimpleBarChart(buckets: buckets, w: w, h: h),
           ),
         ],
       ),
@@ -536,23 +407,24 @@ class _WeeklyCard extends StatelessWidget {
 }
 
 class _SimpleBarChart extends StatelessWidget {
+  final List<double> buckets;
   final double w, h;
-  const _SimpleBarChart({required this.w, required this.h});
+  const _SimpleBarChart(
+      {required this.buckets, required this.w, required this.h});
 
   @override
   Widget build(BuildContext context) {
-    final maxVal = _weeklyBars.reduce(math.max);
+    final maxVal = buckets.fold(0.0, math.max);
 
     return LayoutBuilder(builder: (_, c) {
       final gap = w * 0.02;
-      final barW = (c.maxWidth - gap * (_weeklyBars.length - 1)) /
-          _weeklyBars.length;
+      final barW = (c.maxWidth - gap * (buckets.length - 1)) / buckets.length;
 
       return Row(
         crossAxisAlignment: CrossAxisAlignment.end,
-        children: List.generate(_weeklyBars.length, (i) {
-          final pct = _weeklyBars[i] / maxVal;
-          final isMax = _weeklyBars[i] == maxVal;
+        children: List.generate(buckets.length, (i) {
+          final pct = maxVal > 0 ? buckets[i] / maxVal : 0.0;
+          final isMax = maxVal > 0 && buckets[i] == maxVal;
           final barH = (c.maxHeight - h * 0.03) * pct;
 
           return Row(
@@ -566,13 +438,13 @@ class _SimpleBarChart extends StatelessWidget {
                       duration: Duration(milliseconds: 300 + i * 60),
                       curve: Curves.easeOut,
                       width: barW,
-                      height: barH,
+                      height: barH < 2 ? 2 : barH,
                       decoration: BoxDecoration(
                         color: isMax
                             ? AppColors.primary
                             : AppColors.primary.withValues(alpha: 0.18),
-                        borderRadius:
-                            const BorderRadius.vertical(top: Radius.circular(5)),
+                        borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(5)),
                       ),
                     ),
                     SizedBox(height: h * 0.006),
@@ -581,16 +453,15 @@ class _SimpleBarChart extends StatelessWidget {
                       style: TextStyle(
                         fontFamily: 'Mukta',
                         fontSize: w * 0.028,
-                        color: isMax
-                            ? AppColors.primary
-                            : AppColors.textSecondary,
+                        color:
+                            isMax ? AppColors.primary : AppColors.textSecondary,
                         fontWeight: isMax ? FontWeight.w700 : FontWeight.w400,
                       ),
                     ),
                   ],
                 ),
               ),
-              if (i < _weeklyBars.length - 1) SizedBox(width: gap),
+              if (i < buckets.length - 1) SizedBox(width: gap),
             ],
           );
         }),
@@ -599,26 +470,27 @@ class _SimpleBarChart extends StatelessWidget {
   }
 }
 
-// ─── Info Tile ────────────────────────────────────────────────────────────────
+// ─── Action Buttons ─────────────────────────────────────────────────────────
 
-class _InfoTile extends StatelessWidget {
+class _WalletActionButton extends StatelessWidget {
   final IconData icon;
-  final String value, label;
+  final String label;
   final double w, h;
-  const _InfoTile({
+  final VoidCallback onTap;
+  const _WalletActionButton({
     required this.icon,
-    required this.value,
     required this.label,
     required this.w,
     required this.h,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
+    return GestureDetector(
+      onTap: onTap,
       child: Container(
-        padding: EdgeInsets.symmetric(
-            horizontal: w * 0.03, vertical: h * 0.016),
+        padding: EdgeInsets.symmetric(vertical: h * 0.016),
         decoration: BoxDecoration(
           color: AppColors.card,
           borderRadius: BorderRadius.circular(w * 0.035),
@@ -626,23 +498,15 @@ class _InfoTile extends StatelessWidget {
         ),
         child: Column(
           children: [
-            Icon(icon, color: AppColors.primary, size: w * 0.055),
-            SizedBox(height: h * 0.007),
-            Text(
-              value,
-              style: TextStyle(
-                fontFamily: 'Mukta',
-                fontSize: w * 0.042,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary,
-              ),
-            ),
+            Icon(icon, color: AppColors.primary, size: w * 0.06),
+            SizedBox(height: h * 0.006),
             Text(
               label,
               style: TextStyle(
                 fontFamily: 'Mukta',
-                fontSize: w * 0.028,
-                color: AppColors.textSecondary,
+                fontSize: w * 0.033,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
               ),
             ),
           ],
@@ -652,152 +516,89 @@ class _InfoTile extends StatelessWidget {
   }
 }
 
-// ─── Period Filter ────────────────────────────────────────────────────────────
+// ─── Inline error banner (wallet/recent-transactions section failures) ──────
 
-class _PeriodFilter extends StatelessWidget {
-  final WalletPeriod period;
-  final void Function(WalletPeriod) onSelect;
-  const _PeriodFilter({required this.period, required this.onSelect});
+class _InlineErrorBanner extends StatelessWidget {
+  final String message;
+  final VoidCallback onRetry;
+  final double w;
+  const _InlineErrorBanner(
+      {required this.message, required this.onRetry, required this.w});
 
   @override
   Widget build(BuildContext context) {
-    final w = MediaQuery.of(context).size.width;
-    final h = MediaQuery.of(context).size.height;
-
-    return Row(
-      children: WalletPeriod.values.map((p) {
-        final selected = period == p;
-        final label = switch (p) {
-          WalletPeriod.all => 'All',
-          WalletPeriod.today => 'Today',
-          WalletPeriod.thisWeek => 'Week',
-          WalletPeriod.thisMonth => 'Month',
-        };
-        return GestureDetector(
-          onTap: () => onSelect(p),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
-            margin: EdgeInsets.only(left: w * 0.018),
-            padding: EdgeInsets.symmetric(
-                horizontal: w * 0.028, vertical: h * 0.005),
-            decoration: BoxDecoration(
-              color: selected ? AppColors.primary : Colors.transparent,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: selected ? AppColors.primary : AppColors.border,
-              ),
-            ),
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: w * 0.04, vertical: w * 0.03),
+      decoration: BoxDecoration(
+        color: AppColors.error.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(w * 0.03),
+        border: Border.all(color: AppColors.error.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        children: [
+          Icon(HugeIcons.strokeRoundedAlertCircle,
+              color: AppColors.error, size: w * 0.05),
+          SizedBox(width: w * 0.025),
+          Expanded(
             child: Text(
-              label,
+              message,
               style: TextStyle(
                 fontFamily: 'Mukta',
-                fontSize: w * 0.03,
-                fontWeight: FontWeight.w600,
-                color: selected ? Colors.white : AppColors.textSecondary,
+                fontSize: w * 0.031,
+                color: AppColors.textPrimary,
               ),
             ),
           ),
-        );
-      }).toList(),
+          GestureDetector(
+            onTap: onRetry,
+            child: Text(
+              'Retry',
+              style: TextStyle(
+                fontFamily: 'Mukta',
+                fontSize: w * 0.031,
+                fontWeight: FontWeight.w700,
+                color: AppColors.error,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
 
-// ─── Transaction Tile ─────────────────────────────────────────────────────────
-
-class _TxTile extends StatelessWidget {
-  final String title, sub;
-  final double amount, w, h;
-  final bool credit;
-  const _TxTile({
-    required this.title,
-    required this.sub,
-    required this.amount,
-    required this.credit,
-    required this.w,
-    required this.h,
-  });
+class _RecentEmptyState extends StatelessWidget {
+  final double w, h;
+  const _RecentEmptyState({required this.w, required this.h});
 
   @override
   Widget build(BuildContext context) {
-    final isWithdraw = title.toLowerCase().contains('withdraw');
-    final isBonus = title.toLowerCase().contains('bonus');
-
-    final Color dot = isWithdraw
-        ? AppColors.warning
-        : isBonus
-            ? AppColors.accent
-            : AppColors.success;
-
-    final IconData ico = isWithdraw
-        ? HugeIcons.strokeRoundedPayment01
-        : isBonus
-            ? HugeIcons.strokeRoundedGift
-            : HugeIcons.strokeRoundedDeliveryBox01;
-
-    return Container(
-      margin: EdgeInsets.only(bottom: h * 0.01),
-      padding: EdgeInsets.symmetric(
-          horizontal: w * 0.04, vertical: h * 0.014),
-      decoration: BoxDecoration(
-        color: AppColors.card,
-        borderRadius: BorderRadius.circular(w * 0.035),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: w * 0.1,
-            height: w * 0.1,
-            decoration: BoxDecoration(
-              color: dot.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(w * 0.025),
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: w * 0.04, vertical: h * 0.03),
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.symmetric(vertical: h * 0.03),
+        decoration: BoxDecoration(
+          color: AppColors.card,
+          borderRadius: BorderRadius.circular(w * 0.035),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Column(
+          children: [
+            Icon(HugeIcons.strokeRoundedWallet01,
+                size: w * 0.1, color: AppColors.textHint),
+            SizedBox(height: h * 0.012),
+            Text(
+              'No transactions yet',
+              style: TextStyle(
+                fontFamily: 'Mukta',
+                fontSize: w * 0.035,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textSecondary,
+              ),
             ),
-            child: Icon(ico, color: dot, size: w * 0.046),
-          ),
-          SizedBox(width: w * 0.035),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontFamily: 'Mukta',
-                    fontSize: w * 0.038,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                SizedBox(height: h * 0.002),
-                Text(
-                  sub,
-                  style: TextStyle(
-                    fontFamily: 'Mukta',
-                    fontSize: w * 0.03,
-                    color: AppColors.textSecondary,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-          SizedBox(width: w * 0.02),
-          Text(
-            credit
-                ? '+GHS ${amount.abs().toStringAsFixed(2)}'
-                : '-GHS ${amount.abs().toStringAsFixed(2)}',
-            style: TextStyle(
-              fontFamily: 'Mukta',
-              fontSize: w * 0.038,
-              fontWeight: FontWeight.w700,
-              color: credit ? AppColors.success : AppColors.warning,
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

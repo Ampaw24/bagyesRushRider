@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:delivery_boy/core/di/service_locator.dart';
 import 'package:delivery_boy/core/errors/failures.dart';
+import 'package:delivery_boy/core/realtime/realtime_service.dart';
 import 'package:delivery_boy/core/services/fcm_service.dart';
 import 'package:delivery_boy/core/services/firebase_bootstrap.dart';
 import 'package:delivery_boy/core/services/user_session_manager.dart';
@@ -132,6 +133,7 @@ class RiderAuthNotifier extends Notifier<RiderAuthState> {
       // login(), and verifyPhoneAndEnsureSession (which routes via login).
       // Un-awaited: navigation must not wait on a push round-trip.
       unawaited(registerDeviceToken());
+      unawaited(sl<RealtimeService>().connect());
     } else {
       await _session.saveUser(data.user.toJson());
     }
@@ -566,6 +568,50 @@ class RiderAuthNotifier extends Notifier<RiderAuthState> {
     );
   }
 
+  /// Permanently deletes the signed-in rider's account (`/account/delete`),
+  /// then tears down the local session exactly like [logout]. Returns true
+  /// on success; on failure the state carries the error the same way
+  /// [changePassword] does.
+  Future<bool> deleteAccount({
+    required String password,
+    String? reason,
+  }) async {
+    state = state.copyWith(status: AuthStatus.loading, clearError: true);
+
+    // Deregister BEFORE the delete call, same reasoning as logout(): once
+    // the account is gone the Bearer token is invalid and a DELETE
+    // /device-tokens issued after it would 401.
+    try {
+      final registeredToken =
+          sl<SharedPreferences>().getString(_registeredTokenKey);
+      if (registeredToken != null && registeredToken.isNotEmpty) {
+        await sl<DeviceTokenRepository>().unregister(token: registeredToken);
+      }
+    } catch (e) {
+      appLogger.w('[DeviceToken] deregister failed (ignored): $e');
+    }
+
+    final result = await _repo.deleteAccount(password: password, reason: reason);
+
+    if (result.isLeft()) {
+      final failure = _failureOf(result);
+      state = state.copyWith(
+        status: AuthStatus.error,
+        errorMessage: failure?.message ?? 'Request failed',
+        fieldErrors:
+            failure is ValidationFailure ? failure.errors : const {},
+      );
+      return false;
+    }
+
+    await sl<RealtimeService>().disconnect();
+    await _session.clearSession();
+    await sl<SharedPreferences>().remove(_registeredTokenKey);
+
+    state = const RiderAuthState();
+    return true;
+  }
+
   /// Refreshes the cached user from `/profile`.
   Future<void> refreshProfile() async {
     final result = await _repo.getProfile();
@@ -580,6 +626,8 @@ class RiderAuthNotifier extends Notifier<RiderAuthState> {
 
   /// Best-effort server logout; the local session is always cleared.
   Future<void> logout() async {
+    await sl<RealtimeService>().disconnect();
+
     // Deregister BEFORE POST /logout, which revokes the Sanctum token
     // server-side: a DELETE issued after it would 401, and
     // RiderDioInterceptor turns a 401 into clearSession() + a

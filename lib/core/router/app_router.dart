@@ -3,7 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'package:delivery_boy/core/di/service_locator.dart';
 import 'package:delivery_boy/core/services/user_session_manager.dart';
 import 'package:delivery_boy/core/router/app_routes.dart';
-import 'package:delivery_boy/core/utils/network_utility.dart' show sessionRevision;
+import 'package:delivery_boy/core/utils/network_utility.dart'
+    show sessionRevision;
 
 // ── Splash / Intro ─────────────────────────────────────────────────────────────
 import 'package:delivery_boy/pages/splashScreen.dart';
@@ -23,8 +24,19 @@ import 'package:delivery_boy/features/rider/dashboard/views/screens/rider_dashbo
 import 'package:delivery_boy/features/rider/profile/views/screens/rider_profile_edit_screen.dart';
 // ── Notifications ─────────────────────────────────────────────────────────────
 import 'package:delivery_boy/features/rider/notifications/views/screens/rider_notifications_screen.dart';
+// ── Chat ──────────────────────────────────────────────────────────────────────
+import 'package:delivery_boy/features/rider/chat/views/screens/rider_chat_list_screen.dart';
 // ── Settings ──────────────────────────────────────────────────────────────────
 import 'package:delivery_boy/features/rider/settings/views/screens/rider_settings_screen.dart';
+// ── Wallet ────────────────────────────────────────────────────────────────────
+import 'package:delivery_boy/features/rider/wallet/views/screens/rider_wallet_transactions_screen.dart';
+import 'package:delivery_boy/features/rider/wallet/views/screens/rider_withdrawals_screen.dart';
+// ── Support / Report a Problem ───────────────────────────────────────────────
+import 'package:delivery_boy/features/rider/support/views/screens/rider_help_support_screen.dart';
+import 'package:delivery_boy/features/rider/report/models/rider_report_flow_args.dart';
+import 'package:delivery_boy/features/rider/report/views/screens/rider_my_reports_screen.dart';
+import 'package:delivery_boy/features/rider/report/views/screens/rider_report_flow_screen.dart';
+import 'package:delivery_boy/features/rider/report/views/screens/rider_report_detail_screen.dart';
 // ── Verification (KYC) ────────────────────────────────────────────────────────
 import 'package:delivery_boy/features/rider/kyc/models/kyc_section.dart';
 import 'package:delivery_boy/features/rider/kyc/views/screens/kyc_hub_screen.dart';
@@ -71,7 +83,7 @@ final appRouter = createAppRouter();
 
 GoRouter createAppRouter() {
   return GoRouter(
-     //initialLocation: AppRoutes.intro,
+    //initialLocation: AppRoutes.intro,
     initialLocation: AppRoutes.splash,
     // Re-evaluates the guard when a 401 clears the session mid-session.
     refreshListenable: sessionRevision,
@@ -218,8 +230,7 @@ GoRouter createAppRouter() {
       // ── Dashboard (shell with nested routes) ──────────────────────────────
       GoRoute(
         path: AppRoutes.dashboard,
-        pageBuilder: (_, state) =>
-            _fade(state, const RiderDashboardScreen()),
+        pageBuilder: (_, state) => _fade(state, const RiderDashboardScreen()),
         routes: [
           GoRoute(
             path: 'profile/edit',
@@ -238,14 +249,59 @@ GoRouter createAppRouter() {
                 _slideRight(state, const RiderNotificationsScreen()),
           ),
           GoRoute(
+            path: 'chat',
+            pageBuilder: (_, state) =>
+                _slideRight(state, const RiderChatListScreen()),
+          ),
+          GoRoute(
             path: 'settings',
             pageBuilder: (_, state) =>
                 _slideRight(state, const RiderSettingsScreen()),
           ),
           GoRoute(
-            path: 'kyc',
+            path: 'wallet/transactions',
             pageBuilder: (_, state) =>
-                _slideRight(state, const KycHubScreen()),
+                _slideRight(state, const RiderWalletTransactionsScreen()),
+          ),
+          GoRoute(
+            path: 'wallet/withdrawals',
+            pageBuilder: (_, state) =>
+                _slideRight(state, const RiderWithdrawalsScreen()),
+          ),
+          GoRoute(
+            path: 'help-support',
+            pageBuilder: (_, state) =>
+                _slideRight(state, const RiderHelpSupportScreen()),
+          ),
+          GoRoute(
+            path: 'reports',
+            pageBuilder: (_, state) =>
+                _slideRight(state, const RiderMyReportsScreen()),
+            routes: [
+              GoRoute(
+                path: 'new',
+                pageBuilder: (_, state) => _slideRight(
+                  state,
+                  RiderReportFlowScreen(
+                    args: (state.extra as RiderReportFlowArgs?) ??
+                        const RiderReportFlowArgs(),
+                  ),
+                ),
+              ),
+              GoRoute(
+                path: ':id',
+                pageBuilder: (_, state) => _slideRight(
+                  state,
+                  RiderReportDetailScreen(
+                    reportId: int.parse(state.pathParameters['id']!),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          GoRoute(
+            path: 'kyc',
+            pageBuilder: (_, state) => _slideRight(state, const KycHubScreen()),
             routes: [
               GoRoute(
                 path: ':section',

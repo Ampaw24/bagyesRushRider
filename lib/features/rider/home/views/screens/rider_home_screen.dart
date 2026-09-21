@@ -3,14 +3,20 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/core/di/service_locator.dart';
 import 'package:delivery_boy/core/router/app_routes.dart';
 import 'package:delivery_boy/core/services/user_session_manager.dart';
 import 'package:delivery_boy/core/widgets/app_loading_overlay.dart';
+import 'package:delivery_boy/core/widgets/app_shimmer.dart';
+import 'package:delivery_boy/core/widgets/custom_dialogs.dart';
 import 'package:delivery_boy/features/rider/auth/models/rider_user_model.dart';
 import 'package:delivery_boy/features/rider/auth/viewmodels/rider_auth_viewmodel.dart';
+import 'package:delivery_boy/features/rider/auth/views/widgets/delete_account_sheet.dart';
 import 'package:delivery_boy/features/rider/dashboard/views/screens/rider_dashboard_screen.dart';
+import 'package:delivery_boy/features/rider/home/models/rider_banner_model.dart';
+import 'package:delivery_boy/features/rider/home/providers/rider_banner_providers.dart';
 import 'package:delivery_boy/features/rider/home/views/widgets/customer_drawer.dart';
 import 'package:delivery_boy/features/rider/home/views/widgets/rider_location_chip.dart';
 import 'package:delivery_boy/features/rider/notifications/providers/rider_notifications_providers.dart';
@@ -21,24 +27,6 @@ import 'package:delivery_boy/features/rider/profile/providers/rider_avatar_provi
 import 'package:delivery_boy/features/rider/kyc/providers/kyc_providers.dart';
 import 'package:delivery_boy/features/rider/shared_widgets/rider_avatar.dart';
 import 'package:delivery_boy/features/rider/shared_widgets/rider_setup_progress_card.dart';
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Data models (local / mock)
-// ─────────────────────────────────────────────────────────────────────────────
-
-class _Announcement {
-  final String title;
-  final String body;
-  final Color color;
-  final IconData icon;
-
-  const _Announcement({
-    required this.title,
-    required this.body,
-    required this.color,
-    required this.icon,
-  });
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Screen
@@ -69,7 +57,7 @@ class _RiderHomeScreenState extends ConsumerState<RiderHomeScreen>
   late final List<Animation<double>> _sectionFades;
   late final List<Animation<Offset>> _sectionSlides;
 
-  // Announcement carousel
+  // Announcement (banner) carousel
   final _pageCtrl = PageController(viewportFraction: 0.92);
   int _currentPage = 0;
 
@@ -77,27 +65,6 @@ class _RiderHomeScreenState extends ConsumerState<RiderHomeScreen>
   bool _drawerOpen = false;
   void _openDrawer() => setState(() => _drawerOpen = true);
   void _closeDrawer() => setState(() => _drawerOpen = false);
-
-  final _announcements = const [
-    _Announcement(
-      title: '🎉 Bonus Weekend',
-      body: 'Earn 20% extra on every completed delivery this weekend. Keep riding!',
-      color: Color(0xFF2563EB),
-      icon: HugeIcons.strokeRoundedStar,
-    ),
-    _Announcement(
-      title: '📍 New Delivery Zone',
-      body: 'Osu and Cantonments are now active. Expect higher order volume.',
-      color: Color(0xFF059669),
-      icon: HugeIcons.strokeRoundedLocation01,
-    ),
-    _Announcement(
-      title: '⚠️ Maintenance Notice',
-      body: 'Brief downtime scheduled Sunday 2–3 AM. Orders pause during this window.',
-      color: Color(0xFFD97706),
-      icon: HugeIcons.strokeRoundedAlert01,
-    ),
-  ];
 
   @override
   void initState() {
@@ -127,6 +94,7 @@ class _RiderHomeScreenState extends ConsumerState<RiderHomeScreen>
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(riderMeOrderHistoryProvider.notifier).load();
+      ref.read(riderBannersProvider.notifier).load();
     });
   }
 
@@ -170,21 +138,14 @@ class _RiderHomeScreenState extends ConsumerState<RiderHomeScreen>
   }
 
   void _handleDeleteAccount() {
-    showDialog<void>(
+    CustomDialog.showConfirmation(
       context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Delete Account', style: TextStyle(fontFamily: 'Mukta')),
-        content: const Text(
-          'Account deletion is not yet available. Contact support for assistance.',
-          style: TextStyle(fontFamily: 'Mukta'),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('OK', style: TextStyle(fontFamily: 'Mukta')),
-          ),
-        ],
-      ),
+      title: 'Delete Account',
+      subtitle:
+          'This permanently deletes your account and all associated data. '
+          'This action cannot be undone.',
+      confirmText: 'Continue',
+      onConfirm: () => DeleteAccountSheet.show(context),
     );
   }
 
@@ -199,6 +160,10 @@ class _RiderHomeScreenState extends ConsumerState<RiderHomeScreen>
     final unread = ref.watch(riderNotificationsProvider).unreadCount;
     final historyOrders =
         ref.watch(riderMeOrderHistoryProvider).orders.take(2).toList();
+    final bannersState = ref.watch(riderBannersProvider);
+    final showBanners = bannersState.status == RiderBannersStatus.loading ||
+        (bannersState.status == RiderBannersStatus.loaded &&
+            bannersState.banners.isNotEmpty);
     final photoUrl = ref.watch(riderAvatarUrlProvider);
     final initials = _riderName.isNotEmpty
         ? _riderName[0].toUpperCase()
@@ -274,21 +239,24 @@ class _RiderHomeScreenState extends ConsumerState<RiderHomeScreen>
                             SizedBox(height: h * 0.026),
 
                             // ── Announcements ───────────────────────────
-                            _section(
-                              2,
-                              _AnnouncementsSection(
-                                announcements: _announcements,
-                                controller: _pageCtrl,
-                                currentPage: _currentPage,
-                                onPageChanged: (i) =>
-                                    setState(() => _currentPage = i),
-                                hPad: hPad,
-                                h: h,
-                                w: w,
+                            if (showBanners) ...[
+                              _section(
+                                2,
+                                _AnnouncementsSection(
+                                  isLoading: bannersState.status ==
+                                      RiderBannersStatus.loading,
+                                  banners: bannersState.banners,
+                                  controller: _pageCtrl,
+                                  currentPage: _currentPage,
+                                  onPageChanged: (i) =>
+                                      setState(() => _currentPage = i),
+                                  hPad: hPad,
+                                  h: h,
+                                  w: w,
+                                ),
                               ),
-                            ),
-
-                            SizedBox(height: h * 0.026),
+                              SizedBox(height: h * 0.026),
+                            ],
 
                             // ── Recent deliveries ───────────────────────
                             Padding(
@@ -707,7 +675,8 @@ class _PulseDotState extends State<_PulseDot>
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _AnnouncementsSection extends StatelessWidget {
-  final List<_Announcement> announcements;
+  final bool isLoading;
+  final List<RiderBannerModel> banners;
   final PageController controller;
   final int currentPage;
   final ValueChanged<int> onPageChanged;
@@ -716,7 +685,8 @@ class _AnnouncementsSection extends StatelessWidget {
   final double w;
 
   const _AnnouncementsSection({
-    required this.announcements,
+    required this.isLoading,
+    required this.banners,
     required this.controller,
     required this.currentPage,
     required this.onPageChanged,
@@ -727,6 +697,8 @@ class _AnnouncementsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cardHeight = (h * 0.16).clamp(110.0, 150.0);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -743,123 +715,158 @@ class _AnnouncementsSection extends StatelessWidget {
           ),
         ),
         SizedBox(height: h * 0.012),
-        SizedBox(
-          height: (h * 0.16).clamp(110.0, 150.0),
-          child: PageView.builder(
-            controller: controller,
-            onPageChanged: onPageChanged,
-            itemCount: announcements.length,
-            itemBuilder: (context, index) {
-              final ann = announcements[index];
-              return _AnnouncementCard(ann: ann, w: w, h: h);
-            },
-          ),
-        ),
-        SizedBox(height: h * 0.01),
-        // Dot indicators
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: List.generate(announcements.length, (i) {
-            final active = i == currentPage;
-            return AnimatedContainer(
-              duration: const Duration(milliseconds: 250),
-              curve: Curves.easeInOut,
-              margin: EdgeInsets.symmetric(horizontal: w * 0.008),
-              width: active ? (w * 0.05).clamp(16.0, 22.0) : (w * 0.018).clamp(6.0, 8.0),
-              height: (w * 0.018).clamp(6.0, 8.0),
-              decoration: BoxDecoration(
-                color: active
-                    ? AppColors.primary
-                    : AppColors.border,
-                borderRadius: BorderRadius.circular(w * 0.01),
+        if (isLoading)
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: hPad),
+            child: AppShimmer(
+              child: Container(
+                height: cardHeight,
+                decoration: BoxDecoration(
+                  color: AppColors.shimmerBase,
+                  borderRadius: BorderRadius.circular(w * 0.04),
+                ),
               ),
-            );
-          }),
-        ),
+            ),
+          )
+        else ...[
+          SizedBox(
+            height: cardHeight,
+            child: PageView.builder(
+              controller: controller,
+              onPageChanged: onPageChanged,
+              itemCount: banners.length,
+              itemBuilder: (context, index) =>
+                  _AnnouncementCard(banner: banners[index], w: w, h: h),
+            ),
+          ),
+          SizedBox(height: h * 0.01),
+          // Dot indicators
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(banners.length, (i) {
+              final active = i == currentPage;
+              return AnimatedContainer(
+                duration: const Duration(milliseconds: 250),
+                curve: Curves.easeInOut,
+                margin: EdgeInsets.symmetric(horizontal: w * 0.008),
+                width: active
+                    ? (w * 0.05).clamp(16.0, 22.0)
+                    : (w * 0.018).clamp(6.0, 8.0),
+                height: (w * 0.018).clamp(6.0, 8.0),
+                decoration: BoxDecoration(
+                  color: active ? AppColors.primary : AppColors.border,
+                  borderRadius: BorderRadius.circular(w * 0.01),
+                ),
+              );
+            }),
+          ),
+        ],
       ],
     );
   }
 }
 
 class _AnnouncementCard extends StatelessWidget {
-  final _Announcement ann;
+  final RiderBannerModel banner;
   final double w;
   final double h;
 
-  const _AnnouncementCard({required this.ann, required this.w, required this.h});
+  const _AnnouncementCard({
+    required this.banner,
+    required this.w,
+    required this.h,
+  });
+
+  Future<void> _handleTap() async {
+    if (banner.link.type != 'url') return;
+    final value = banner.link.value;
+    if (value == null || value.isEmpty) return;
+    final uri = Uri.tryParse(value);
+    if (uri != null && await canLaunchUrl(uri)) await launchUrl(uri);
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: w * 0.015),
-      padding: EdgeInsets.symmetric(
-        horizontal: w * 0.05,
-        vertical: h * 0.018,
-      ),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            ann.color,
-            ann.color.withValues(alpha: 0.75),
+    final imageUrl = banner.imageUrl;
+    final subtitle = banner.displaySubtitle;
+
+    return GestureDetector(
+      onTap: _handleTap,
+      child: Container(
+        margin: EdgeInsets.symmetric(horizontal: w * 0.015),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(w * 0.04),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.08),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
           ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(w * 0.04),
-        boxShadow: [
-          BoxShadow(
-            color: ann.color.withValues(alpha: 0.22),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: (w * 0.12).clamp(42.0, 52.0),
-            height: (w * 0.12).clamp(42.0, 52.0),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(w * 0.03),
-            ),
-            child: Icon(
-              ann.icon,
-              size: (w * 0.06).clamp(22.0, 26.0),
-              color: Colors.white,
-            ),
-          ),
-          SizedBox(width: w * 0.04),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  ann.title,
-                  style: TextStyle(
-                    fontFamily: 'Mukta',
-                    fontSize: (w * 0.04).clamp(14.0, 17.0),
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(w * 0.04),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              if (imageUrl != null && imageUrl.isNotEmpty)
+                Image.network(
+                  imageUrl,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) =>
+                      ColoredBox(color: AppColors.primary),
+                )
+              else
+                ColoredBox(color: AppColors.primary),
+              // Scrim for text legibility over the photo — not decorative.
+              const DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
+                    colors: [Color(0xB3000000), Colors.transparent],
                   ),
                 ),
-                SizedBox(height: h * 0.005),
-                Text(
-                  ann.body,
-                  style: TextStyle(
-                    fontFamily: 'Mukta',
-                    fontSize: (w * 0.03).clamp(10.0, 13.0),
-                    color: Colors.white.withValues(alpha: 0.88),
-                    height: 1.35,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+              ),
+              Positioned(
+                left: w * 0.045,
+                right: w * 0.045,
+                bottom: h * 0.016,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      banner.title,
+                      style: TextStyle(
+                        fontFamily: 'Mukta',
+                        fontSize: (w * 0.04).clamp(14.0, 17.0),
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (subtitle != null && subtitle.isNotEmpty) ...[
+                      SizedBox(height: h * 0.005),
+                      Text(
+                        subtitle,
+                        style: TextStyle(
+                          fontFamily: 'Mukta',
+                          fontSize: (w * 0.03).clamp(10.0, 13.0),
+                          color: Colors.white.withValues(alpha: 0.88),
+                          height: 1.35,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

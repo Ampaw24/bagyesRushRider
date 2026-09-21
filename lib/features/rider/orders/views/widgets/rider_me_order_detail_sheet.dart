@@ -1,18 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:delivery_boy/constant/app_theme.dart';
+import 'package:delivery_boy/core/router/app_routes.dart';
 import 'package:delivery_boy/core/widgets/app_gradient_button.dart';
 import 'package:delivery_boy/core/widgets/custom_dialogs.dart';
 import 'package:delivery_boy/core/widgets/drag_handle.dart';
 import 'package:delivery_boy/core/widgets/status_badge.dart';
+import 'package:delivery_boy/features/rider/chat/providers/rider_chat_thread_args.dart';
+import 'package:delivery_boy/features/rider/chat/views/widgets/rider_chat_thread_sheet.dart';
 import 'package:delivery_boy/features/rider/orders/models/rider_delivery_stage.dart';
 import 'package:delivery_boy/features/rider/orders/models/rider_me_order_model.dart';
 import 'package:delivery_boy/features/rider/orders/providers/rider_me_order_providers.dart';
 import 'package:delivery_boy/features/rider/orders/views/widgets/delivery_confirmation_sheet.dart';
 import 'package:delivery_boy/features/rider/orders/views/widgets/reason_input_sheet.dart';
 import 'package:delivery_boy/features/rider/orders/views/widgets/rider_me_order_status.dart';
+import 'package:delivery_boy/features/rider/report/models/rider_report_flow_args.dart';
+import 'package:delivery_boy/features/rider/report/models/rider_report_model.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 /// Self-contained order detail sheet for the `/rider/me` order model —
@@ -39,7 +45,9 @@ class _RiderMeOrderDetailSheetState
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(riderMeOrdersProvider.notifier).loadOrder(widget.initialOrder.id);
+      ref
+          .read(riderMeOrdersProvider.notifier)
+          .loadOrder(widget.initialOrder.id);
     });
   }
 
@@ -87,10 +95,11 @@ class _RiderMeOrderDetailSheetState
       builder: (_) => ReasonInputSheet(
         title: 'Release this order?',
         submitLabel: 'Release',
-        onSubmit: (reason) => ref.read(riderMeOrdersProvider.notifier).releaseOrder(
-              orderId,
-              reason: reason.isEmpty ? null : reason,
-            ),
+        onSubmit: (reason) =>
+            ref.read(riderMeOrdersProvider.notifier).releaseOrder(
+                  orderId,
+                  reason: reason.isEmpty ? null : reason,
+                ),
       ),
     ).then((released) {
       if (released == true && mounted) Navigator.of(context).pop();
@@ -105,10 +114,11 @@ class _RiderMeOrderDetailSheetState
       builder: (_) => ReasonInputSheet(
         title: "Can't reach the customer?",
         submitLabel: 'Mark Unreachable',
-        onSubmit: (reason) => ref.read(riderMeOrdersProvider.notifier).markUnreachable(
-              orderId,
-              reason: reason.isEmpty ? null : reason,
-            ),
+        onSubmit: (reason) =>
+            ref.read(riderMeOrdersProvider.notifier).markUnreachable(
+                  orderId,
+                  reason: reason.isEmpty ? null : reason,
+                ),
       ),
     ).then((marked) {
       if (marked == true && mounted) Navigator.of(context).pop();
@@ -119,6 +129,39 @@ class _RiderMeOrderDetailSheetState
     if (phone == null || phone.isEmpty) return;
     final uri = Uri.parse('tel:$phone');
     if (await canLaunchUrl(uri)) await launchUrl(uri);
+  }
+
+  /// The chat API 422s until this order has an assigned rider — since this
+  /// sheet only ever shows an order already on this rider's own list, that
+  /// should already be true, but `RiderChatThreadSheet` still renders the
+  /// "not available yet" state defensively rather than assuming it.
+  void _openChat(RiderMeOrderModel order) {
+    RiderChatThreadSheet.show(
+      context,
+      args: RiderChatThreadArgs(
+        orderId: order.id,
+        peerName: order.customerName,
+        peerPhone: order.customerPhone,
+      ),
+    );
+  }
+
+  /// Pre-fills the report wizard with this order's customer — the rider
+  /// still picks the reason/description, but skips the "what would you
+  /// like to report?" and "which delivery?" steps since both are already
+  /// known here.
+  void _openReport(RiderMeOrderModel order) {
+    context.push(
+      AppRoutes.reportNew,
+      extra: RiderReportFlowArgs(
+        targetType: RiderReportTargetType.customer,
+        orderId: order.id,
+        targetName: (order.customerName?.isNotEmpty ?? false)
+            ? order.customerName!
+            : 'Customer',
+        targetPhone: order.customerPhone,
+      ),
+    );
   }
 
   @override
@@ -269,6 +312,76 @@ class _RiderMeOrderDetailSheetState
                           ),
                         ],
                       ),
+                      const SizedBox(height: 10),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Message',
+                            style: TextStyle(
+                              fontFamily: 'Roboto',
+                              fontSize: 14,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () => _openChat(order),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  'Chat',
+                                  style: TextStyle(
+                                    fontFamily: 'Roboto',
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                    color: AppColors.primary,
+                                    decoration: TextDecoration.underline,
+                                  ),
+                                ),
+                                SizedBox(width: 6),
+                                Icon(HugeIcons.strokeRoundedBubbleChat,
+                                    size: 16, color: AppColors.primary),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Problem with this delivery?',
+                            style: TextStyle(
+                              fontFamily: 'Roboto',
+                              fontSize: 14,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () => _openReport(order),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  'Report',
+                                  style: TextStyle(
+                                    fontFamily: 'Roboto',
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                    color: AppColors.error,
+                                    decoration: TextDecoration.underline,
+                                  ),
+                                ),
+                                SizedBox(width: 6),
+                                Icon(HugeIcons.strokeRoundedFlag02,
+                                    size: 16, color: AppColors.error),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                 ),
@@ -279,7 +392,11 @@ class _RiderMeOrderDetailSheetState
                 title: 'Payment',
                 child: Padding(
                   padding: const EdgeInsets.all(14),
-                  child: _row('Amount', order.amountFormatted.isEmpty ? '-' : order.amountFormatted,
+                  child: _row(
+                      'Amount',
+                      order.amountFormatted.isEmpty
+                          ? '-'
+                          : order.amountFormatted,
                       valueStyle: const TextStyle(
                         fontFamily: 'Roboto',
                         fontSize: 15,
@@ -313,7 +430,8 @@ class _RiderMeOrderDetailSheetState
                               : () => _openReleaseSheet(order.id),
                           child: const Text('Release',
                               style: TextStyle(
-                                  fontFamily: 'Roboto', color: AppColors.textSecondary)),
+                                  fontFamily: 'Roboto',
+                                  color: AppColors.textSecondary)),
                         ),
                       ),
                       Expanded(
@@ -323,7 +441,8 @@ class _RiderMeOrderDetailSheetState
                               : () => _openUnreachableSheet(order.id),
                           child: const Text('Unreachable',
                               style: TextStyle(
-                                  fontFamily: 'Roboto', color: AppColors.error)),
+                                  fontFamily: 'Roboto',
+                                  color: AppColors.error)),
                         ),
                       ),
                     ],
@@ -365,8 +484,9 @@ class _RiderMeOrderDetailSheetState
           isLoading: _actionBusy,
           onPressed: _actionBusy
               ? null
-              : () => _runSimpleAction(
-                  () => ref.read(riderMeOrdersProvider.notifier).arrivedAtPickup(order.id)),
+              : () => _runSimpleAction(() => ref
+                  .read(riderMeOrdersProvider.notifier)
+                  .arrivedAtPickup(order.id)),
         );
 
       case RiderDeliveryStage.arrivedAtPickup:
@@ -375,8 +495,9 @@ class _RiderMeOrderDetailSheetState
           isLoading: _actionBusy,
           onPressed: _actionBusy
               ? null
-              : () => _runSimpleAction(
-                  () => ref.read(riderMeOrdersProvider.notifier).pickUpOrder(order.id)),
+              : () => _runSimpleAction(() => ref
+                  .read(riderMeOrdersProvider.notifier)
+                  .pickUpOrder(order.id)),
         );
 
       case RiderDeliveryStage.pickedUp:
@@ -384,11 +505,13 @@ class _RiderMeOrderDetailSheetState
           return _MultiStopPanel(
             order: order,
             busy: _actionBusy,
-            onArrive: (stopId) => _runSimpleAction(
-                () => ref.read(riderMeOrdersProvider.notifier).arriveAtStop(order.id, stopId)),
+            onArrive: (stopId) => _runSimpleAction(() => ref
+                .read(riderMeOrdersProvider.notifier)
+                .arriveAtStop(order.id, stopId)),
             onDeliver: (stopId) => _openDeliverySheet(order.id, stopId: stopId),
-            onFail: (stopId, reason) =>
-                ref.read(riderMeOrdersProvider.notifier).failStop(order.id, stopId, reason: reason),
+            onFail: (stopId, reason) => ref
+                .read(riderMeOrdersProvider.notifier)
+                .failStop(order.id, stopId, reason: reason),
           );
         }
         return AppGradientButton(
@@ -396,8 +519,9 @@ class _RiderMeOrderDetailSheetState
           isLoading: _actionBusy,
           onPressed: _actionBusy
               ? null
-              : () => _runSimpleAction(
-                  () => ref.read(riderMeOrdersProvider.notifier).arrivedAtDropoff(order.id)),
+              : () => _runSimpleAction(() => ref
+                  .read(riderMeOrdersProvider.notifier)
+                  .arrivedAtDropoff(order.id)),
         );
 
       case RiderDeliveryStage.arrivedAtDropoff:
@@ -464,7 +588,9 @@ class _RiderMeOrderDetailSheetState
       children: [
         Text(label,
             style: const TextStyle(
-                fontFamily: 'Roboto', fontSize: 14, color: AppColors.textSecondary)),
+                fontFamily: 'Roboto',
+                fontSize: 14,
+                color: AppColors.textSecondary)),
         Flexible(
           child: Text(
             value,
@@ -604,7 +730,8 @@ class _StopTile extends StatelessWidget {
       statusText = 'Delivered';
       statusColor = AppColors.success;
     } else if (stop.isFailed) {
-      statusText = 'Failed${stop.failureReason != null ? ': ${stop.failureReason}' : ''}';
+      statusText =
+          'Failed${stop.failureReason != null ? ': ${stop.failureReason}' : ''}';
       statusColor = AppColors.error;
     } else if (hasArrived) {
       statusText = 'Arrived';
@@ -617,10 +744,12 @@ class _StopTile extends StatelessWidget {
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 side: const BorderSide(color: AppColors.error),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
               ),
               child: const Text('Fail',
-                  style: TextStyle(fontFamily: 'Roboto', color: AppColors.error)),
+                  style:
+                      TextStyle(fontFamily: 'Roboto', color: AppColors.error)),
             ),
           ),
           const SizedBox(width: 8),

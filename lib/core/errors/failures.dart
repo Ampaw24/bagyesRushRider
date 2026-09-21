@@ -39,3 +39,12 @@ class ValidationFailure extends Failure {
     return msg != null && RegExp(r'already been taken', caseSensitive: false).hasMatch(msg);
   }
 }
+
+/// A 422 from `GET /orders/:id/conversation` — no conversation exists for
+/// this order yet, per the chat API's documented contract. A state, not a
+/// bad request, so it's kept distinct from [ValidationFailure] (which is
+/// about rejected request-body fields) — callers render "not available
+/// yet" rather than a retry/error UI.
+class ConversationUnavailableFailure extends Failure {
+  const ConversationUnavailableFailure(super.message);
+}

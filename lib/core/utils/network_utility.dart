@@ -1,6 +1,10 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:delivery_boy/constant/baseurl.dart';
+import 'package:delivery_boy/core/di/service_locator.dart';
+import 'package:delivery_boy/core/realtime/realtime_service.dart';
 import 'package:delivery_boy/core/services/user_session_manager.dart';
 import 'package:delivery_boy/core/utils/app_logger.dart';
 
@@ -89,6 +93,10 @@ class RiderDioInterceptor extends Interceptor {
       await _sessionManager.clearSession();
       // Wakes GoRouter's redirect so the guard can send us to login.
       sessionRevision.value++;
+      // The realtime socket was authenticated against the now-cleared
+      // token too — tear it down rather than leave it open until its own
+      // next channel-auth attempt discovers the same 401.
+      unawaited(sl<RealtimeService>().disconnect());
     }
 
     handler.next(error);

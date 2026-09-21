@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 import 'package:delivery_boy/core/errors/failures.dart';
+import 'package:delivery_boy/core/network/api_error_parser.dart';
 import 'package:delivery_boy/core/network/request_error_message.dart';
 import 'package:delivery_boy/features/rider/wallet/models/rider_me_wallet_model.dart';
 import 'package:delivery_boy/features/rider/wallet/repositories/rider_me_wallet_repository.dart';
@@ -56,11 +57,13 @@ class RiderMeWalletRepositoryImpl implements RiderMeWalletRepository {
     return (raw as Map?)?.cast<String, dynamic>() ?? const {};
   }
 
-  /// Unwraps a Laravel paginated/plain collection envelope
-  /// (`{"data": [...]}`); falls back to a bare JSON array.
+  /// Unwraps a Laravel paginated collection envelope
+  /// (`{"data": {"items": [...], "pagination": {...}}}`), a plain
+  /// collection envelope (`{"data": [...]}`), or a bare JSON array.
   List<Map<String, dynamic>> _asList(dynamic raw) {
-    final list = (raw is Map<String, dynamic> ? raw['data'] : raw) as List?;
-    return (list ?? const [])
+    final data = raw is Map<String, dynamic> ? raw['data'] : raw;
+    final list = data is Map<String, dynamic> ? data['items'] : data;
+    return (list is List ? list : const [])
         .map((e) => (e as Map).cast<String, dynamic>())
         .toList();
   }
@@ -69,7 +72,12 @@ class RiderMeWalletRepositoryImpl implements RiderMeWalletRepository {
     try {
       return Right(await action());
     } on DioException catch (e) {
-      return Left(ServerFailure(dioErrorMessage(e)));
+      final msg = dioErrorMessage(e);
+      final fieldErrors = apiFieldErrorsFrom(e.response?.data);
+      if (fieldErrors != null) {
+        return Left(ValidationFailure(msg, fieldErrors));
+      }
+      return Left(ServerFailure(msg));
     } catch (e, s) {
       return Left(ServerFailure(unexpectedErrorMessage(e, s)));
     }

@@ -83,6 +83,14 @@ abstract class RiderAuthRepository {
     required String confirmPassword,
   });
 
+  /// Permanently deletes the signed-in rider's account
+  /// (`POST /account/delete`). Requires the current password to confirm
+  /// intent; `reason` is optional feedback sent to support.
+  ResultFuture<void> deleteAccount({
+    required String password,
+    String? reason,
+  });
+
   ResultFuture<AuthUserModel> getProfile();
 
   ResultFuture<void> logout();

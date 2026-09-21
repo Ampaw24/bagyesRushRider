@@ -1,3 +1,5 @@
+import 'dart:ui' show Color;
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
@@ -42,7 +44,7 @@ class FcmService {
 
   static const _androidChannel = AndroidNotificationChannel(
     'bagyes_rush_high_importance',
-    'BagyesRUSH Notifications',
+    'BagyesRIDER Notifications',
     description: 'Delivery updates and new order alerts',
     importance: Importance.high,
   );
@@ -97,8 +99,11 @@ class FcmService {
     });
 
     // ── Local notifications setup (for foreground display) ───────────────────
+    // Must be a flat white-on-transparent silhouette (see ic_notification.png
+    // under android/app/src/main/res/drawable-*) — Android strips color from
+    // status bar icons on API 21+.
     const androidInit =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+        AndroidInitializationSettings('@drawable/ic_notification');
     const iosInit = DarwinInitializationSettings(
       requestAlertPermission: false,
       requestBadgePermission: false,
@@ -165,7 +170,11 @@ class FcmService {
           _androidChannel.id,
           _androidChannel.name,
           channelDescription: _androidChannel.description,
-          icon: '@mipmap/ic_launcher',
+          icon: '@drawable/ic_notification',
+          // Matches ic_launcher_background / the manifest's
+          // default_notification_color, so a foreground-shown notification
+          // looks the same as one the FCM SDK auto-displays in background.
+          color: const Color(0xFFE91D25),
           importance: Importance.high,
           priority: Priority.high,
         ),

@@ -78,6 +78,16 @@ class RiderAuthApiService {
         'password_confirmation': confirmPassword,
       });
 
+  /// Requires Bearer auth. `reason` is optional feedback for support.
+  Future<Response<dynamic>> deleteAccount({
+    required String password,
+    String? reason,
+  }) =>
+      _dio.post(ApiEndpoints.accountDelete, data: {
+        'password': password,
+        if (reason != null && reason.isNotEmpty) 'reason': reason,
+      });
+
   Future<Response<dynamic>> getProfile() => _dio.get(ApiEndpoints.profile);
 
   Future<Response<dynamic>> logout() => _dio.post(ApiEndpoints.logout);

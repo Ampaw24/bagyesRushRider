@@ -482,6 +482,12 @@ class _OrdersTab extends ConsumerWidget {
             ),
           ),
           actions: [
+            // Order chats
+            IconButton(
+              icon: const Icon(HugeIcons.strokeRoundedBubbleChat,
+                  color: AppColors.textPrimary, size: 24),
+              onPressed: () => context.push(AppRoutes.chat),
+            ),
             // Notifications bell with unread badge
             Stack(
               alignment: Alignment.topRight,

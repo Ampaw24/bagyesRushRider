@@ -134,6 +134,33 @@ class RiderMeOrderModel extends Equatable {
   String get amountFormatted =>
       amount != null ? 'GHS ${amount!.toStringAsFixed(2)}' : '';
 
+  RiderMeOrderModel copyWith({
+    int? id,
+    String? reference,
+    String? status,
+    String? pickupAddress,
+    String? dropoffAddress,
+    String? customerName,
+    String? customerPhone,
+    num? amount,
+    List<RiderMeOrderStopModel>? stops,
+    String? createdAt,
+    String? updatedAt,
+  }) =>
+      RiderMeOrderModel(
+        id: id ?? this.id,
+        reference: reference ?? this.reference,
+        status: status ?? this.status,
+        pickupAddress: pickupAddress ?? this.pickupAddress,
+        dropoffAddress: dropoffAddress ?? this.dropoffAddress,
+        customerName: customerName ?? this.customerName,
+        customerPhone: customerPhone ?? this.customerPhone,
+        amount: amount ?? this.amount,
+        stops: stops ?? this.stops,
+        createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+      );
+
   factory RiderMeOrderModel.fromJson(Map<String, dynamic> json) {
     final stopsList = json['stops'] as List? ?? const [];
     return RiderMeOrderModel(

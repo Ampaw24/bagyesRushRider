@@ -110,6 +110,13 @@ class RiderAuthRepositoryImpl implements RiderAuthRepository {
           ));
 
   @override
+  Future<Either<Failure, void>> deleteAccount({
+    required String password,
+    String? reason,
+  }) =>
+      _run(() => _api.deleteAccount(password: password, reason: reason));
+
+  @override
   Future<Either<Failure, AuthUserModel>> getProfile() => _run(() async {
         final response = await _api.getProfile();
         // NOTE: /profile has no `user` envelope level — unlike login/register.

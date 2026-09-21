@@ -8,9 +8,11 @@ class RiderMeWalletApiService {
 
   RiderMeWalletApiService(this._dio);
 
-  Future<Response<dynamic>> getWallet() =>
-      _dio.get(ApiEndpoints.riderMeWallet);
+  Future<Response<dynamic>> getWallet() => _dio.get(ApiEndpoints.riderMeWallet);
 
+  // TODO(pagination): neither this nor getWithdrawals() documents a
+  // page/per_page/cursor param. Add one once the live response's
+  // meta/links/pagination shape is confirmed (rider-wallet-apis.md #6).
   Future<Response<dynamic>> getTransactions() =>
       _dio.get(ApiEndpoints.riderMeWalletTransactions);
 

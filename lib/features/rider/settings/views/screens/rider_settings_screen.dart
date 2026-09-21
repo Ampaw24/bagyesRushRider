@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/core/di/service_locator.dart';
+import 'package:delivery_boy/core/router/app_routes.dart';
 import 'package:delivery_boy/core/services/user_session_manager.dart';
+import 'package:delivery_boy/core/widgets/custom_dialogs.dart';
 import 'package:delivery_boy/features/rider/auth/views/widgets/change_password_sheet.dart';
+import 'package:delivery_boy/features/rider/auth/views/widgets/delete_account_sheet.dart';
 import 'package:delivery_boy/features/rider/auth/views/widgets/phone_change_flow_sheet.dart';
 import 'package:hugeicons/hugeicons.dart';
 
@@ -29,8 +33,7 @@ class _RiderSettingsScreenState extends ConsumerState<RiderSettingsScreen> {
   Future<void> _loadPrefs() async {
     final prefs = sl<SharedPreferences>();
     setState(() {
-      _notificationsEnabled =
-          prefs.getBool('notifications_enabled') ?? true;
+      _notificationsEnabled = prefs.getBool('notifications_enabled') ?? true;
     });
   }
 
@@ -92,7 +95,19 @@ class _RiderSettingsScreenState extends ConsumerState<RiderSettingsScreen> {
             value: _notificationsEnabled,
             onChanged: _toggleNotifications,
           ),
-
+          _sectionHeader('Support'),
+          _tile(
+            icon: HugeIcons.strokeRoundedCustomerService01,
+            iconColor: AppColors.primary,
+            title: 'Help & Support',
+            onTap: () => context.push(AppRoutes.helpSupport),
+          ),
+          _tile(
+            icon: HugeIcons.strokeRoundedFlag02,
+            iconColor: Colors.deepOrange,
+            title: 'Report a Problem',
+            onTap: () => context.push(AppRoutes.reports),
+          ),
           _sectionHeader('About'),
           _tile(
             icon: HugeIcons.strokeRoundedInformationCircle,
@@ -119,7 +134,6 @@ class _RiderSettingsScreenState extends ConsumerState<RiderSettingsScreen> {
             title: 'Privacy Policy',
             onTap: () => _launch('https://bagyesrush.com/privacy'),
           ),
-
           _sectionHeader('Danger Zone'),
           _tile(
             icon: HugeIcons.strokeRoundedDelete01,
@@ -267,29 +281,14 @@ class _RiderSettingsScreenState extends ConsumerState<RiderSettingsScreen> {
   }
 
   void _showDeleteDialog(BuildContext context) {
-    showDialog(
+    CustomDialog.showConfirmation(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Delete Account'),
-        content: const Text(
-          'To delete your account, please contact our support team at support@bagyesrush.com',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Close'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              _launch('mailto:support@bagyesrush.com');
-            },
-            child: const Text('Contact Support',
-                style: TextStyle(color: AppColors.primary)),
-          ),
-        ],
-      ),
+      title: 'Delete Account',
+      subtitle:
+          'This permanently deletes your account and all associated data. '
+          'This action cannot be undone.',
+      confirmText: 'Continue',
+      onConfirm: () => DeleteAccountSheet.show(context),
     );
   }
 }

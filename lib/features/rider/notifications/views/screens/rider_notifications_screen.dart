@@ -1,11 +1,10 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/core/di/service_locator.dart';
+import 'package:delivery_boy/core/widgets/shimmer_list_placeholder.dart';
+import 'package:delivery_boy/features/rider/notifications/models/rider_notification_model.dart';
+import 'package:delivery_boy/features/rider/notifications/providers/rider_notifications_providers.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -14,208 +13,25 @@ import 'package:hugeicons/hugeicons.dart';
 
 enum _NotifType { order, payment, kyc, zone, system, promo }
 
-class _Notif {
-  final String id;
-  final String title;
-  final String body;
-  final bool read;
-  final DateTime createdAt;
-  final _NotifType type;
-
-  const _Notif({
-    required this.id,
-    required this.title,
-    required this.body,
-    required this.read,
-    required this.createdAt,
-    required this.type,
-  });
-
-  _Notif copyWith({bool? read}) => _Notif(
-        id: id,
-        title: title,
-        body: body,
-        read: read ?? this.read,
-        createdAt: createdAt,
-        type: type,
-      );
-
-  Map<String, dynamic> toJson() => {
-        'id': id,
-        'title': title,
-        'body': body,
-        'read': read,
-        'createdAt': createdAt.toIso8601String(),
-        'type': type.name,
-      };
-
-  factory _Notif.fromJson(Map<String, dynamic> j) => _Notif(
-        id: j['id'] as String,
-        title: j['title'] as String,
-        body: j['body'] as String,
-        read: j['read'] as bool,
-        createdAt: DateTime.parse(j['createdAt'] as String),
-        type: _NotifType.values.firstWhere(
-          (t) => t.name == j['type'],
-          orElse: () => _NotifType.system,
-        ),
-      );
-}
-
-class _Thread {
-  final String id;
-  final String senderName;
-  final String lastMessage;
-  final String time;
-  final int unread;
-  final Color avatarColor;
-  final bool isOnline;
-
-  const _Thread({
-    required this.id,
-    required this.senderName,
-    required this.lastMessage,
-    required this.time,
-    required this.unread,
-    required this.avatarColor,
-    this.isOnline = false,
-  });
-
-  String get initials {
-    final parts = senderName.trim().split(' ');
-    if (parts.length >= 2) return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
-    return senderName.isNotEmpty ? senderName[0].toUpperCase() : '?';
+/// Maps the backend's free-form `type` string to this screen's icon/color
+/// styling — unrecognised or missing values fall back to [_NotifType.system]
+/// rather than guessing.
+_NotifType _notifTypeFromApi(String? type) {
+  switch (type) {
+    case 'order':
+      return _NotifType.order;
+    case 'payment':
+      return _NotifType.payment;
+    case 'kyc':
+      return _NotifType.kyc;
+    case 'zone':
+      return _NotifType.zone;
+    case 'promo':
+      return _NotifType.promo;
+    default:
+      return _NotifType.system;
   }
 }
-
-// ═════════════════════════════════════════════════════════════════════════════
-// MOCK DATA
-// ═════════════════════════════════════════════════════════════════════════════
-
-DateTime _ago({int days = 0, int hours = 0, int minutes = 0}) {
-  return DateTime.now()
-      .subtract(Duration(days: days, hours: hours, minutes: minutes));
-}
-
-List<_Notif> _buildMockNotifs() => [
-      _Notif(
-        id: 'n01',
-        title: 'New Delivery Request',
-        body:
-            'A pickup is ready at Accra Mall, East Legon. Estimated 3.4 km from your location.',
-        read: false,
-        createdAt: _ago(minutes: 8),
-        type: _NotifType.order,
-      ),
-      _Notif(
-        id: 'n02',
-        title: 'Payment Received',
-        body:
-            'GH₵ 28.50 has been credited to your wallet for order #BR-00421.',
-        read: false,
-        createdAt: _ago(hours: 1, minutes: 20),
-        type: _NotifType.payment,
-      ),
-      _Notif(
-        id: 'n03',
-        title: 'KYC Approved ✓',
-        body:
-            'Your identity verification is complete. You can now go online and accept orders.',
-        read: false,
-        createdAt: _ago(hours: 3),
-        type: _NotifType.kyc,
-      ),
-      _Notif(
-        id: 'n04',
-        title: 'New Zone Unlocked',
-        body:
-            'The Tema Industrial Area zone is now active. Deliveries in this zone earn 15% more.',
-        read: true,
-        createdAt: _ago(hours: 6, minutes: 45),
-        type: _NotifType.zone,
-      ),
-      _Notif(
-        id: 'n05',
-        title: 'Order Completed',
-        body: 'Order #BR-00418 delivered successfully to Osu Oxford Street. Great work!',
-        read: false,
-        createdAt: _ago(days: 1, hours: 2),
-        type: _NotifType.order,
-      ),
-      _Notif(
-        id: 'n06',
-        title: 'Bonus Earnings Alert 🎉',
-        body:
-            'You completed 10 orders this week! GH₵ 50 bonus has been added to your wallet.',
-        read: false,
-        createdAt: _ago(days: 1, hours: 5),
-        type: _NotifType.payment,
-      ),
-      _Notif(
-        id: 'n07',
-        title: 'Document Expiring Soon',
-        body:
-            'Your motor insurance document expires in 7 days. Upload a renewed copy to avoid suspension.',
-        read: true,
-        createdAt: _ago(days: 1, hours: 9),
-        type: _NotifType.kyc,
-      ),
-      _Notif(
-        id: 'n08',
-        title: 'App Update Available',
-        body:
-            'BagyesRUSH v2.4 is out with faster order matching and improved maps. Update now.',
-        read: true,
-        createdAt: _ago(days: 3, hours: 11),
-        type: _NotifType.system,
-      ),
-      _Notif(
-        id: 'n09',
-        title: 'Weekend Promo Active',
-        body:
-            'Earn double points on all deliveries this Saturday and Sunday from 8AM – 10PM.',
-        read: true,
-        createdAt: _ago(days: 4, hours: 7),
-        type: _NotifType.promo,
-      ),
-      _Notif(
-        id: 'n10',
-        title: 'Account Verified',
-        body:
-            'Your BagyesRUSH rider account setup is complete. Welcome to the fleet!',
-        read: true,
-        createdAt: _ago(days: 6, hours: 14),
-        type: _NotifType.kyc,
-      ),
-    ];
-
-final _mockThreads = <_Thread>[
-  const _Thread(
-    id: 't1',
-    senderName: 'BagyesRUSH Support',
-    lastMessage: 'Your account has been verified! Welcome aboard 🎉',
-    time: '10:30 AM',
-    unread: 2,
-    avatarColor: AppColors.primary,
-    isOnline: true,
-  ),
-  const _Thread(
-    id: 't2',
-    senderName: 'Delivery Team',
-    lastMessage: 'New delivery zones are now available in your area.',
-    time: 'Yesterday',
-    unread: 0,
-    avatarColor: Color(0xFF0097A7),
-  ),
-  const _Thread(
-    id: 't3',
-    senderName: 'BagyesRUSH Admin',
-    lastMessage: 'Please complete your document upload to go online.',
-    time: 'Mon',
-    unread: 1,
-    avatarColor: AppColors.secondary,
-  ),
-];
 
 // ═════════════════════════════════════════════════════════════════════════════
 // HELPERS
@@ -293,48 +109,6 @@ String _timeLabel(DateTime dt) {
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
-// LOCAL STORE  — persists notifications in SharedPreferences (no API)
-// ═════════════════════════════════════════════════════════════════════════════
-
-class _LocalStore {
-  static const _notifsKey = 'rider_notifs_v1';
-
-  final SharedPreferences _prefs;
-  _LocalStore(this._prefs);
-
-  /// Load saved list; seeds mock data on first run.
-  List<_Notif> load() {
-    final raw = _prefs.getString(_notifsKey);
-    if (raw == null) {
-      final seed = _buildMockNotifs();
-      _persist(seed);
-      return seed;
-    }
-    try {
-      final decoded = jsonDecode(raw) as List<dynamic>;
-      return decoded
-          .map((e) => _Notif.fromJson(e as Map<String, dynamic>))
-          .toList();
-    } catch (_) {
-      // Corrupted data — re-seed.
-      final seed = _buildMockNotifs();
-      _persist(seed);
-      return seed;
-    }
-  }
-
-  /// Persist the current list.
-  void save(List<_Notif> notifs) => _persist(notifs);
-
-  void _persist(List<_Notif> notifs) {
-    _prefs.setString(
-      _notifsKey,
-      jsonEncode(notifs.map((n) => n.toJson()).toList()),
-    );
-  }
-}
-
-// ═════════════════════════════════════════════════════════════════════════════
 // MAIN SCREEN
 // ═════════════════════════════════════════════════════════════════════════════
 
@@ -347,89 +121,49 @@ class RiderNotificationsScreen extends ConsumerStatefulWidget {
 }
 
 class _RiderNotificationsScreenState
-    extends ConsumerState<RiderNotificationsScreen>
-    with SingleTickerProviderStateMixin {
-  late final TabController _tab;
-  late final _LocalStore _store;
-
-  List<_Notif> _notifs = [];
-  List<_Thread> _threads = List.from(_mockThreads);
-
-  int get _notifUnread => _notifs.where((n) => !n.read).length;
-  int get _msgUnread => _threads.fold(0, (s, t) => s + t.unread);
-
+    extends ConsumerState<RiderNotificationsScreen> {
   @override
   void initState() {
     super.initState();
-    _tab = TabController(length: 2, vsync: this);
-    _tab.addListener(() => setState(() {}));
-
-    // Load from SharedPreferences (seeds mock data on first run).
-    _store = _LocalStore(sl<SharedPreferences>());
-    _notifs = _store.load();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(riderNotificationsProvider.notifier).load();
+    });
   }
-
-  @override
-  void dispose() {
-    _tab.dispose();
-    super.dispose();
-  }
-
-  void _updateNotifs(List<_Notif> updated) {
-    setState(() => _notifs = updated);
-    _store.save(updated);
-  }
-
-  void _markRead(String id) => _updateNotifs(
-        _notifs.map((n) => n.id == id ? n.copyWith(read: true) : n).toList(),
-      );
 
   void _markAllRead() {
     HapticFeedback.lightImpact();
-    _updateNotifs(_notifs.map((n) => n.copyWith(read: true)).toList());
+    ref.read(riderNotificationsProvider.notifier).markAllRead();
   }
-
-  void _archiveNotif(String id) =>
-      _updateNotifs(_notifs.where((n) => n.id != id).toList());
-
-  void _deleteNotif(String id) =>
-      _updateNotifs(_notifs.where((n) => n.id != id).toList());
-
-  void _dismissThread(String id) => setState(
-      () => _threads = _threads.where((t) => t.id != id).toList());
 
   @override
   Widget build(BuildContext context) {
+    final notifState = ref.watch(riderNotificationsProvider);
+    final notifUnread = notifState.unreadCount;
+
     return Scaffold(
       backgroundColor: AppColors.scaffold,
       body: SafeArea(
         bottom: false,
         child: Column(
           children: [
-            _InboxHeader(
-              tabIndex: _tab.index,
-              notifUnread: _notifUnread,
-              msgUnread: _msgUnread,
-              tabController: _tab,
-              onMarkAllRead: _notifUnread > 0 ? _markAllRead : null,
+            _NotificationsHeader(
+              notifUnread: notifUnread,
+              onMarkAllRead: notifUnread > 0 ? _markAllRead : null,
             ),
             Expanded(
-              child: TabBarView(
-                controller: _tab,
-                physics: const BouncingScrollPhysics(),
-                children: [
-                  _NotificationsTab(
-                    notifs: _notifs,
-                    onMarkRead: _markRead,
-                    onArchive: _archiveNotif,
-                    onDelete: _deleteNotif,
-                    onMarkAllRead: _markAllRead,
-                  ),
-                  _MessagesTab(
-                    threads: _threads,
-                    onDismiss: _dismissThread,
-                  ),
-                ],
+              child: _NotificationsTab(
+                isLoading: notifState.status == NotificationsStatus.loading ||
+                    notifState.status == NotificationsStatus.initial,
+                notifs: notifState.notifications,
+                onMarkRead: (id) =>
+                    ref.read(riderNotificationsProvider.notifier).markRead(id),
+                // There is only one removal endpoint on the backend — both
+                // swipe directions dismiss the notification the same way.
+                onArchive: (id) =>
+                    ref.read(riderNotificationsProvider.notifier).dismiss(id),
+                onDelete: (id) =>
+                    ref.read(riderNotificationsProvider.notifier).dismiss(id),
+                onMarkAllRead: _markAllRead,
               ),
             ),
           ],
@@ -440,21 +174,15 @@ class _RiderNotificationsScreenState
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
-// INBOX HEADER  (plain widget — self-sizes, no fixed height)
+// HEADER  (plain widget — self-sizes, no fixed height)
 // ═════════════════════════════════════════════════════════════════════════════
 
-class _InboxHeader extends StatelessWidget {
-  final int tabIndex;
+class _NotificationsHeader extends StatelessWidget {
   final int notifUnread;
-  final int msgUnread;
-  final TabController tabController;
   final VoidCallback? onMarkAllRead;
 
-  const _InboxHeader({
-    required this.tabIndex,
+  const _NotificationsHeader({
     required this.notifUnread,
-    required this.msgUnread,
-    required this.tabController,
     this.onMarkAllRead,
   });
 
@@ -464,235 +192,74 @@ class _InboxHeader extends StatelessWidget {
 
     return Container(
       color: AppColors.scaffold,
-      child: Column(
-        children: [
-          // Title row
-          Padding(
-            padding: EdgeInsets.fromLTRB(w * 0.04, w * 0.03, w * 0.04, 0),
-            child: Row(
-              children: [
-                GestureDetector(
-                  onTap: () => Navigator.maybePop(context),
-                  child: Container(
-                    width: w * 0.09,
-                    height: w * 0.09,
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceVariant,
-                      borderRadius: BorderRadius.circular(w * 0.025),
-                    ),
-                    child: Icon(
-                      HugeIcons.strokeRoundedArrowLeft01,
-                      size: w * 0.048,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                ),
-                SizedBox(width: w * 0.03),
-                Expanded(
-                  child: Text(
-                    'Inbox',
-                    style: TextStyle(
-                      fontSize: w * 0.055,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimary,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                ),
-                // Mark all read — only on notif tab
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 200),
-                  child: (tabIndex == 0 && onMarkAllRead != null)
-                      ? GestureDetector(
-                          key: const ValueKey('markAll'),
-                          onTap: onMarkAllRead,
-                          child: Container(
-                            padding: EdgeInsets.symmetric(
-                                horizontal: w * 0.03, vertical: w * 0.015),
-                            decoration: BoxDecoration(
-                              color: AppColors.primary.withValues(alpha: 0.08),
-                              borderRadius: BorderRadius.circular(w * 0.05),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  HugeIcons.strokeRoundedCheckmarkCircle01,
-                                  size: w * 0.038,
-                                  color: AppColors.primary,
-                                ),
-                                SizedBox(width: w * 0.015),
-                                Text(
-                                  'Mark all read',
-                                  style: TextStyle(
-                                    fontSize: w * 0.031,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.primary,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        )
-                      : const SizedBox.shrink(key: ValueKey('empty')),
-                ),
-              ],
-            ),
-          ),
-          SizedBox(height: w * 0.03),
-          // Segmented bar
-          _SegmentedBar(
-            controller: tabController,
-            notifUnread: notifUnread,
-            msgUnread: msgUnread,
-          ),
-          SizedBox(height: w * 0.02),
-        ],
-      ),
-    );
-  }
-}
-
-// ═════════════════════════════════════════════════════════════════════════════
-// SEGMENTED TAB BAR
-// ═════════════════════════════════════════════════════════════════════════════
-
-class _SegmentedBar extends StatelessWidget {
-  final TabController controller;
-  final int notifUnread;
-  final int msgUnread;
-
-  const _SegmentedBar({
-    required this.controller,
-    required this.notifUnread,
-    required this.msgUnread,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final w = MediaQuery.sizeOf(context).width;
-    final selected = controller.index;
-
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: w * 0.04),
-      child: Container(
-        height: w * 0.115,
-        decoration: BoxDecoration(
-          color: AppColors.surfaceVariant,
-          borderRadius: BorderRadius.circular(w * 0.03),
-        ),
-        child: Stack(
-          children: [
-            // Sliding pill
-            AnimatedAlign(
-              alignment:
-                  selected == 0 ? Alignment.centerLeft : Alignment.centerRight,
-              duration: const Duration(milliseconds: 260),
-              curve: Curves.easeInOutCubic,
-              child: FractionallySizedBox(
-                widthFactor: 0.5,
-                child: Padding(
-                  padding: EdgeInsets.all(w * 0.012),
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(w * 0.022),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.07),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: const SizedBox.expand(),
-                  ),
-                ),
-              ),
-            ),
-            // Labels
-            Row(
-              children: [
-                Expanded(
-                  child: _SegLabel(
-                    label: 'Notifications',
-                    badge: notifUnread,
-                    active: selected == 0,
-                    onTap: () => controller.animateTo(0),
-                  ),
-                ),
-                Expanded(
-                  child: _SegLabel(
-                    label: 'Messages',
-                    badge: msgUnread,
-                    active: selected == 1,
-                    onTap: () => controller.animateTo(1),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _SegLabel extends StatelessWidget {
-  final String label;
-  final int badge;
-  final bool active;
-  final VoidCallback onTap;
-
-  const _SegLabel({
-    required this.label,
-    required this.badge,
-    required this.active,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final w = MediaQuery.sizeOf(context).width;
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: onTap,
-      child: Center(
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(w * 0.04, w * 0.03, w * 0.04, w * 0.02),
         child: Row(
-          mainAxisSize: MainAxisSize.min,
           children: [
-            AnimatedDefaultTextStyle(
-              duration: const Duration(milliseconds: 200),
-              style: TextStyle(
-                fontSize: w * 0.036,
-                fontWeight: active ? FontWeight.w700 : FontWeight.w500,
-                color:
-                    active ? AppColors.textPrimary : AppColors.textSecondary,
-              ),
-              child: Text(label),
-            ),
-            if (badge > 0) ...[
-              SizedBox(width: w * 0.015),
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding: EdgeInsets.symmetric(
-                    horizontal: w * 0.017, vertical: w * 0.006),
+            GestureDetector(
+              onTap: () => Navigator.maybePop(context),
+              child: Container(
+                width: w * 0.09,
+                height: w * 0.09,
                 decoration: BoxDecoration(
-                  color: active
-                      ? AppColors.primary
-                      : AppColors.primary.withValues(alpha: 0.18),
-                  borderRadius: BorderRadius.circular(20),
+                  color: AppColors.surfaceVariant,
+                  borderRadius: BorderRadius.circular(w * 0.025),
                 ),
-                child: Text(
-                  badge > 99 ? '99+' : '$badge',
-                  style: TextStyle(
-                    fontSize: w * 0.027,
-                    fontWeight: FontWeight.w700,
-                    color: active ? Colors.white : AppColors.primary,
-                  ),
+                child: Icon(
+                  HugeIcons.strokeRoundedArrowLeft01,
+                  size: w * 0.048,
+                  color: AppColors.textPrimary,
                 ),
               ),
-            ],
+            ),
+            SizedBox(width: w * 0.03),
+            Expanded(
+              child: Text(
+                'Notifications',
+                style: TextStyle(
+                  fontSize: w * 0.055,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
+                  letterSpacing: -0.5,
+                ),
+              ),
+            ),
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              child: onMarkAllRead != null
+                  ? GestureDetector(
+                      key: const ValueKey('markAll'),
+                      onTap: onMarkAllRead,
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                            horizontal: w * 0.03, vertical: w * 0.015),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(w * 0.05),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              HugeIcons.strokeRoundedCheckmarkCircle01,
+                              size: w * 0.038,
+                              color: AppColors.primary,
+                            ),
+                            SizedBox(width: w * 0.015),
+                            Text(
+                              'Mark all read',
+                              style: TextStyle(
+                                fontSize: w * 0.031,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  : const SizedBox.shrink(key: ValueKey('empty')),
+            ),
           ],
         ),
       ),
@@ -701,17 +268,19 @@ class _SegLabel extends StatelessWidget {
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
-// NOTIFICATIONS TAB
+// NOTIFICATIONS LIST
 // ═════════════════════════════════════════════════════════════════════════════
 
 class _NotificationsTab extends StatelessWidget {
-  final List<_Notif> notifs;
+  final bool isLoading;
+  final List<RiderNotificationModel> notifs;
   final ValueChanged<String> onMarkRead;
   final ValueChanged<String> onArchive;
   final ValueChanged<String> onDelete;
   final VoidCallback onMarkAllRead;
 
   const _NotificationsTab({
+    required this.isLoading,
     required this.notifs,
     required this.onMarkRead,
     required this.onArchive,
@@ -721,12 +290,15 @@ class _NotificationsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (isLoading) {
+      return const ShimmerListPlaceholder(itemCount: 5, itemHeight: 96);
+    }
     if (notifs.isEmpty) return const _EmptyNotifications();
 
     // Group by date label
-    final groups = <String, List<_Notif>>{};
+    final groups = <String, List<RiderNotificationModel>>{};
     for (final n in notifs) {
-      groups.putIfAbsent(_groupLabel(n.createdAt), () => []).add(n);
+      groups.putIfAbsent(_groupLabel(n.createdAtOrNow), () => []).add(n);
     }
     const order = ['Today', 'Yesterday', 'Earlier'];
     final keys = order.where(groups.containsKey).toList();
@@ -745,11 +317,12 @@ class _NotificationsTab extends StatelessWidget {
       itemBuilder: (ctx, i) {
         final item = rows[i];
         if (item is String) return _SectionHeader(label: item);
+        final notif = item as RiderNotificationModel;
         return _NotifCard(
-          notif: item as _Notif,
-          onTap: () => onMarkRead((item).id),
-          onArchive: () => onArchive((item).id),
-          onDelete: () => onDelete((item).id),
+          notif: notif,
+          onTap: () => onMarkRead(notif.id),
+          onArchive: () => onArchive(notif.id),
+          onDelete: () => onDelete(notif.id),
         );
       },
     );
@@ -790,7 +363,7 @@ class _SectionHeader extends StatelessWidget {
 }
 
 class _NotifCard extends StatelessWidget {
-  final _Notif notif;
+  final RiderNotificationModel notif;
   final VoidCallback onTap;
   final VoidCallback onArchive;
   final VoidCallback onDelete;
@@ -805,7 +378,8 @@ class _NotifCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final w = MediaQuery.sizeOf(context).width;
-    final style = _notifStyle(notif.type);
+    final notifType = _notifTypeFromApi(notif.type);
+    final style = _notifStyle(notifType);
     final isUnread = !notif.read;
 
     return Dismissible(
@@ -891,7 +465,7 @@ class _NotifCard extends StatelessWidget {
                         children: [
                           Expanded(
                             child: Text(
-                              notif.title,
+                              notif.title ?? 'Notification',
                               style: TextStyle(
                                 fontSize: w * 0.038,
                                 fontWeight: isUnread
@@ -909,7 +483,7 @@ class _NotifCard extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
                               Text(
-                                _timeLabel(notif.createdAt),
+                                _timeLabel(notif.createdAtOrNow),
                                 style: TextStyle(
                                   fontSize: w * 0.029,
                                   color: isUnread
@@ -937,7 +511,7 @@ class _NotifCard extends StatelessWidget {
                       ),
                       SizedBox(height: w * 0.015),
                       Text(
-                        notif.body,
+                        notif.body ?? '',
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
@@ -956,7 +530,7 @@ class _NotifCard extends StatelessWidget {
                           borderRadius: BorderRadius.circular(w * 0.04),
                         ),
                         child: Text(
-                          _chipLabel(notif.type),
+                          _chipLabel(notifType),
                           style: TextStyle(
                             fontSize: w * 0.027,
                             fontWeight: FontWeight.w600,
@@ -1046,183 +620,6 @@ class _SwipeBackground extends StatelessWidget {
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
-// MESSAGES TAB
-// ═════════════════════════════════════════════════════════════════════════════
-
-class _MessagesTab extends StatelessWidget {
-  final List<_Thread> threads;
-  final ValueChanged<String> onDismiss;
-
-  const _MessagesTab({required this.threads, required this.onDismiss});
-
-  @override
-  Widget build(BuildContext context) {
-    if (threads.isEmpty) return const _EmptyMessages();
-
-    final w = MediaQuery.sizeOf(context).width;
-    return ListView.separated(
-      physics: const BouncingScrollPhysics(),
-      padding: EdgeInsets.symmetric(vertical: w * 0.03),
-      itemCount: threads.length,
-      separatorBuilder: (_, __) =>
-          Divider(height: 1, indent: w * 0.22, color: AppColors.divider),
-      itemBuilder: (ctx, i) => _ThreadTile(
-        thread: threads[i],
-        onDismiss: () => onDismiss(threads[i].id),
-      ),
-    );
-  }
-}
-
-class _ThreadTile extends StatelessWidget {
-  final _Thread thread;
-  final VoidCallback onDismiss;
-
-  const _ThreadTile({required this.thread, required this.onDismiss});
-
-  @override
-  Widget build(BuildContext context) {
-    final w = MediaQuery.sizeOf(context).width;
-    final hasUnread = thread.unread > 0;
-
-    return Dismissible(
-      key: ValueKey(thread.id),
-      direction: DismissDirection.endToStart,
-      background: Container(
-        alignment: Alignment.centerRight,
-        padding: EdgeInsets.only(right: w * 0.05),
-        color: AppColors.error,
-        child: Icon(HugeIcons.strokeRoundedDelete01,
-            color: Colors.white, size: w * 0.055),
-      ),
-      onDismissed: (_) => onDismiss(),
-      child: InkWell(
-        onTap: () {},
-        child: Padding(
-          padding: EdgeInsets.symmetric(
-              horizontal: w * 0.04, vertical: w * 0.035),
-          child: Row(
-            children: [
-              Stack(
-                children: [
-                  Container(
-                    width: w * 0.135,
-                    height: w * 0.135,
-                    decoration: BoxDecoration(
-                      color: thread.avatarColor,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Center(
-                      child: Text(
-                        thread.initials,
-                        style: TextStyle(
-                          fontSize: w * 0.045,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-                  if (thread.isOnline)
-                    Positioned(
-                      right: 1,
-                      bottom: 1,
-                      child: Container(
-                        width: w * 0.032,
-                        height: w * 0.032,
-                        decoration: BoxDecoration(
-                          color: AppColors.success,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 2),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-              SizedBox(width: w * 0.035),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            thread.senderName,
-                            style: TextStyle(
-                              fontSize: w * 0.038,
-                              fontWeight: hasUnread
-                                  ? FontWeight.w700
-                                  : FontWeight.w500,
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                        ),
-                        Text(
-                          thread.time,
-                          style: TextStyle(
-                            fontSize: w * 0.029,
-                            fontWeight:
-                                hasUnread ? FontWeight.w600 : FontWeight.w400,
-                            color: hasUnread
-                                ? AppColors.primary
-                                : AppColors.textHint,
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: w * 0.01),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            thread.lastMessage,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: w * 0.033,
-                              fontWeight: hasUnread
-                                  ? FontWeight.w500
-                                  : FontWeight.w400,
-                              color: hasUnread
-                                  ? AppColors.textPrimary
-                                  : AppColors.textSecondary,
-                            ),
-                          ),
-                        ),
-                        if (hasUnread) ...[
-                          SizedBox(width: w * 0.02),
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                                horizontal: w * 0.018, vertical: w * 0.007),
-                            decoration: BoxDecoration(
-                              color: AppColors.primary,
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Text(
-                              '${thread.unread}',
-                              style: TextStyle(
-                                fontSize: w * 0.027,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ═════════════════════════════════════════════════════════════════════════════
 // EMPTY STATES
 // ═════════════════════════════════════════════════════════════════════════════
 
@@ -1272,52 +669,3 @@ class _EmptyNotifications extends StatelessWidget {
   }
 }
 
-class _EmptyMessages extends StatelessWidget {
-  const _EmptyMessages();
-
-  @override
-  Widget build(BuildContext context) {
-    final w = MediaQuery.sizeOf(context).width;
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: w * 0.26,
-            height: w * 0.26,
-            decoration: BoxDecoration(
-              color: AppColors.info.withValues(alpha: 0.08),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              HugeIcons.strokeRoundedBubbleChatAdd,
-              size: w * 0.13,
-              color: AppColors.info.withValues(alpha: 0.6),
-            ),
-          ),
-          SizedBox(height: w * 0.06),
-          Text(
-            'No messages yet',
-            style: TextStyle(
-              fontSize: w * 0.048,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          SizedBox(height: w * 0.02),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: w * 0.15),
-            child: Text(
-              'Support and team messages will appear here.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: w * 0.036,
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}

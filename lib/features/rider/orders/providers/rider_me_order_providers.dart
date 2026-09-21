@@ -1,8 +1,12 @@
+import 'dart:async';
+
 import 'package:equatable/equatable.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:delivery_boy/constant/typedef.dart';
 import 'package:delivery_boy/core/di/service_locator.dart';
 import 'package:delivery_boy/core/errors/failures.dart';
+import 'package:delivery_boy/core/realtime/models/realtime_events.dart';
+import 'package:delivery_boy/core/realtime/realtime_service.dart';
 import 'package:delivery_boy/features/rider/shared/rider_me_action_status.dart';
 import 'package:delivery_boy/features/rider/orders/models/rider_delivery_stage.dart';
 import 'package:delivery_boy/features/rider/orders/models/rider_me_order_model.dart';
@@ -52,8 +56,21 @@ class RiderMeOffersState extends Equatable {
 }
 
 class RiderMeOffersNotifier extends Notifier<RiderMeOffersState> {
+  StreamSubscription<Map<String, dynamic>>? _riderChannelSub;
+
   @override
-  RiderMeOffersState build() => const RiderMeOffersState();
+  RiderMeOffersState build() {
+    ref.onDispose(() => _riderChannelSub?.cancel());
+    // New offers arrive on this rider's own private-rider.{id} channel (see
+    // RealtimeService) — its payload shape isn't documented yet, so any
+    // event there is treated as "something changed, refresh" rather than
+    // parsed. The existing 25s poll in RiderNewOrdersScreen stays in place
+    // as the reliability fallback for a dropped/reconnecting socket.
+    _riderChannelSub = sl<RealtimeService>()
+        .riderChannelEvents$
+        .listen((_) => load(silent: true));
+    return const RiderMeOffersState();
+  }
 
   RiderMeOrderRepository get _repo => sl<RiderMeOrderRepository>();
 
@@ -202,10 +219,78 @@ class RiderMeOrdersState extends Equatable {
 }
 
 class RiderMeOrdersNotifier extends Notifier<RiderMeOrdersState> {
+  /// Order ids this notifier currently holds a `private-order.{id}` channel
+  /// open for — kept in sync with the active orders in [state] by
+  /// [_syncOrderChannels]. There's no dedicated order-tracking screen in
+  /// this app to scope subscriptions to instead (see
+  /// rider_tracking_providers.dart — it was retired), so "currently loaded
+  /// as active" is the next best proxy for "relevant to this rider right
+  /// now".
+  final Set<int> _liveOrderChannels = {};
+  StreamSubscription<RealtimeOrderStatusEvent>? _orderStatusSub;
+
   @override
-  RiderMeOrdersState build() => const RiderMeOrdersState();
+  RiderMeOrdersState build() {
+    ref.onDispose(_teardownRealtime);
+    _orderStatusSub =
+        sl<RealtimeService>().orderStatus$.listen(_onOrderStatusEvent);
+    return const RiderMeOrdersState();
+  }
 
   RiderMeOrderRepository get _repo => sl<RiderMeOrderRepository>();
+
+  /// An admin (or any other actor) changed an order's status out of band —
+  /// patch it in place rather than assuming which prior status it came
+  /// from. An order that leaves the active set this way also drops its
+  /// channel subscription, same as a rider-driven completion would.
+  void _onOrderStatusEvent(RealtimeOrderStatusEvent event) {
+    final orders = state.orders;
+    final index = orders.indexWhere((o) => o.id == event.orderId);
+    if (index == -1) return;
+
+    final updated = orders[index].copyWith(status: event.status);
+    final newOrders = [...orders];
+    if (updated.isActive) {
+      newOrders[index] = updated;
+    } else {
+      newOrders.removeAt(index);
+    }
+
+    state = state.copyWith(
+      orders: newOrders,
+      selectedOrder:
+          state.selectedOrder?.id == event.orderId ? updated : state.selectedOrder,
+    );
+
+    if (!updated.isActive) {
+      sl<RealtimeService>().unsubscribeFromOrder(event.orderId);
+      _liveOrderChannels.remove(event.orderId);
+    }
+  }
+
+  void _syncOrderChannels() {
+    final activeIds =
+        state.orders.where((o) => o.isActive).map((o) => o.id).toSet();
+    final realtime = sl<RealtimeService>();
+
+    for (final id in activeIds.difference(_liveOrderChannels)) {
+      realtime.subscribeToOrder(id);
+    }
+    for (final id in _liveOrderChannels.difference(activeIds)) {
+      realtime.unsubscribeFromOrder(id);
+    }
+    _liveOrderChannels
+      ..clear()
+      ..addAll(activeIds);
+  }
+
+  void _teardownRealtime() {
+    _orderStatusSub?.cancel();
+    final realtime = sl<RealtimeService>();
+    for (final id in _liveOrderChannels) {
+      realtime.unsubscribeFromOrder(id);
+    }
+  }
 
   /// [filter] is `all` | `active` | `history` per the API contract.
   Future<void> load({String? filter, String? status, int? perPage}) async {
@@ -216,8 +301,10 @@ class RiderMeOrdersNotifier extends Notifier<RiderMeOrdersState> {
     result.fold(
       (f) => state = state.copyWith(
           status: RiderMeOrdersStatus.error, errorMessage: f.message),
-      (orders) => state = state.copyWith(
-          status: RiderMeOrdersStatus.loaded, orders: orders),
+      (orders) {
+        state = state.copyWith(status: RiderMeOrdersStatus.loaded, orders: orders);
+        _syncOrderChannels();
+      },
     );
   }
 
