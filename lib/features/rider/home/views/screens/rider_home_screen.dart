@@ -172,9 +172,18 @@ class _RiderHomeScreenState extends ConsumerState<RiderHomeScreen>
     // Same technique as the vendor dashboard's "Finish Setup" card: show the
     // server's outstanding verification steps in place of the online toggle,
     // since the rider can't go online until they're done anyway.
+    //
+    // Gated on canGoOnline/isOnline, not just the checklist, because a rider
+    // who is already online (or already cleared to go online) must always
+    // be able to reach the toggle — otherwise a stray outstanding item
+    // (e.g. an optional field the server still lists after approval) hides
+    // the only way to go offline from this screen, even though the API
+    // call itself works fine.
     final kycProgress = ref.watch(kycProgressProvider);
-    final setupIncomplete =
-        kycProgress?.sections.any((s) => s.needsAction) ?? false;
+    final canGoOnline = kycProgress?.canGoOnline ?? false;
+    final setupIncomplete = !isOnline &&
+        !canGoOnline &&
+        (kycProgress?.sections.any((s) => s.needsAction) ?? false);
 
     return Scaffold(
       backgroundColor: AppColors.scaffold,
@@ -290,6 +299,7 @@ class _RiderHomeScreenState extends ConsumerState<RiderHomeScreen>
               onClose: _closeDrawer,
               onOrders: widget.onViewAllOrders,
               onWallet: widget.onViewWallet,
+              onProfile: widget.onViewProfile,
               onLogout: _handleLogout,
               onDeleteAccount: _handleDeleteAccount,
               isVerified:

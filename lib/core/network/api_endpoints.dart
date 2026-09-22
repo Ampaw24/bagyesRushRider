@@ -203,4 +203,12 @@ abstract final class ApiEndpoints {
   /// is misleading). Returns reasons grouped by target type, e.g.
   /// `{vendor: [...], customer: [...], order_issue: [...], general: [...]}`.
   static const reportReasons = '/reports/reasons';
+
+  // ── Legal documents ──────────────────────────────────────────────────────
+  /// `GET /rider-agreement` — public, no auth required (verified live
+  /// 2026-09-21: returns `{data: {id, version, title, body, file_url,
+  /// file_name, file_size, published_at}}`). `body` is Markdown, not HTML.
+  /// Lets the agreement text change server-side without an app release —
+  /// replaces the old hardcoded `RiderAgreementContent`.
+  static const riderAgreement = '/rider-agreement';
 }

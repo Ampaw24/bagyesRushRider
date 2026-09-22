@@ -34,6 +34,7 @@ class CustomerDrawer extends StatefulWidget {
   final VoidCallback onClose;
   final VoidCallback onOrders;
   final VoidCallback onWallet;
+  final VoidCallback onProfile;
   final VoidCallback onLogout;
   final VoidCallback onDeleteAccount;
 
@@ -49,6 +50,7 @@ class CustomerDrawer extends StatefulWidget {
     required this.onClose,
     required this.onOrders,
     required this.onWallet,
+    required this.onProfile,
     required this.onLogout,
     required this.onDeleteAccount,
     this.isVerified = false,
@@ -110,13 +112,15 @@ class _CustomerDrawerState extends State<CustomerDrawer>
   void _handleTap(_TileData item) {
     switch (item.label) {
       case 'My Profile':
-        _close().then((_) { if (mounted) context.push(AppRoutes.editProfile); });
+        _close().then((_) => widget.onProfile());
       case 'My Orders':
         _close().then((_) => widget.onOrders());
       case 'Notifications':
         _close().then((_) { if (mounted) context.push(AppRoutes.notifications); });
       case 'Wallet':
         _close().then((_) => widget.onWallet());
+      case 'Transactions':
+        _close().then((_) { if (mounted) context.push(AppRoutes.walletTransactions); });
       case 'Delete Account':
         _close().then((_) => widget.onDeleteAccount());
       case 'Logout':
@@ -159,6 +163,7 @@ class _CustomerDrawerState extends State<CustomerDrawer>
       const _TileData(icon: HugeIcons.strokeRoundedDeliveryBox01,    label: 'My Orders',        color: Color(0xFF3182CE)),
       const _TileData(icon: HugeIcons.strokeRoundedNotification01,   label: 'Notifications',    color: Color(0xFF2D3748)),
       const _TileData(icon: HugeIcons.strokeRoundedWallet01,         label: 'Wallet',           color: Color(0xFF059669)),
+      const _TileData(icon: HugeIcons.strokeRoundedTransactionHistory, label: 'Transactions',   color: Color(0xFF0891B2)),
       const _TileData(icon: HugeIcons.strokeRoundedCreditCard,       label: 'Payment Methods',  color: Color(0xFF7C3AED)),
       const _TileData(icon: HugeIcons.strokeRoundedShield01,         label: 'Privacy Policy',   color: Color(0xFF0369A1)),
       const _TileData(icon: HugeIcons.strokeRoundedHeadphones,       label: 'Help & Support',   color: Color(0xFFD97706)),

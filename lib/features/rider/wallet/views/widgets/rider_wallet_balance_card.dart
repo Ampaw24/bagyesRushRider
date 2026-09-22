@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 import 'package:delivery_boy/constant/app_theme.dart';
 
 /// Top balance card for the wallet overview — real balance, real pending
 /// amount and real currency, all sourced from `GET /rider/me/wallet`.
+/// [hidden] masks the figures behind bullets (tap the eye icon to toggle)
+/// so a rider isn't forced to show earnings to whoever is nearby.
 class RiderWalletBalanceCard extends StatelessWidget {
   final double total;
   final double today;
   final double pending;
   final String currency;
-  final double topPad;
+  final bool hidden;
+  final VoidCallback onToggleHidden;
   final double w;
   final double h;
 
@@ -20,16 +24,19 @@ class RiderWalletBalanceCard extends StatelessWidget {
     required this.today,
     required this.pending,
     required this.currency,
-    required this.topPad,
+    required this.hidden,
+    required this.onToggleHidden,
     required this.w,
     required this.h,
   });
+
+  String _mask(int width) => '•' * width;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      margin: EdgeInsets.fromLTRB(w * 0.04, topPad + h * 0.012, w * 0.04, 0),
+      margin: EdgeInsets.fromLTRB(w * 0.04, h * 0.012, w * 0.04, 0),
       padding: EdgeInsets.all(w * 0.055),
       decoration: BoxDecoration(
         color: AppColors.primary,
@@ -77,22 +84,57 @@ class RiderWalletBalanceCard extends StatelessWidget {
             ],
           ),
           SizedBox(height: h * 0.012),
-          TweenAnimationBuilder<double>(
-            key: ValueKey(total),
-            tween: Tween(begin: 0, end: total),
-            duration: const Duration(milliseconds: 900),
-            curve: Curves.easeOut,
-            builder: (_, v, __) => Text(
-              '$currency ${v.toStringAsFixed(2)}',
-              style: TextStyle(
-                fontFamily: 'Mukta',
-                fontSize: w * 0.095,
-                fontWeight: FontWeight.w800,
-                color: Colors.white,
-                height: 1,
-                letterSpacing: -1,
+          Row(
+            children: [
+              Expanded(
+                child: hidden
+                    ? Text(
+                        '$currency ${_mask(8)}',
+                        style: TextStyle(
+                          fontFamily: 'Mukta',
+                          fontSize: w * 0.095,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                          height: 1,
+                          letterSpacing: -1,
+                        ),
+                      )
+                    : TweenAnimationBuilder<double>(
+                        key: ValueKey(total),
+                        tween: Tween(begin: 0, end: total),
+                        duration: const Duration(milliseconds: 900),
+                        curve: Curves.easeOut,
+                        builder: (_, v, __) => Text(
+                          '$currency ${v.toStringAsFixed(2)}',
+                          style: TextStyle(
+                            fontFamily: 'Mukta',
+                            fontSize: w * 0.095,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                            height: 1,
+                            letterSpacing: -1,
+                          ),
+                        ),
+                      ),
               ),
-            ),
+              GestureDetector(
+                onTap: () {
+                  HapticFeedback.selectionClick();
+                  onToggleHidden();
+                },
+                behavior: HitTestBehavior.opaque,
+                child: Padding(
+                  padding: EdgeInsets.all(w * 0.015),
+                  child: Icon(
+                    hidden
+                        ? HugeIcons.strokeRoundedViewOff
+                        : HugeIcons.strokeRoundedView,
+                    color: Colors.white.withValues(alpha: 0.85),
+                    size: w * 0.058,
+                  ),
+                ),
+              ),
+            ],
           ),
           SizedBox(height: h * 0.016),
           Container(height: 0.8, color: Colors.white.withValues(alpha: 0.2)),
@@ -102,7 +144,9 @@ class RiderWalletBalanceCard extends StatelessWidget {
               Expanded(
                 child: _BalanceFooterItem(
                   label: 'Today',
-                  value: '$currency ${today.toStringAsFixed(2)}',
+                  value: hidden
+                      ? _mask(5)
+                      : '$currency ${today.toStringAsFixed(2)}',
                   w: w,
                   h: h,
                 ),
@@ -114,7 +158,9 @@ class RiderWalletBalanceCard extends StatelessWidget {
               Expanded(
                 child: _BalanceFooterItem(
                   label: 'Pending',
-                  value: '$currency ${pending.toStringAsFixed(2)}',
+                  value: hidden
+                      ? _mask(5)
+                      : '$currency ${pending.toStringAsFixed(2)}',
                   w: w,
                   h: h,
                   align: CrossAxisAlignment.end,

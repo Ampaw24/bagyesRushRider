@@ -36,7 +36,7 @@ void main() {
       UncontrolledProviderScope(
         container: container,
         child: const BagyesRushApp(),
-      ),
+      ), 
     );
 
     // Fire-and-forget: permission dialogs, the first GPS fix and push

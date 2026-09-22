@@ -31,6 +31,10 @@ import 'package:delivery_boy/features/rider/wallet/repositories/rider_me_wallet_
 import 'package:delivery_boy/features/rider/report/services/rider_report_api_service.dart';
 import 'package:delivery_boy/features/rider/report/repositories/rider_report_repository.dart';
 import 'package:delivery_boy/features/rider/report/repositories/rider_report_repository_impl.dart';
+// Legal documents (public /rider-agreement)
+import 'package:delivery_boy/features/rider/legal/services/legal_document_api_service.dart';
+import 'package:delivery_boy/features/rider/legal/repositories/legal_document_repository.dart';
+import 'package:delivery_boy/features/rider/legal/repositories/legal_document_repository_impl.dart';
 import 'package:delivery_boy/features/rider/home/services/rider_banner_api_service.dart';
 import 'package:delivery_boy/features/rider/home/repositories/rider_banner_repository.dart';
 import 'package:delivery_boy/features/rider/home/repositories/rider_banner_repository_impl.dart';
@@ -112,6 +116,11 @@ Future<void> initServiceLocator() async {
   sl.registerLazySingleton(() => RiderReportApiService(sl<Dio>()));
   sl.registerLazySingleton<RiderReportRepository>(
     () => RiderReportRepositoryImpl(sl<RiderReportApiService>()),
+  );
+
+  sl.registerLazySingleton(() => LegalDocumentApiService(sl<Dio>()));
+  sl.registerLazySingleton<LegalDocumentRepository>(
+    () => LegalDocumentRepositoryImpl(sl<LegalDocumentApiService>()),
   );
 
   // ── Home banners (public /banners — shared with the customer/vendor app) ──

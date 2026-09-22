@@ -9,6 +9,7 @@ import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/core/router/app_routes.dart';
 import 'package:delivery_boy/core/widgets/animated_list_item.dart';
 import 'package:delivery_boy/core/widgets/shimmer_list_placeholder.dart';
+import 'package:delivery_boy/features/rider/profile/providers/rider_me_profile_providers.dart';
 import 'package:delivery_boy/features/rider/wallet/models/rider_me_wallet_model.dart';
 import 'package:delivery_boy/features/rider/wallet/providers/rider_me_wallet_providers.dart';
 import 'package:delivery_boy/features/rider/wallet/providers/rider_me_wallet_transactions_providers.dart';
@@ -31,6 +32,10 @@ class RiderWalletScreen extends ConsumerStatefulWidget {
 class _RiderWalletScreenState extends ConsumerState<RiderWalletScreen> {
   static const _recentPreviewCount = 5;
 
+  final ScrollController _scrollController = ScrollController();
+  bool _headerElevated = false;
+  bool _balanceHidden = false;
+
   @override
   void initState() {
     super.initState();
@@ -38,6 +43,19 @@ class _RiderWalletScreenState extends ConsumerState<RiderWalletScreen> {
       ref.read(riderMeWalletProvider.notifier).load();
       ref.read(riderMeWalletTransactionsProvider.notifier).load();
     });
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    final elevated = _scrollController.offset > 4;
+    if (elevated != _headerElevated) setState(() => _headerElevated = elevated);
   }
 
   Future<void> _refresh() => Future.wait([
@@ -96,6 +114,7 @@ class _RiderWalletScreenState extends ConsumerState<RiderWalletScreen> {
 
     final walletState = ref.watch(riderMeWalletProvider);
     final txState = ref.watch(riderMeWalletTransactionsProvider);
+    final profile = ref.watch(riderMeProfileProvider.select((s) => s.profile));
 
     final wallet = walletState.wallet;
     final currency = wallet?.currency ?? 'GHS';
@@ -108,22 +127,69 @@ class _RiderWalletScreenState extends ConsumerState<RiderWalletScreen> {
     final pending = (wallet?.pendingBalance ?? 0).toDouble();
     final recentTx = transactions.take(_recentPreviewCount).toList();
 
+    final riderName = (profile?.firstName?.isNotEmpty ?? false)
+        ? profile!.firstName!
+        : (profile?.fullName.isNotEmpty ?? false)
+            ? profile!.fullName
+            : 'Rider';
+
     return Scaffold(
       backgroundColor: AppColors.scaffold,
       body: RefreshIndicator(
         color: AppColors.primary,
         onRefresh: _refresh,
         child: CustomScrollView(
+          controller: _scrollController,
           physics: const BouncingScrollPhysics(
               parent: AlwaysScrollableScrollPhysics()),
           slivers: [
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: _WalletHeaderDelegate(
+                topPad: top,
+                w: w,
+                h: h,
+                elevated: _headerElevated,
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding:
+                    EdgeInsets.fromLTRB(w * 0.045, h * 0.014, w * 0.045, 0),
+                child: Text.rich(
+                  TextSpan(
+                    text: 'Welcome back, ',
+                    style: TextStyle(
+                      fontFamily: 'Mukta',
+                      fontSize: w * 0.038,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.textSecondary,
+                    ),
+                    children: [
+                      TextSpan(
+                        text: riderName,
+                        style: TextStyle(
+                          fontFamily: 'Mukta',
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ),
             SliverToBoxAdapter(
               child: RiderWalletBalanceCard(
                 total: total,
                 today: today,
                 pending: pending,
                 currency: currency,
-                topPad: top,
+                hidden: _balanceHidden,
+                onToggleHidden: () =>
+                    setState(() => _balanceHidden = !_balanceHidden),
                 w: w,
                 h: h,
               ),
@@ -152,6 +218,7 @@ class _RiderWalletScreenState extends ConsumerState<RiderWalletScreen> {
                         label: 'Today',
                         amount: today,
                         currency: currency,
+                        hidden: _balanceHidden,
                         w: w,
                         h: h),
                     SizedBox(width: w * 0.025),
@@ -159,6 +226,7 @@ class _RiderWalletScreenState extends ConsumerState<RiderWalletScreen> {
                         label: 'This Week',
                         amount: week,
                         currency: currency,
+                        hidden: _balanceHidden,
                         w: w,
                         h: h),
                     SizedBox(width: w * 0.025),
@@ -166,6 +234,7 @@ class _RiderWalletScreenState extends ConsumerState<RiderWalletScreen> {
                         label: 'This Month',
                         amount: month,
                         currency: currency,
+                        hidden: _balanceHidden,
                         w: w,
                         h: h),
                   ],
@@ -290,16 +359,84 @@ class _RiderWalletScreenState extends ConsumerState<RiderWalletScreen> {
   }
 }
 
+// ─── Pinned page-title header ────────────────────────────────────────────────
+
+/// Fixed "Wallet" title bar — stays pinned while everything else scrolls
+/// beneath it, per [SliverPersistentHeader]. Picks up a subtle shadow once
+/// the list has scrolled out from under it, so the fixed/scrolling split
+/// reads clearly rather than looking like a static bit of chrome.
+class _WalletHeaderDelegate extends SliverPersistentHeaderDelegate {
+  final double topPad;
+  final double w;
+  final double h;
+  final bool elevated;
+
+  const _WalletHeaderDelegate({
+    required this.topPad,
+    required this.w,
+    required this.h,
+    required this.elevated,
+  });
+
+  double get _barHeight => math.max(h * 0.062, 48);
+
+  @override
+  double get minExtent => topPad + _barHeight;
+
+  @override
+  double get maxExtent => topPad + _barHeight;
+
+  @override
+  Widget build(
+      BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 150),
+      padding: EdgeInsets.only(top: topPad),
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: AppColors.scaffold,
+        boxShadow: elevated
+            ? [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.06),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
+                ),
+              ]
+            : const [],
+      ),
+      child: Text(
+        'Wallet',
+        style: TextStyle(
+          fontFamily: 'Mukta',
+          fontSize: w * 0.05,
+          fontWeight: FontWeight.w800,
+          color: AppColors.textPrimary,
+        ),
+      ),
+    );
+  }
+
+  @override
+  bool shouldRebuild(covariant _WalletHeaderDelegate oldDelegate) =>
+      topPad != oldDelegate.topPad ||
+      w != oldDelegate.w ||
+      h != oldDelegate.h ||
+      elevated != oldDelegate.elevated;
+}
+
 // ─── Stat Pill ──────────────────────────────────────────────────────────────
 
 class _StatPill extends StatelessWidget {
   final String label;
   final double amount, w, h;
   final String currency;
+  final bool hidden;
   const _StatPill({
     required this.label,
     required this.amount,
     required this.currency,
+    required this.hidden,
     required this.w,
     required this.h,
   });
@@ -329,7 +466,9 @@ class _StatPill extends StatelessWidget {
             ),
             SizedBox(height: h * 0.004),
             Text(
-              '$currency ${amount.toStringAsFixed(0)}',
+              hidden
+                  ? '$currency ••••'
+                  : '$currency ${amount.toStringAsFixed(0)}',
               style: TextStyle(
                 fontFamily: 'Mukta',
                 fontSize: w * 0.038,

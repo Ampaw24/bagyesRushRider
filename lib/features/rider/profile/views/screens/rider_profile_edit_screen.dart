@@ -9,12 +9,20 @@ import 'package:delivery_boy/core/di/service_locator.dart';
 import 'package:delivery_boy/core/services/user_session_manager.dart';
 import 'package:delivery_boy/core/widgets/app_gradient_button.dart';
 import 'package:delivery_boy/core/widgets/custom_dialogs.dart';
+import 'package:delivery_boy/features/rider/auth/views/widgets/phone_change_flow_sheet.dart';
 import 'package:delivery_boy/features/rider/profile/providers/rider_avatar_providers.dart';
 import 'package:delivery_boy/features/rider/profile/providers/rider_me_profile_providers.dart';
 import 'package:delivery_boy/features/rider/shared/rider_me_action_status.dart';
 import 'package:delivery_boy/features/rider/shared_widgets/rider_avatar.dart';
 import 'package:hugeicons/hugeicons.dart';
 
+/// Edit Profile — personal info + vehicle plate, restyled after the
+/// customer/vendor app's `EditProfile` screen: a pinned hero header
+/// carrying the avatar, focus-aware field cards, and a save action that
+/// only lights up once something has actually changed (so a rider tapping
+/// in and back out never fires a needless PATCH). Kept solid-colour
+/// throughout rather than the reference's gradients, per this project's
+/// no-gradient-UI rule.
 class RiderProfileEditScreen extends ConsumerStatefulWidget {
   const RiderProfileEditScreen({super.key});
 
@@ -31,11 +39,30 @@ class _RiderProfileEditScreenState
   File? _pickedImage;
   bool _isUploading = false;
 
+  // Snapshot of the loaded values — compared against the live controllers
+  // to decide whether Save should be reachable at all.
+  String _initialFirstName = '';
+  String _initialLastName = '';
+  String _initialPlate = '';
+
   @override
   void initState() {
     super.initState();
+    _firstNameCtrl.addListener(_handleFieldChanged);
+    _lastNameCtrl.addListener(_handleFieldChanged);
+    _plateCtrl.addListener(_handleFieldChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) => _populate());
   }
+
+  void _handleFieldChanged() {
+    if (mounted) setState(() {});
+  }
+
+  bool get _isDirty =>
+      _pickedImage != null ||
+      _firstNameCtrl.text.trim() != _initialFirstName ||
+      _lastNameCtrl.text.trim() != _initialLastName ||
+      _plateCtrl.text.trim() != _initialPlate;
 
   void _populate() {
     final session = sl<UserSessionManager>();
@@ -43,24 +70,34 @@ class _RiderProfileEditScreenState
     _firstNameCtrl.text = profile?.firstName ?? session.firstName ?? '';
     _lastNameCtrl.text = profile?.lastName ?? session.lastName ?? '';
     _plateCtrl.text = profile?.plateNumber ?? '';
+
+    _initialFirstName = _firstNameCtrl.text;
+    _initialLastName = _lastNameCtrl.text;
+    _initialPlate = _plateCtrl.text;
+    setState(() {});
   }
 
   @override
   void dispose() {
-    _firstNameCtrl.dispose();
-    _lastNameCtrl.dispose();
-    _plateCtrl.dispose();
+    _firstNameCtrl
+      ..removeListener(_handleFieldChanged)
+      ..dispose();
+    _lastNameCtrl
+      ..removeListener(_handleFieldChanged)
+      ..dispose();
+    _plateCtrl
+      ..removeListener(_handleFieldChanged)
+      ..dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final w = MediaQuery.sizeOf(context).width;
     final profileState = ref.watch(riderMeProfileProvider);
     final isLoading =
         profileState.actionStatus == RiderMeActionStatus.inProgress ||
             _isUploading;
-    final avatarRadius =
-        (MediaQuery.sizeOf(context).width * 0.14).clamp(48.0, 72.0);
 
     ref.listen(riderMeProfileProvider, (prev, next) {
       // Only on the transition into an error, so a later emission (e.g. a
@@ -78,180 +115,186 @@ class _RiderProfileEditScreenState
 
     return Scaffold(
       backgroundColor: AppColors.scaffold,
-      appBar: AppBar(
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        title: const Text(
-          'Edit Profile',
-          style: TextStyle(
-            fontFamily: 'Roboto',
-            fontWeight: FontWeight.w600,
-            fontSize: 18,
-          ),
-        ),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ── Avatar section ──────────────────────────────────────────────
-            Center(
-              child: Stack(
-                children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: AppColors.primary, width: 3),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.primary.withValues(alpha: 0.2),
-                          blurRadius: 16,
-                          offset: const Offset(0, 4),
+      body: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
+        slivers: [
+          SliverAppBar(
+            expandedHeight: (w * 0.52).clamp(210.0, 300.0),
+            pinned: true,
+            backgroundColor: AppColors.primary,
+            surfaceTintColor: Colors.transparent,
+            elevation: 0,
+            leading: IconButton(
+              icon: Container(
+                padding: EdgeInsets.all(w * 0.018),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: HugeIcon(
+                  icon: HugeIcons.strokeRoundedArrowLeft01,
+                  color: Colors.white,
+                  size: w * 0.05,
+                ),
+              ),
+              onPressed: () => context.pop(),
+            ),
+            actions: [
+              Padding(
+                padding: EdgeInsets.only(right: w * 0.04),
+                child: isLoading
+                    ? SizedBox(
+                        width: w * 0.06,
+                        height: w * 0.06,
+                        child: const CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2.4,
                         ),
-                      ],
-                    ),
-                    child: _pickedImage != null
-                        ? CircleAvatar(
-                            radius: avatarRadius,
-                            backgroundImage: FileImage(_pickedImage!),
-                          )
-                        : RiderAvatar(
-                            radius: avatarRadius,
-                            imageUrl: ref.watch(riderAvatarUrlProvider),
-                            backgroundColor: Colors.grey.shade200,
-                            placeholder: Icon(
-                              HugeIcons.strokeRoundedUser,
-                              size: avatarRadius * 0.9,
-                              color: Colors.grey.shade400,
-                            ),
+                      )
+                    : TextButton(
+                        onPressed: _isDirty ? _save : null,
+                        style: TextButton.styleFrom(
+                          backgroundColor: Colors.white.withValues(alpha: 0.2),
+                          foregroundColor: Colors.white,
+                          disabledBackgroundColor:
+                              Colors.white.withValues(alpha: 0.08),
+                          disabledForegroundColor:
+                              Colors.white.withValues(alpha: 0.4),
+                          padding: EdgeInsets.symmetric(
+                              horizontal: w * 0.045, vertical: w * 0.02),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(w * 0.05),
                           ),
-                  ),
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: GestureDetector(
-                      onTap: _pickImage,
-                      child: Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [AppColors.primary, Color(0xFFCA445D)],
-                          ),
-                          shape: BoxShape.circle,
-                          border:
-                              Border.all(color: Colors.white, width: 2),
                         ),
-                        child: const Icon(HugeIcons.strokeRoundedCamera01,
-                            color: Colors.white, size: 18),
+                        child: Text(
+                          'Save',
+                          style: TextStyle(
+                            fontFamily: 'Mukta',
+                            fontWeight: FontWeight.w700,
+                            fontSize: (w * 0.038).clamp(13.0, 16.0),
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                ],
+              ),
+            ],
+            flexibleSpace: FlexibleSpaceBar(
+              collapseMode: CollapseMode.pin,
+              background: _ProfileEditHero(
+                w: w,
+                onTapAvatar: _selectPhotoBottomSheet,
+                localImage: _pickedImage,
+                avatarUrl: ref.watch(riderAvatarUrlProvider),
+                isUploading: _isUploading,
               ),
             ),
-            const SizedBox(height: 32),
+          ),
+          SliverPadding(
+            padding:
+                EdgeInsets.fromLTRB(w * 0.05, w * 0.045, w * 0.05, w * 0.08),
+            sliver: SliverList.list(
+              children: [
+                const _SectionLabel('Personal Info'),
+                SizedBox(height: w * 0.03),
+                _ProfileFieldCard(
+                  icon: HugeIcons.strokeRoundedUser,
+                  iconColor: AppColors.primary,
+                  label: 'First Name',
+                  controller: _firstNameCtrl,
+                  hint: 'Enter your first name',
+                  textCapitalization: TextCapitalization.words,
+                ),
+                SizedBox(height: w * 0.03),
+                _ProfileFieldCard(
+                  icon: HugeIcons.strokeRoundedUser,
+                  iconColor: AppColors.primary,
+                  label: 'Last Name',
+                  controller: _lastNameCtrl,
+                  hint: 'Enter your last name',
+                  textCapitalization: TextCapitalization.words,
+                ),
+                SizedBox(height: w * 0.03),
+                _ReadOnlyInfoCard(
+                  icon: HugeIcons.strokeRoundedSmartPhone01,
+                  iconColor: AppColors.success,
+                  label: 'PHONE NUMBER',
+                  value: sl<UserSessionManager>().phone ?? 'Not set',
+                  actionLabel: 'Change',
+                  onAction: () {
+                    final phone = sl<UserSessionManager>().phone;
+                    if (phone == null || phone.isEmpty) return;
+                    PhoneChangeFlowSheet.show(context, oldPhone: phone);
+                  },
+                ),
+                SizedBox(height: w * 0.07),
+                const _SectionLabel('Vehicle'),
+                SizedBox(height: w * 0.03),
+                _ProfileFieldCard(
+                  icon: HugeIcons.strokeRoundedCar01,
+                  iconColor: AppColors.secondary,
+                  label: 'Number Plate',
+                  controller: _plateCtrl,
+                  hint: 'e.g. GR-1234-21',
+                  textCapitalization: TextCapitalization.characters,
+                ),
+                SizedBox(height: w * 0.09),
+                AppGradientButton(
+                  label: 'Save Changes',
+                  height: (w * 0.13).clamp(46.0, 58.0),
+                  borderRadius: w * 0.035,
+                  isLoading: isLoading,
+                  onPressed: (isLoading || !_isDirty) ? null : _save,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-            // ── Form fields ─────────────────────────────────────────────────
-            _buildField(
-              controller: _firstNameCtrl,
-              label: 'First Name',
-              hint: 'Enter your first name',
-              icon: HugeIcons.strokeRoundedUser,
+  Future<void> _selectPhotoBottomSheet() async {
+    final w = MediaQuery.sizeOf(context).width;
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      backgroundColor: AppColors.scaffold,
+      showDragHandle: true,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(w * 0.06)),
+      ),
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.fromLTRB(w * 0.05, 0, w * 0.05, w * 0.06),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Update Profile Photo',
+              style: TextStyle(
+                fontFamily: 'Mukta',
+                fontSize: (w * 0.043).clamp(14.0, 18.0),
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+              ),
             ),
-            const SizedBox(height: 16),
-            _buildField(
-              controller: _lastNameCtrl,
-              label: 'Last Name',
-              hint: 'Enter your last name',
-              icon: HugeIcons.strokeRoundedUser,
+            SizedBox(height: w * 0.05),
+            _PhotoSourceOption(
+              icon: HugeIcons.strokeRoundedCamera01,
+              label: 'Take a Photo',
+              onTap: () => Navigator.pop(ctx, ImageSource.camera),
             ),
-            const SizedBox(height: 16),
-            _buildField(
-              controller: _plateCtrl,
-              label: 'Number Plate',
-              hint: 'e.g. GR-1234-21',
-              icon: HugeIcons.strokeRoundedCar01,
-              textCapitalization: TextCapitalization.characters,
-            ),
-            const SizedBox(height: 36),
-            AppGradientButton(
-              label: 'Save Changes',
-              isLoading: isLoading,
-              onPressed: isLoading ? null : _save,
+            SizedBox(height: w * 0.03),
+            _PhotoSourceOption(
+              icon: HugeIcons.strokeRoundedImage01,
+              label: 'Choose from Gallery',
+              onTap: () => Navigator.pop(ctx, ImageSource.gallery),
             ),
           ],
         ),
       ),
     );
-  }
+    if (source == null) return;
 
-  Widget _buildField({
-    required TextEditingController controller,
-    required String label,
-    required String hint,
-    required IconData icon,
-    TextInputType? keyboardType,
-    TextCapitalization textCapitalization = TextCapitalization.none,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontFamily: 'Roboto',
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: TextField(
-            controller: controller,
-            keyboardType: keyboardType,
-            textCapitalization: textCapitalization,
-            decoration: InputDecoration(
-              hintText: hint,
-              hintStyle: TextStyle(
-                color: Colors.grey.shade400,
-                fontSize: 14,
-                fontFamily: 'Roboto',
-              ),
-              prefixIcon:
-                  Icon(icon, color: Colors.grey.shade500, size: 20),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none,
-              ),
-              filled: true,
-              fillColor: Colors.white,
-              contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16, vertical: 16),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Future<void> _pickImage() async {
     final file = await ImagePicker()
-        .pickImage(source: ImageSource.gallery, imageQuality: 80);
+        .pickImage(source: source, imageQuality: 80, maxWidth: 1024);
     if (file != null && mounted) {
       setState(() => _pickedImage = File(file.path));
     }
@@ -260,7 +303,7 @@ class _RiderProfileEditScreenState
   Future<void> _save() async {
     final notifier = ref.read(riderMeProfileProvider.notifier);
 
-    // 1. Upload selfie if a new one was picked
+    // 1. Upload photo if a new one was picked
     if (_pickedImage != null) {
       setState(() => _isUploading = true);
       final uploaded = await notifier.uploadPhoto(_pickedImage!.path);
@@ -295,5 +338,436 @@ class _RiderProfileEditScreenState
       );
       context.pop();
     }
+  }
+}
+
+// ── Hero header ─────────────────────────────────────────────────────────────
+
+class _ProfileEditHero extends StatelessWidget {
+  final double w;
+  final VoidCallback onTapAvatar;
+  final File? localImage;
+  final String? avatarUrl;
+  final bool isUploading;
+
+  const _ProfileEditHero({
+    required this.w,
+    required this.onTapAvatar,
+    this.localImage,
+    this.avatarUrl,
+    this.isUploading = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final avatarRadius = (w * 0.14).clamp(48.0, 76.0);
+
+    return ColoredBox(
+      color: AppColors.primary,
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(height: w * 0.1),
+            GestureDetector(
+              onTap: onTapAvatar,
+              child: Stack(
+                alignment: Alignment.bottomRight,
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 3),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.15),
+                          blurRadius: 16,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
+                    ),
+                    child: localImage != null
+                        ? CircleAvatar(
+                            radius: avatarRadius,
+                            backgroundImage: FileImage(localImage!),
+                          )
+                        : RiderAvatar(
+                            radius: avatarRadius,
+                            imageUrl: avatarUrl,
+                            backgroundColor:
+                                Colors.white.withValues(alpha: 0.25),
+                            placeholder: HugeIcon(
+                              icon: HugeIcons.strokeRoundedUser,
+                              size: avatarRadius * 0.75,
+                              color: Colors.white,
+                            ),
+                          ),
+                  ),
+                  if (isUploading)
+                    Positioned.fill(
+                      child: DecoratedBox(
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.black38,
+                        ),
+                        child: const Center(
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2.5,
+                          ),
+                        ),
+                      ),
+                    ),
+                  Container(
+                    padding: EdgeInsets.all(w * 0.02),
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryDark,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 2),
+                    ),
+                    child: HugeIcon(
+                      icon: HugeIcons.strokeRoundedCamera01,
+                      color: Colors.white,
+                      size: w * 0.04,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: w * 0.03),
+            Text(
+              'Tap to change photo',
+              style: TextStyle(
+                fontFamily: 'Mukta',
+                color: Colors.white.withValues(alpha: 0.8),
+                fontSize: (w * 0.032).clamp(11.0, 14.0),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Section label ────────────────────────────────────────────────────────────
+
+class _SectionLabel extends StatelessWidget {
+  final String label;
+  const _SectionLabel(this.label);
+
+  @override
+  Widget build(BuildContext context) {
+    final w = MediaQuery.sizeOf(context).width;
+    return Text(
+      label.toUpperCase(),
+      style: TextStyle(
+        fontFamily: 'Mukta',
+        fontSize: (w * 0.03).clamp(10.0, 13.0),
+        fontWeight: FontWeight.w800,
+        color: AppColors.textHint,
+        letterSpacing: 1.1,
+      ),
+    );
+  }
+}
+
+// ── Focus-aware field card ───────────────────────────────────────────────────
+//
+// Each field is its own bordered card whose border/shadow intensify on
+// focus, so the active input reads clearly without relying on a shared
+// list divider.
+
+class _ProfileFieldCard extends StatefulWidget {
+  final IconData icon;
+  final Color iconColor;
+  final String label;
+  final TextEditingController controller;
+  final String hint;
+  final TextCapitalization textCapitalization;
+
+  const _ProfileFieldCard({
+    required this.icon,
+    required this.iconColor,
+    required this.label,
+    required this.controller,
+    required this.hint,
+    this.textCapitalization = TextCapitalization.none,
+  });
+
+  @override
+  State<_ProfileFieldCard> createState() => _ProfileFieldCardState();
+}
+
+class _ProfileFieldCardState extends State<_ProfileFieldCard> {
+  final _focusNode = FocusNode();
+  bool _focused = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode.addListener(_handleFocusChange);
+  }
+
+  void _handleFocusChange() {
+    if (mounted) setState(() => _focused = _focusNode.hasFocus);
+  }
+
+  @override
+  void dispose() {
+    _focusNode.removeListener(_handleFocusChange);
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final w = MediaQuery.sizeOf(context).width;
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 160),
+      curve: Curves.easeOut,
+      padding: EdgeInsets.symmetric(horizontal: w * 0.04, vertical: w * 0.03),
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(w * 0.04),
+        border: Border.all(
+          color: _focused ? AppColors.primary : AppColors.border,
+          width: _focused ? 1.6 : 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: _focused
+                ? AppColors.primary.withValues(alpha: 0.12)
+                : Colors.black.withValues(alpha: 0.03),
+            blurRadius: _focused ? 16 : 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: w * 0.1,
+            height: w * 0.1,
+            decoration: BoxDecoration(
+              color: widget.iconColor.withValues(alpha: _focused ? 0.18 : 0.1),
+              borderRadius: BorderRadius.circular(w * 0.03),
+            ),
+            child: Center(
+              child: HugeIcon(
+                icon: widget.icon,
+                color: widget.iconColor,
+                size: w * 0.045,
+              ),
+            ),
+          ),
+          SizedBox(width: w * 0.035),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  widget.label,
+                  style: TextStyle(
+                    fontFamily: 'Mukta',
+                    fontSize: (w * 0.028).clamp(10.0, 12.0),
+                    fontWeight: FontWeight.w700,
+                    color: _focused ? AppColors.primary : AppColors.textHint,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+                SizedBox(height: w * 0.005),
+                TextFormField(
+                  controller: widget.controller,
+                  focusNode: _focusNode,
+                  textCapitalization: widget.textCapitalization,
+                  style: TextStyle(
+                    fontFamily: 'Mukta',
+                    fontSize: (w * 0.04).clamp(14.0, 17.0),
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: widget.hint,
+                    hintStyle: TextStyle(
+                      fontFamily: 'Mukta',
+                      color: AppColors.textHint,
+                      fontSize: (w * 0.036).clamp(12.0, 15.0),
+                    ),
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    contentPadding: EdgeInsets.zero,
+                    isDense: true,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Read-only info card (phone) ──────────────────────────────────────────────
+
+class _ReadOnlyInfoCard extends StatelessWidget {
+  final IconData icon;
+  final Color iconColor;
+  final String label;
+  final String value;
+  final String actionLabel;
+  final VoidCallback onAction;
+
+  const _ReadOnlyInfoCard({
+    required this.icon,
+    required this.iconColor,
+    required this.label,
+    required this.value,
+    required this.actionLabel,
+    required this.onAction,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final w = MediaQuery.sizeOf(context).width;
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: w * 0.04, vertical: w * 0.03),
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(w * 0.04),
+        border: Border.all(color: AppColors.border, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: w * 0.1,
+            height: w * 0.1,
+            decoration: BoxDecoration(
+              color: iconColor.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(w * 0.03),
+            ),
+            child: Center(
+              child: HugeIcon(icon: icon, color: iconColor, size: w * 0.045),
+            ),
+          ),
+          SizedBox(width: w * 0.035),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontFamily: 'Mukta',
+                    fontSize: (w * 0.028).clamp(10.0, 12.0),
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textHint,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+                SizedBox(height: w * 0.005),
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontFamily: 'Mukta',
+                    fontSize: (w * 0.04).clamp(14.0, 17.0),
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          TextButton(
+            onPressed: onAction,
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.primary,
+              backgroundColor: AppColors.primary.withValues(alpha: 0.08),
+              padding: EdgeInsets.symmetric(
+                  horizontal: w * 0.03, vertical: w * 0.014),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(w * 0.03),
+              ),
+            ),
+            child: Text(
+              actionLabel,
+              style: TextStyle(
+                fontFamily: 'Mukta',
+                fontWeight: FontWeight.w700,
+                fontSize: (w * 0.033).clamp(12.0, 14.0),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Photo source bottom-sheet option ─────────────────────────────────────────
+
+class _PhotoSourceOption extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  const _PhotoSourceOption({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final w = MediaQuery.sizeOf(context).width;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(w * 0.04),
+        child: Container(
+          padding:
+              EdgeInsets.symmetric(horizontal: w * 0.045, vertical: w * 0.038),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceVariant,
+            borderRadius: BorderRadius.circular(w * 0.04),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: EdgeInsets.all(w * 0.022),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: HugeIcon(
+                    icon: icon, color: AppColors.primary, size: w * 0.045),
+              ),
+              SizedBox(width: w * 0.04),
+              Text(
+                label,
+                style: TextStyle(
+                  fontFamily: 'Mukta',
+                  fontSize: (w * 0.038).clamp(13.0, 16.0),
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
