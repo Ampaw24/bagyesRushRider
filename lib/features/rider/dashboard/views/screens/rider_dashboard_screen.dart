@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/core/di/service_locator.dart';
 import 'package:delivery_boy/core/router/app_routes.dart';
+import 'package:delivery_boy/core/services/navigation_return_notifier.dart';
 import 'package:delivery_boy/core/services/user_session_manager.dart';
 import 'package:delivery_boy/features/rider/auth/models/rider_user_model.dart';
 import 'package:delivery_boy/core/widgets/sos_floating_button.dart';
@@ -92,18 +93,37 @@ class RiderDashboardScreen extends ConsumerStatefulWidget {
       _RiderDashboardScreenState();
 }
 
-class _RiderDashboardScreenState extends ConsumerState<RiderDashboardScreen> {
+class _RiderDashboardScreenState extends ConsumerState<RiderDashboardScreen>
+    with WidgetsBindingObserver {
   int _currentIndex = 0;
   DateTime? _lastBackPress;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(riderNotificationsProvider.notifier).load();
       // Populates is_online + verification_status for this screen.
       ref.read(riderMeProfileProvider.notifier).load();
     });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Covers every way the rider actually comes back — tapping the return
+    // notification, switching apps manually, or Maps closing on its own —
+    // not just a notification tap, which a `didChangeAppLifecycleState`
+    // check can't distinguish from any other reason the app resumed anyway.
+    if (state == AppLifecycleState.resumed) {
+      NavigationReturnNotifier.cancel();
+    }
   }
 
   Future<void> _toggleQueue() async {

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/core/router/app_routes.dart';
+import 'package:delivery_boy/core/utils/external_navigation_launcher.dart';
 import 'package:delivery_boy/core/widgets/app_gradient_button.dart';
 import 'package:delivery_boy/core/widgets/custom_dialogs.dart';
 import 'package:delivery_boy/core/widgets/drag_handle.dart';
@@ -131,6 +132,24 @@ class _RiderMeOrderDetailSheetState
     if (await canLaunchUrl(uri)) await launchUrl(uri);
   }
 
+  /// Cheap/fast path: hand the address straight to the rider's own Maps app,
+  /// no need to open [RiderOrderMapScreen] first. See
+  /// `ExternalNavigationLauncher` for why this is address-only (the backend
+  /// sends no coordinates) and why there's no in-app turn-by-turn.
+  Future<void> _navigateTo(String? address) async {
+    final ok = await ExternalNavigationLauncher.launch(address: address);
+    if (!ok && mounted) {
+      CustomDialog.showError(
+        context: context,
+        title: "Couldn't Open Maps",
+        subtitle: 'No maps app is available on this device.',
+      );
+    }
+  }
+
+  void _openMap(RiderMeOrderModel order) =>
+      context.push(AppRoutes.orderMap, extra: order);
+
   /// The chat API 422s until this order has an assigned rider — since this
   /// sheet only ever shows an order already on this rider's own list, that
   /// should already be true, but `RiderChatThreadSheet` still renders the
@@ -247,6 +266,26 @@ class _RiderMeOrderDetailSheetState
               // ── Locations ──────────────────────────────────────────────
               _card(
                 title: 'Location',
+                headerAction: GestureDetector(
+                  onTap: () => _openMap(order),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(HugeIcons.strokeRoundedMapsLocation01,
+                          size: 14, color: AppColors.primary),
+                      SizedBox(width: 4),
+                      Text(
+                        'View Map',
+                        style: TextStyle(
+                          fontFamily: 'Roboto',
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
                 child: Padding(
                   padding: const EdgeInsets.all(14),
                   child: Column(
@@ -256,6 +295,7 @@ class _RiderMeOrderDetailSheetState
                         iconColor: Colors.green,
                         label: 'Pickup',
                         value: order.pickupAddress ?? '-',
+                        onNavigate: () => _navigateTo(order.pickupAddress),
                       ),
                       const SizedBox(height: 10),
                       _locationRow(
@@ -263,6 +303,7 @@ class _RiderMeOrderDetailSheetState
                         iconColor: AppColors.primary,
                         label: order.isMultiStop ? 'Final Stop' : 'Delivery',
                         value: order.dropoffAddress ?? '-',
+                        onNavigate: () => _navigateTo(order.dropoffAddress),
                       ),
                     ],
                   ),
@@ -538,7 +579,11 @@ class _RiderMeOrderDetailSheetState
 
   // ── Shared card/row helpers (same visual language as the legacy sheet) ──
 
-  Widget _card({required String title, required Widget child}) {
+  Widget _card({
+    required String title,
+    required Widget child,
+    Widget? headerAction,
+  }) {
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
       decoration: BoxDecoration(
@@ -565,15 +610,21 @@ class _RiderMeOrderDetailSheetState
                   const BorderRadius.vertical(top: Radius.circular(12)),
               border: Border(bottom: BorderSide(color: Colors.grey.shade100)),
             ),
-            child: Text(
-              title,
-              style: const TextStyle(
-                fontFamily: 'Roboto',
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textSecondary,
-                letterSpacing: 0.5,
-              ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontFamily: 'Roboto',
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textSecondary,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                if (headerAction != null) headerAction,
+              ],
             ),
           ),
           child,
@@ -614,6 +665,7 @@ class _RiderMeOrderDetailSheetState
     required Color iconColor,
     required String label,
     required String value,
+    required VoidCallback onNavigate,
   }) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -638,6 +690,20 @@ class _RiderMeOrderDetailSheetState
                       fontWeight: FontWeight.w500,
                       color: AppColors.textPrimary)),
             ],
+          ),
+        ),
+        const SizedBox(width: 8),
+        GestureDetector(
+          onTap: onNavigate,
+          behavior: HitTestBehavior.opaque,
+          child: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(HugeIcons.strokeRoundedNavigator02,
+                size: 16, color: AppColors.primary),
           ),
         ),
       ],

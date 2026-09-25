@@ -49,6 +49,16 @@ class FcmService {
     importance: Importance.high,
   );
 
+  /// The single initialized plugin instance — exposed so other local
+  /// notifications (e.g. [NavigationReturnNotifier]) reuse the same
+  /// platform channel, tap-routing and Android channel setup this class
+  /// already establishes in [initialize], rather than standing up a second,
+  /// separately-initialized instance.
+  static FlutterLocalNotificationsPlugin get localNotifications =>
+      _localNotifications;
+
+  static AndroidNotificationChannel get androidChannel => _androidChannel;
+
   /// Initialize FCM: request permission, configure local notifications,
   /// and set up foreground / background / tap listeners.
   ///

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -36,14 +37,28 @@ class _RiderProfileEditScreenState
   final _firstNameCtrl = TextEditingController();
   final _lastNameCtrl = TextEditingController();
   final _plateCtrl = TextEditingController();
+  final _areaInputCtrl = TextEditingController();
   File? _pickedImage;
   bool _isUploading = false;
+
+  // Work preferences — plain fields rather than controllers since they're
+  // edited via chips/pickers, not free text.
+  List<String> _operatingAreas = [];
+  List<String> _operatingDays = [];
+  String? _shiftStartTime;
+  String? _shiftEndTime;
+  double _maxDeliveryRadiusKm = 15;
 
   // Snapshot of the loaded values — compared against the live controllers
   // to decide whether Save should be reachable at all.
   String _initialFirstName = '';
   String _initialLastName = '';
   String _initialPlate = '';
+  List<String> _initialOperatingAreas = const [];
+  List<String> _initialOperatingDays = const [];
+  String? _initialShiftStartTime;
+  String? _initialShiftEndTime;
+  double _initialMaxDeliveryRadiusKm = 15;
 
   @override
   void initState() {
@@ -62,7 +77,12 @@ class _RiderProfileEditScreenState
       _pickedImage != null ||
       _firstNameCtrl.text.trim() != _initialFirstName ||
       _lastNameCtrl.text.trim() != _initialLastName ||
-      _plateCtrl.text.trim() != _initialPlate;
+      _plateCtrl.text.trim() != _initialPlate ||
+      !listEquals(_operatingAreas, _initialOperatingAreas) ||
+      !listEquals(_operatingDays, _initialOperatingDays) ||
+      _shiftStartTime != _initialShiftStartTime ||
+      _shiftEndTime != _initialShiftEndTime ||
+      _maxDeliveryRadiusKm != _initialMaxDeliveryRadiusKm;
 
   void _populate() {
     final session = sl<UserSessionManager>();
@@ -70,11 +90,87 @@ class _RiderProfileEditScreenState
     _firstNameCtrl.text = profile?.firstName ?? session.firstName ?? '';
     _lastNameCtrl.text = profile?.lastName ?? session.lastName ?? '';
     _plateCtrl.text = profile?.plateNumber ?? '';
+    _operatingAreas = List<String>.from(profile?.operatingAreas ?? const []);
+    _operatingDays = List<String>.from(profile?.operatingDays ?? const []);
+    _shiftStartTime = profile?.shiftStartTime;
+    _shiftEndTime = profile?.shiftEndTime;
+    _maxDeliveryRadiusKm =
+        (profile?.maxDeliveryRadiusKm?.toDouble() ?? 15).clamp(1, 100);
 
     _initialFirstName = _firstNameCtrl.text;
     _initialLastName = _lastNameCtrl.text;
     _initialPlate = _plateCtrl.text;
+    _initialOperatingAreas = List<String>.from(_operatingAreas);
+    _initialOperatingDays = List<String>.from(_operatingDays);
+    _initialShiftStartTime = _shiftStartTime;
+    _initialShiftEndTime = _shiftEndTime;
+    _initialMaxDeliveryRadiusKm = _maxDeliveryRadiusKm;
     setState(() {});
+  }
+
+  void _addArea(String value) {
+    final area = value.trim();
+    if (area.isEmpty || _operatingAreas.length >= 10) return;
+    if (_operatingAreas.any((a) => a.toLowerCase() == area.toLowerCase())) {
+      _areaInputCtrl.clear();
+      return;
+    }
+    setState(() {
+      _operatingAreas.add(area);
+      _areaInputCtrl.clear();
+    });
+  }
+
+  void _removeArea(String area) => setState(() => _operatingAreas.remove(area));
+
+  void _toggleDay(String day) => setState(() {
+        if (_operatingDays.contains(day)) {
+          _operatingDays.remove(day);
+        } else {
+          _operatingDays.add(day);
+        }
+      });
+
+  void _setDeliveryRadius(double value) =>
+      setState(() => _maxDeliveryRadiusKm = value);
+
+  Future<void> _pickShiftTime({required bool isStart}) async {
+    final current = isStart ? _shiftStartTime : _shiftEndTime;
+    final parts = (current ?? '').split(':');
+    final hour =
+        int.tryParse(parts.isNotEmpty ? parts[0] : '') ?? (isStart ? 8 : 18);
+    final minute = int.tryParse(parts.length > 1 ? parts[1] : '') ?? 0;
+
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay(hour: hour, minute: minute),
+      builder: (context, child) {
+        final clampedScaler = MediaQuery.textScalerOf(context)
+            .clamp(minScaleFactor: 0.8, maxScaleFactor: 1.2);
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(textScaler: clampedScaler),
+          child: Theme(
+            data: Theme.of(context).copyWith(
+              colorScheme: Theme.of(context).colorScheme.copyWith(
+                    primary: AppColors.primary,
+                    onPrimary: Colors.white,
+                  ),
+            ),
+            child: child!,
+          ),
+        );
+      },
+    );
+    if (picked == null) return;
+    final formatted =
+        '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
+    setState(() {
+      if (isStart) {
+        _shiftStartTime = formatted;
+      } else {
+        _shiftEndTime = formatted;
+      }
+    });
   }
 
   @override
@@ -88,6 +184,7 @@ class _RiderProfileEditScreenState
     _plateCtrl
       ..removeListener(_handleFieldChanged)
       ..dispose();
+    _areaInputCtrl.dispose();
     super.dispose();
   }
 
@@ -236,6 +333,45 @@ class _RiderProfileEditScreenState
                   hint: 'e.g. GR-1234-21',
                   textCapitalization: TextCapitalization.characters,
                 ),
+                SizedBox(height: w * 0.07),
+                const _SectionLabel('Work Preferences'),
+                SizedBox(height: w * 0.03),
+                _DeliveryRadiusCard(
+                  radiusKm: _maxDeliveryRadiusKm,
+                  onChanged: _setDeliveryRadius,
+                ),
+                SizedBox(height: w * 0.03),
+                _OperatingAreasCard(
+                  areas: _operatingAreas,
+                  controller: _areaInputCtrl,
+                  onAdd: _addArea,
+                  onRemove: _removeArea,
+                ),
+                SizedBox(height: w * 0.03),
+                _OperatingDaysCard(
+                  selectedDays: _operatingDays,
+                  onToggleDay: _toggleDay,
+                ),
+                SizedBox(height: w * 0.03),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _ShiftTimeCard(
+                        label: 'Shift Start',
+                        time: _shiftStartTime,
+                        onTap: () => _pickShiftTime(isStart: true),
+                      ),
+                    ),
+                    SizedBox(width: w * 0.03),
+                    Expanded(
+                      child: _ShiftTimeCard(
+                        label: 'Shift End',
+                        time: _shiftEndTime,
+                        onTap: () => _pickShiftTime(isStart: false),
+                      ),
+                    ),
+                  ],
+                ),
                 SizedBox(height: w * 0.09),
                 AppGradientButton(
                   label: 'Save Changes',
@@ -316,6 +452,11 @@ class _RiderProfileEditScreenState
       'first_name': _firstNameCtrl.text.trim(),
       'last_name': _lastNameCtrl.text.trim(),
       'plate_number': _plateCtrl.text.trim(),
+      'operating_areas': _operatingAreas,
+      'operating_days': _operatingDays,
+      'shift_start_time': _shiftStartTime,
+      'shift_end_time': _shiftEndTime,
+      'max_delivery_radius_km': _maxDeliveryRadiusKm.round(),
     });
 
     if (ok) {
@@ -606,6 +747,514 @@ class _ProfileFieldCardState extends State<_ProfileFieldCard> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ── Max delivery radius (slider) ─────────────────────────────────────────────
+
+class _DeliveryRadiusCard extends StatelessWidget {
+  final double radiusKm;
+  final ValueChanged<double> onChanged;
+
+  const _DeliveryRadiusCard({
+    required this.radiusKm,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final w = MediaQuery.sizeOf(context).width;
+
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: w * 0.04, vertical: w * 0.035),
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(w * 0.04),
+        border: Border.all(color: AppColors.border, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: w * 0.1,
+                height: w * 0.1,
+                decoration: BoxDecoration(
+                  color: AppColors.secondary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(w * 0.03),
+                ),
+                child: Center(
+                  child: HugeIcon(
+                    icon: HugeIcons.strokeRoundedLocation04,
+                    color: AppColors.secondary,
+                    size: w * 0.045,
+                  ),
+                ),
+              ),
+              SizedBox(width: w * 0.035),
+              Expanded(
+                child: Text(
+                  'MAX DELIVERY RADIUS',
+                  style: TextStyle(
+                    fontFamily: 'Mukta',
+                    fontSize: (w * 0.028).clamp(10.0, 12.0),
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textHint,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+              ),
+              Text(
+                '${radiusKm.round()} km',
+                style: TextStyle(
+                  fontFamily: 'Mukta',
+                  fontSize: (w * 0.042).clamp(15.0, 18.0),
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.primary,
+                ),
+              ),
+            ],
+          ),
+          SliderTheme(
+            data: SliderTheme.of(context).copyWith(
+              activeTrackColor: AppColors.primary,
+              inactiveTrackColor: AppColors.border,
+              thumbColor: AppColors.primary,
+              overlayColor: AppColors.primary.withValues(alpha: 0.12),
+              trackHeight: w * 0.008,
+            ),
+            child: Slider(
+              value: radiusKm,
+              min: 1,
+              max: 100,
+              divisions: 99,
+              label: '${radiusKm.round()} km',
+              onChanged: onChanged,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Operating areas (chip input) ─────────────────────────────────────────────
+
+class _OperatingAreasCard extends StatelessWidget {
+  final List<String> areas;
+  final TextEditingController controller;
+  final ValueChanged<String> onAdd;
+  final ValueChanged<String> onRemove;
+
+  const _OperatingAreasCard({
+    required this.areas,
+    required this.controller,
+    required this.onAdd,
+    required this.onRemove,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final w = MediaQuery.sizeOf(context).width;
+    final atLimit = areas.length >= 10;
+
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: w * 0.04, vertical: w * 0.035),
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(w * 0.04),
+        border: Border.all(color: AppColors.border, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: w * 0.1,
+                height: w * 0.1,
+                decoration: BoxDecoration(
+                  color: AppColors.accent.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(w * 0.03),
+                ),
+                child: Center(
+                  child: HugeIcon(
+                    icon: HugeIcons.strokeRoundedLocation01,
+                    color: AppColors.accent,
+                    size: w * 0.045,
+                  ),
+                ),
+              ),
+              SizedBox(width: w * 0.035),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'OPERATING AREAS',
+                      style: TextStyle(
+                        fontFamily: 'Mukta',
+                        fontSize: (w * 0.028).clamp(10.0, 12.0),
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textHint,
+                        letterSpacing: 0.3,
+                      ),
+                    ),
+                    SizedBox(height: w * 0.005),
+                    Text(
+                      atLimit
+                          ? 'Maximum of 10 zones reached'
+                          : 'Zones you\'re willing to deliver in',
+                      style: TextStyle(
+                        fontFamily: 'Mukta',
+                        fontSize: (w * 0.032).clamp(11.0, 13.0),
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          if (areas.isNotEmpty) ...[
+            SizedBox(height: w * 0.035),
+            Wrap(
+              spacing: w * 0.02,
+              runSpacing: w * 0.02,
+              children: areas
+                  .map((area) => _RemovableChip(
+                        label: area,
+                        onRemove: () => onRemove(area),
+                      ))
+                  .toList(),
+            ),
+          ],
+          if (!atLimit) ...[
+            SizedBox(height: w * 0.035),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: controller,
+                    textCapitalization: TextCapitalization.words,
+                    style: TextStyle(
+                      fontFamily: 'Mukta',
+                      fontSize: (w * 0.038).clamp(13.0, 16.0),
+                      color: AppColors.textPrimary,
+                    ),
+                    decoration: InputDecoration(
+                      isDense: true,
+                      hintText: 'e.g. East Legon',
+                      hintStyle: TextStyle(
+                        fontFamily: 'Mukta',
+                        color: AppColors.textHint,
+                        fontSize: (w * 0.036).clamp(12.0, 15.0),
+                      ),
+                      filled: true,
+                      fillColor: AppColors.surfaceVariant,
+                      contentPadding: EdgeInsets.symmetric(
+                          horizontal: w * 0.03, vertical: w * 0.03),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(w * 0.03),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                    onSubmitted: onAdd,
+                  ),
+                ),
+                SizedBox(width: w * 0.02),
+                Material(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(w * 0.03),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(w * 0.03),
+                    onTap: () => onAdd(controller.text),
+                    child: Padding(
+                      padding: EdgeInsets.all(w * 0.032),
+                      child: HugeIcon(
+                        icon: HugeIcons.strokeRoundedAdd01,
+                        color: Colors.white,
+                        size: w * 0.05,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _RemovableChip extends StatelessWidget {
+  final String label;
+  final VoidCallback onRemove;
+
+  const _RemovableChip({required this.label, required this.onRemove});
+
+  @override
+  Widget build(BuildContext context) {
+    final w = MediaQuery.sizeOf(context).width;
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: w * 0.03, vertical: w * 0.017),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(w * 0.05),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontFamily: 'Mukta',
+              fontSize: (w * 0.033).clamp(12.0, 14.0),
+              fontWeight: FontWeight.w600,
+              color: AppColors.primary,
+            ),
+          ),
+          SizedBox(width: w * 0.015),
+          GestureDetector(
+            onTap: onRemove,
+            child: HugeIcon(
+              icon: HugeIcons.strokeRoundedCancel01,
+              color: AppColors.primary,
+              size: w * 0.032,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Operating days (multi-select chips) ──────────────────────────────────────
+
+class _OperatingDaysCard extends StatelessWidget {
+  static const _days = [
+    'monday',
+    'tuesday',
+    'wednesday',
+    'thursday',
+    'friday',
+    'saturday',
+    'sunday',
+  ];
+  static const _dayLabels = {
+    'monday': 'Mon',
+    'tuesday': 'Tue',
+    'wednesday': 'Wed',
+    'thursday': 'Thu',
+    'friday': 'Fri',
+    'saturday': 'Sat',
+    'sunday': 'Sun',
+  };
+
+  final List<String> selectedDays;
+  final ValueChanged<String> onToggleDay;
+
+  const _OperatingDaysCard({
+    required this.selectedDays,
+    required this.onToggleDay,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final w = MediaQuery.sizeOf(context).width;
+    final today = _days[DateTime.now().weekday - 1];
+
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: w * 0.04, vertical: w * 0.035),
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(w * 0.04),
+        border: Border.all(color: AppColors.border, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: w * 0.1,
+                height: w * 0.1,
+                decoration: BoxDecoration(
+                  color: AppColors.success.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(w * 0.03),
+                ),
+                child: Center(
+                  child: HugeIcon(
+                    icon: HugeIcons.strokeRoundedCalendar03,
+                    color: AppColors.success,
+                    size: w * 0.045,
+                  ),
+                ),
+              ),
+              SizedBox(width: w * 0.035),
+              Text(
+                'OPERATING DAYS',
+                style: TextStyle(
+                  fontFamily: 'Mukta',
+                  fontSize: (w * 0.028).clamp(10.0, 12.0),
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textHint,
+                  letterSpacing: 0.3,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: w * 0.035),
+          Wrap(
+            spacing: w * 0.02,
+            runSpacing: w * 0.02,
+            children: _days.map((day) {
+              final isSelected = selectedDays.contains(day);
+              final isToday = day == today;
+              return GestureDetector(
+                onTap: () => onToggleDay(day),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 160),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: w * 0.032,
+                    vertical: w * 0.02,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? AppColors.primary
+                        : AppColors.surfaceVariant,
+                    borderRadius: BorderRadius.circular(w * 0.03),
+                    border: isToday
+                        ? Border.all(
+                            color:
+                                isSelected ? Colors.white : AppColors.primary,
+                            width: 1.4,
+                          )
+                        : null,
+                  ),
+                  child: Text(
+                    _dayLabels[day]!,
+                    style: TextStyle(
+                      fontFamily: 'Mukta',
+                      fontSize: (w * 0.033).clamp(12.0, 14.0),
+                      fontWeight: FontWeight.w700,
+                      color:
+                          isSelected ? Colors.white : AppColors.textSecondary,
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Shift time picker card ───────────────────────────────────────────────────
+
+class _ShiftTimeCard extends StatelessWidget {
+  final String label;
+  final String? time;
+  final VoidCallback onTap;
+
+  const _ShiftTimeCard({
+    required this.label,
+    required this.time,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final w = MediaQuery.sizeOf(context).width;
+    return Material(
+      color: AppColors.card,
+      borderRadius: BorderRadius.circular(w * 0.04),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(w * 0.04),
+        onTap: onTap,
+        child: Container(
+          padding:
+              EdgeInsets.symmetric(horizontal: w * 0.035, vertical: w * 0.03),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(w * 0.04),
+            border: Border.all(color: AppColors.border, width: 1),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.03),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label.toUpperCase(),
+                style: TextStyle(
+                  fontFamily: 'Mukta',
+                  fontSize: (w * 0.026).clamp(9.0, 11.0),
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textHint,
+                  letterSpacing: 0.3,
+                ),
+              ),
+              SizedBox(height: w * 0.015),
+              Row(
+                children: [
+                  HugeIcon(
+                    icon: HugeIcons.strokeRoundedClock01,
+                    color: AppColors.primary,
+                    size: w * 0.042,
+                  ),
+                  SizedBox(width: w * 0.02),
+                  Expanded(
+                    child: Text(
+                      time ?? 'Not set',
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontFamily: 'Mukta',
+                        fontSize: (w * 0.038).clamp(13.0, 16.0),
+                        fontWeight: FontWeight.w700,
+                        color: time != null
+                            ? AppColors.textPrimary
+                            : AppColors.textHint,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

@@ -24,6 +24,7 @@ import 'package:delivery_boy/features/rider/orders/models/rider_me_order_model.d
 import 'package:delivery_boy/features/rider/orders/providers/rider_me_order_providers.dart';
 import 'package:delivery_boy/features/rider/orders/views/widgets/rider_me_order_status.dart';
 import 'package:delivery_boy/features/rider/profile/providers/rider_avatar_providers.dart';
+import 'package:delivery_boy/features/rider/profile/providers/rider_me_profile_providers.dart';
 import 'package:delivery_boy/features/rider/kyc/providers/kyc_providers.dart';
 import 'package:delivery_boy/features/rider/shared_widgets/rider_avatar.dart';
 import 'package:delivery_boy/features/rider/shared_widgets/rider_setup_progress_card.dart';
@@ -70,7 +71,7 @@ class _RiderHomeScreenState extends ConsumerState<RiderHomeScreen>
   void initState() {
     super.initState();
 
-    const sectionCount = 4;
+    const sectionCount = 5;
     _sectionAnims = List.generate(
       sectionCount,
       (i) => AnimationController(
@@ -93,6 +94,7 @@ class _RiderHomeScreenState extends ConsumerState<RiderHomeScreen>
     _startStagger();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(riderMeOrdersProvider.notifier).load(filter: 'active');
       ref.read(riderMeOrderHistoryProvider.notifier).load();
       ref.read(riderBannersProvider.notifier).load();
     });
@@ -137,6 +139,13 @@ class _RiderHomeScreenState extends ConsumerState<RiderHomeScreen>
     context.go(AppRoutes.login);
   }
 
+  Future<void> _handleRefresh() => Future.wait([
+        ref.read(riderMeOrdersProvider.notifier).load(filter: 'active'),
+        ref.read(riderMeOrderHistoryProvider.notifier).load(),
+        ref.read(riderBannersProvider.notifier).load(),
+        ref.read(riderMeProfileProvider.notifier).load(),
+      ]);
+
   void _handleDeleteAccount() {
     CustomDialog.showConfirmation(
       context: context,
@@ -158,6 +167,8 @@ class _RiderHomeScreenState extends ConsumerState<RiderHomeScreen>
 
     final isOnline = ref.watch(riderQueueProvider);
     final unread = ref.watch(riderNotificationsProvider).unreadCount;
+    final activeOrders =
+        ref.watch(riderMeOrdersProvider).orders.take(3).toList();
     final historyOrders =
         ref.watch(riderMeOrderHistoryProvider).orders.take(2).toList();
     final bannersState = ref.watch(riderBannersProvider);
@@ -165,9 +176,7 @@ class _RiderHomeScreenState extends ConsumerState<RiderHomeScreen>
         (bannersState.status == RiderBannersStatus.loaded &&
             bannersState.banners.isNotEmpty);
     final photoUrl = ref.watch(riderAvatarUrlProvider);
-    final initials = _riderName.isNotEmpty
-        ? _riderName[0].toUpperCase()
-        : 'R';
+    final initials = _riderName.isNotEmpty ? _riderName[0].toUpperCase() : 'R';
 
     // Same technique as the vendor dashboard's "Finish Setup" card: show the
     // server's outstanding verification steps in place of the online toggle,
@@ -214,79 +223,101 @@ class _RiderHomeScreenState extends ConsumerState<RiderHomeScreen>
 
                 // ── Scrollable content ───────────────────────────────────
                 Expanded(
-                  child: CustomScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    slivers: [
-                      SliverToBoxAdapter(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // ── Online toggle, or setup checklist while
-                            // KYC is incomplete ────────────────────────
-                            Padding(
-                              padding:
-                                  EdgeInsets.symmetric(horizontal: hPad),
-                              child: _section(
-                                1,
-                                setupIncomplete
-                                    ? RiderSetupProgressCard(
-                                        progress: kycProgress!,
-                                        onOpen: (section) => context.push(
-                                          AppRoutes.kycSection(section.slug),
-                                        ),
-                                      )
-                                    : _OnlineCard(
-                                        isOnline: isOnline,
-                                        onToggle: () {
-                                          HapticFeedback.lightImpact();
-                                          widget.onToggleQueue();
-                                        },
-                                      ),
-                              ),
-                            ),
-
-                            SizedBox(height: h * 0.026),
-
-                            // ── Announcements ───────────────────────────
-                            if (showBanners) ...[
-                              _section(
-                                2,
-                                _AnnouncementsSection(
-                                  isLoading: bannersState.status ==
-                                      RiderBannersStatus.loading,
-                                  banners: bannersState.banners,
-                                  controller: _pageCtrl,
-                                  currentPage: _currentPage,
-                                  onPageChanged: (i) =>
-                                      setState(() => _currentPage = i),
-                                  hPad: hPad,
-                                  h: h,
-                                  w: w,
-                                ),
-                              ),
-                              SizedBox(height: h * 0.026),
-                            ],
-
-                            // ── Recent deliveries ───────────────────────
-                            Padding(
-                              padding:
-                                  EdgeInsets.symmetric(horizontal: hPad),
-                              child: _section(
-                                3,
-                                _RecentOrdersSection(
-                                  orders: historyOrders,
-                                  onShowAll: widget.onViewAllOrders,
-                                  w: w,
-                                  h: h,
-                                ),
-                              ),
-                            ),
-
-                            SizedBox(height: h * 0.04),
-                          ],
-                        ),
+                  child: RefreshIndicator(
+                    color: AppColors.primary,
+                    onRefresh: _handleRefresh,
+                    child: CustomScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(
+                        parent: BouncingScrollPhysics(),
                       ),
-                    ],
+                      slivers: [
+                        SliverToBoxAdapter(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // ── Online toggle, or setup checklist while
+                              // KYC is incomplete ────────────────────────
+                              Padding(
+                                padding: EdgeInsets.symmetric(horizontal: hPad),
+                                child: _section(
+                                  1,
+                                  setupIncomplete
+                                      ? RiderSetupProgressCard(
+                                          progress: kycProgress!,
+                                          onOpen: (section) => context.push(
+                                            AppRoutes.kycSection(section.slug),
+                                          ),
+                                        )
+                                      : _OnlineCard(
+                                          isOnline: isOnline,
+                                          onToggle: () {
+                                            HapticFeedback.lightImpact();
+                                            widget.onToggleQueue();
+                                          },
+                                        ),
+                                ),
+                              ),
+
+                              SizedBox(height: h * 0.026),
+
+                              // ── Active orders ────────────────────────────
+                              if (activeOrders.isNotEmpty) ...[
+                                Padding(
+                                  padding:
+                                      EdgeInsets.symmetric(horizontal: hPad),
+                                  child: _section(
+                                    2,
+                                    _ActiveOrdersSection(
+                                      orders: activeOrders,
+                                      onShowAll: widget.onViewAllOrders,
+                                      w: w,
+                                      h: h,
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(height: h * 0.026),
+                              ],
+
+                              // ── Announcements ───────────────────────────
+                              if (showBanners) ...[
+                                _section(
+                                  3,
+                                  _AnnouncementsSection(
+                                    isLoading: bannersState.status ==
+                                        RiderBannersStatus.loading,
+                                    banners: bannersState.banners,
+                                    controller: _pageCtrl,
+                                    currentPage: _currentPage,
+                                    onPageChanged: (i) =>
+                                        setState(() => _currentPage = i),
+                                    hPad: hPad,
+                                    h: h,
+                                    w: w,
+                                  ),
+                                ),
+                                SizedBox(height: h * 0.026),
+                              ],
+
+                              // ── Recent deliveries ───────────────────────
+                              Padding(
+                                padding: EdgeInsets.symmetric(horizontal: hPad),
+                                child: _section(
+                                  4,
+                                  _RecentOrdersSection(
+                                    orders: historyOrders,
+                                    onShowAll: widget.onViewAllOrders,
+                                    w: w,
+                                    h: h,
+                                  ),
+                                ),
+                              ),
+
+                              SizedBox(height: h * 0.04),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],
@@ -355,8 +386,8 @@ class _HomeHeader extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(w * 0.028),
-                  border:
-                      Border.all(color: AppColors.border.withValues(alpha: 0.6)),
+                  border: Border.all(
+                      color: AppColors.border.withValues(alpha: 0.6)),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.02),
@@ -381,8 +412,8 @@ class _HomeHeader extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(w * 0.028),
-                  border:
-                      Border.all(color: AppColors.border.withValues(alpha: 0.6)),
+                  border: Border.all(
+                      color: AppColors.border.withValues(alpha: 0.6)),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.02),
@@ -513,8 +544,9 @@ class _OnlineCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(w * 0.045),
         boxShadow: [
           BoxShadow(
-            color: (isOnline ? const Color(0xFF059669) : const Color(0xFF374151))
-                .withValues(alpha: 0.28),
+            color:
+                (isOnline ? const Color(0xFF059669) : const Color(0xFF374151))
+                    .withValues(alpha: 0.28),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -652,7 +684,11 @@ class _PulseDotState extends State<_PulseDot>
   void didUpdateWidget(_PulseDot old) {
     super.didUpdateWidget(old);
     if (widget.active != old.active) {
-      widget.active ? _ctrl.repeat(reverse: true) : (_ctrl..stop()..value = 0);
+      widget.active
+          ? _ctrl.repeat(reverse: true)
+          : (_ctrl
+            ..stop()
+            ..value = 0);
     }
   }
 
@@ -878,6 +914,76 @@ class _AnnouncementCard extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Active orders section
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// Only rendered while there's at least one active order (see the
+/// `activeOrders.isNotEmpty` gate in `build()`) — unlike recent deliveries,
+/// an idle rider has nothing useful to show here, so the section itself
+/// stays hidden rather than rendering an empty state.
+class _ActiveOrdersSection extends StatelessWidget {
+  final List<RiderMeOrderModel> orders;
+  final VoidCallback onShowAll;
+  final double w;
+  final double h;
+
+  const _ActiveOrdersSection({
+    required this.orders,
+    required this.onShowAll,
+    required this.w,
+    required this.h,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                'Active Orders',
+                style: TextStyle(
+                  fontFamily: 'Mukta',
+                  fontSize: (w * 0.042).clamp(14.0, 18.0),
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ),
+            GestureDetector(
+              onTap: onShowAll,
+              child: Row(
+                children: [
+                  Text(
+                    'Show all',
+                    style: TextStyle(
+                      fontFamily: 'Mukta',
+                      fontSize: (w * 0.032).clamp(11.0, 14.0),
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                  SizedBox(width: w * 0.01),
+                  Icon(
+                    HugeIcons.strokeRoundedArrowRight01,
+                    size: (w * 0.038).clamp(13.0, 16.0),
+                    color: AppColors.primary,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: h * 0.014),
+        ...orders.map((order) => _MiniOrderCard(order: order, w: w, h: h)),
+      ],
     );
   }
 }

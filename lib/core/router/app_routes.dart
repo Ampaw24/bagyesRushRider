@@ -31,6 +31,10 @@ abstract final class AppRoutes {
   /// Profile verification checklist, driven by `/rider/me`.
   static const kyc = '/dashboard/kyc';
 
+  /// Pickup/delivery map for one order. Pushed with `extra: RiderMeOrderModel`
+  /// — see `RiderOrderMapScreen`.
+  static const orderMap = '/dashboard/order-map';
+
   /// One checklist step, by `KycSection.slug`.
   static String kycSection(String slug) => '$kyc/$slug';
 }

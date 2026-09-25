@@ -75,4 +75,57 @@ class RiderPlacesService {
       return null;
     }
   }
+
+  /// Resolves a free-text address to a pin for the order map — the backend
+  /// sends orders as address strings only (no lat/lng), so this is the only
+  /// way to place a marker. Returns null on any failure; the caller falls
+  /// back to an address-only external nav link rather than blocking on this.
+  static Future<(double lat, double lng)?> geocodeAddress(
+    String address,
+  ) async {
+    if (kMapsApiKey.isEmpty) {
+      appLogger.w('[Places] GMAPCODE missing from .env — skipping geocode');
+      return null;
+    }
+    if (address.trim().isEmpty) return null;
+
+    try {
+      final response = await _dio.get<Map<String, dynamic>>(
+        _geocodeUrl,
+        queryParameters: {
+          'address': address,
+          'key': kMapsApiKey,
+          'language': 'en',
+        },
+      );
+
+      final data = response.data;
+      if (data == null) return null;
+
+      final status = data['status'] as String?;
+      if (status != 'OK') {
+        appLogger.w(
+          '[Places] geocodeAddress status: $status '
+          '— ${data['error_message'] ?? 'no error_message'}',
+        );
+        return null;
+      }
+
+      final results = data['results'] as List<dynamic>?;
+      if (results == null || results.isEmpty) return null;
+
+      final location =
+          ((results.first as Map)['geometry'] as Map?)?['location'] as Map?;
+      final lat = (location?['lat'] as num?)?.toDouble();
+      final lng = (location?['lng'] as num?)?.toDouble();
+      return (lat != null && lng != null) ? (lat, lng) : null;
+    } on DioException catch (e, s) {
+      appLogger.e('[Places] geocodeAddress network error', error: e, stackTrace: s);
+      return null;
+    } catch (e, s) {
+      appLogger.e('[Places] geocodeAddress unexpected error',
+          error: e, stackTrace: s);
+      return null;
+    }
+  }
 }

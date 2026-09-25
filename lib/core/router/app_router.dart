@@ -41,6 +41,9 @@ import 'package:delivery_boy/features/rider/report/views/screens/rider_report_de
 import 'package:delivery_boy/features/rider/kyc/models/kyc_section.dart';
 import 'package:delivery_boy/features/rider/kyc/views/screens/kyc_hub_screen.dart';
 import 'package:delivery_boy/features/rider/kyc/views/screens/kyc_section_screen.dart';
+// ── Orders ────────────────────────────────────────────────────────────────────
+import 'package:delivery_boy/features/rider/orders/models/rider_me_order_model.dart';
+import 'package:delivery_boy/features/rider/orders/views/screens/rider_order_map_screen.dart';
 
 /// Routes reachable while signed out.
 ///
@@ -298,6 +301,21 @@ GoRouter createAppRouter() {
                 ),
               ),
             ],
+          ),
+          GoRoute(
+            path: 'order-map',
+            // `extra` is only attached to the push that opened this route —
+            // a later rebuild of the stack (e.g. `sessionRevision` firing
+            // from an unrelated 401 while this screen is open) replays this
+            // pageBuilder with `state.extra` back to null. Same guard shape
+            // as `forgotPasswordOtp`/`resetPassword` above, for the same
+            // reason: fail back to the dashboard rather than a null check.
+            redirect: (_, state) =>
+                state.extra is RiderMeOrderModel ? null : AppRoutes.dashboard,
+            pageBuilder: (_, state) => _slideRight(
+              state,
+              RiderOrderMapScreen(order: state.extra! as RiderMeOrderModel),
+            ),
           ),
           GoRoute(
             path: 'kyc',
