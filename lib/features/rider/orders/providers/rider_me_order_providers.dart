@@ -194,12 +194,19 @@ class RiderMeOrdersState extends Equatable {
         arrivedStopIds: arrivedStopIds ?? this.arrivedStopIds,
       );
 
-  /// Current delivery stage for [order] — the advanced-on-success stage if
-  /// this session has actioned it, else a best-effort seed from its coarse
-  /// `status`. See rider_delivery_stage.dart for why this can't come
-  /// straight from the server.
-  RiderDeliveryStage stageFor(RiderMeOrderModel order) =>
-      stageByOrderId[order.id] ?? seedDeliveryStageFrom(order.status);
+  /// Current delivery stage for [order] — whichever is further along of the
+  /// stage this session advanced it to and the best-effort seed from its
+  /// coarse `status`. Taking the furthest means a server-side `delivered`
+  /// (e.g. after the last stop of a multi-stop order) always wins over a
+  /// local `pickedUp`, while a local `arrivedAtDropoff` isn't knocked back
+  /// to the `pickedUp` that `out_for_delivery` seeds. See
+  /// rider_delivery_stage.dart for why this can't come straight from the
+  /// server.
+  RiderDeliveryStage stageFor(RiderMeOrderModel order) {
+    final seeded = seedDeliveryStageFrom(order.status);
+    final local = stageByOrderId[order.id];
+    return (local == null || seeded.index > local.index) ? seeded : local;
+  }
 
   bool hasArrived(int orderId, int stopId) =>
       arrivedStopIds[orderId]?.contains(stopId) ?? false;
@@ -290,6 +297,10 @@ class RiderMeOrdersNotifier extends Notifier<RiderMeOrdersState> {
     for (final id in _liveOrderChannels) {
       realtime.unsubscribeFromOrder(id);
     }
+    // Riverpod 2 reuses this Notifier instance across `invalidate` (only
+    // build() re-runs), so a stale set would make _syncOrderChannels skip
+    // re-subscribing for the next session.
+    _liveOrderChannels.clear();
   }
 
   /// [filter] is `all` | `active` | `history` per the API contract.
@@ -308,12 +319,47 @@ class RiderMeOrdersNotifier extends Notifier<RiderMeOrdersState> {
     );
   }
 
+  /// Fetches one order into [RiderMeOrdersState.selectedOrder] and patches
+  /// the same order in the active list, so the list, the location-tracking
+  /// gate and any open detail sheet all agree. An order the server now
+  /// reports as finished leaves the list (and its channel) here, same as
+  /// a realtime status event would.
   Future<void> loadOrder(int orderId) async {
     final result = await _repo.getOrder(orderId);
     result.fold(
       (f) => state = state.copyWith(errorMessage: f.message),
-      (order) => state = state.copyWith(selectedOrder: order),
+      (order) {
+        final index = state.orders.indexWhere((o) => o.id == orderId);
+        if (index == -1) {
+          state = state.copyWith(selectedOrder: order);
+          return;
+        }
+        final orders = [...state.orders];
+        if (order.isActive) {
+          orders[index] = order;
+        } else {
+          orders.removeAt(index);
+        }
+        state = state.copyWith(selectedOrder: order, orders: orders);
+        _syncOrderChannels();
+      },
     );
+  }
+
+  /// Once every stop of a multi-stop order is delivered or failed there is
+  /// no rider action left, so the order is treated as done locally even if
+  /// the server hasn't moved its coarse `status` to `delivered` yet —
+  /// otherwise the order would sit in the active list with no action panel
+  /// and keep location tracking on its high-accuracy tier. The active list
+  /// is then re-fetched so the server has the final word.
+  Future<void> _afterStopResolved(int orderId) async {
+    await loadOrder(orderId);
+    final order = state.selectedOrder;
+    if (order == null || order.id != orderId || order.stops.isEmpty) return;
+    final allResolved = order.stops.every((s) => s.isDelivered || s.isFailed);
+    if (!allResolved) return;
+    _setStage(orderId, RiderDeliveryStage.delivered);
+    await load(filter: 'active');
   }
 
   Future<bool> _runAction(ResultFuture<void> Function() action) async {
@@ -414,7 +460,8 @@ class RiderMeOrdersNotifier extends Notifier<RiderMeOrdersState> {
   }
 
   /// See [deliverOrder] re: `deliveryPin`. Re-fetches just this order on
-  /// success to resync its stop statuses, rather than the full active list.
+  /// success to resync its stop statuses — the full active list only once
+  /// the last stop is resolved (see [_afterStopResolved]).
   Future<bool> deliverStop(
     int orderId,
     int stopId, {
@@ -429,14 +476,14 @@ class RiderMeOrdersNotifier extends Notifier<RiderMeOrdersState> {
           deliveredToName: deliveredToName,
           proofPhotoPath: proofPhotoPath,
         ));
-    if (ok) await loadOrder(orderId);
+    if (ok) await _afterStopResolved(orderId);
     return ok;
   }
 
   Future<bool> failStop(int orderId, int stopId, {required String reason}) async {
     final ok =
         await _runAction(() => _repo.failStop(orderId, stopId, reason: reason));
-    if (ok) await loadOrder(orderId);
+    if (ok) await _afterStopResolved(orderId);
     return ok;
   }
 

@@ -7,7 +7,7 @@ import 'package:delivery_boy/core/services/fcm_service.dart';
 import 'package:delivery_boy/core/services/user_session_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:package_info_plus/package_info_plus.dart';
+// import 'package:package_info_plus/package_info_plus.dart';
 
 import '../components/widget/decorative.widget.dart'
     hide kDecorativeBackgroundColor;
@@ -59,7 +59,7 @@ class _SplashScreenState extends State<SplashScreen>
 
   Future<void> _loadVersion() async {
     try {
-      final info = await PackageInfo.fromPlatform();
+      //final info = await PackageInfo.fromPlatform();
       if (mounted) setState(() => _versionLabel = 'v${kAppVersion}');
     } catch (_) {
       // Non-critical: the version label simply stays hidden if unavailable.

@@ -197,13 +197,14 @@ class _RiderDashboardScreenState extends ConsumerState<RiderDashboardScreen>
 
     // Starts/stops the GPS ping loop centrally — this shell stays mounted
     // across tabs, so it's the right place to react regardless of which
-    // tab the rider is on. Gated on shouldTrackLocationProvider (true once
-    // any order is past pickup), not on individual delivery actions, so it
-    // stays correct with more than one concurrent active order.
-    ref.listen<bool>(shouldTrackLocationProvider, (_, shouldTrack) {
+    // tab the rider is on. riderTrackingModeProvider covers both the
+    // active-delivery case (any order past pickup) and idle-online case
+    // (rider available but nothing picked up yet) — see that provider for
+    // why nearest-rider matching needs the idle tier too.
+    ref.listen<RiderTrackingMode?>(riderTrackingModeProvider, (_, mode) {
       final tracking = ref.read(riderTrackingProvider.notifier);
-      if (shouldTrack) {
-        tracking.startTracking();
+      if (mode != null) {
+        tracking.startTracking(mode);
       } else {
         tracking.stopTracking();
       }

@@ -9,12 +9,14 @@ import 'package:delivery_boy/core/errors/failures.dart';
 import 'package:delivery_boy/core/realtime/realtime_service.dart';
 import 'package:delivery_boy/core/services/fcm_service.dart';
 import 'package:delivery_boy/core/services/firebase_bootstrap.dart';
+import 'package:delivery_boy/core/services/rider_session_teardown.dart';
 import 'package:delivery_boy/core/services/user_session_manager.dart';
 import 'package:delivery_boy/core/utils/app_logger.dart';
 import 'package:delivery_boy/core/utils/device_info_utils.dart';
 import 'package:delivery_boy/features/rider/auth/models/auth_user_model.dart';
 import 'package:delivery_boy/features/rider/auth/repositories/rider_auth_repository.dart';
 import 'package:delivery_boy/features/rider/notifications/repositories/device_token_repository.dart';
+import 'package:delivery_boy/features/rider/profile/providers/rider_me_profile_providers.dart';
 
 // ── State ─────────────────────────────────────────────────────────────────────
 
@@ -146,8 +148,6 @@ class RiderAuthNotifier extends Notifier<RiderAuthState> {
   Future<void> registerDeviceToken() async {
     try {
       if (!FirebaseBootstrap.isAvailable) return;
-      // Checked directly rather than inferred from the current route:
-      // `_testBypassAuthGuard` lets /dashboard be reached with no session.
       if (!_session.isLoggedIn) return;
 
       final token = await FcmService.getToken();
@@ -609,6 +609,9 @@ class RiderAuthNotifier extends Notifier<RiderAuthState> {
     await sl<SharedPreferences>().remove(_registeredTokenKey);
 
     state = const RiderAuthState();
+    // Not via sessionRevision: that would redirect away from the calling
+    // screen before it can dismiss its loading overlay and navigate.
+    RiderSessionTeardown.reset(ref.invalidate);
     return true;
   }
 
@@ -626,6 +629,14 @@ class RiderAuthNotifier extends Notifier<RiderAuthState> {
 
   /// Best-effort server logout; the local session is always cleared.
   Future<void> logout() async {
+    // Go offline while the token is still valid — otherwise the server keeps
+    // this rider `is_online` and dispatch can keep offering them orders
+    // after they've signed out. Best-effort: a failure mustn't block logout.
+    // Only skipped when the profile is known to be offline already.
+    if (ref.read(riderMeProfileProvider).profile?.isOnline != false) {
+      await ref.read(riderMeProfileProvider.notifier).setAvailability(false);
+    }
+
     await sl<RealtimeService>().disconnect();
 
     // Deregister BEFORE POST /logout, which revokes the Sanctum token
@@ -651,6 +662,9 @@ class RiderAuthNotifier extends Notifier<RiderAuthState> {
     await sl<SharedPreferences>().remove(_registeredTokenKey);
 
     state = const RiderAuthState();
+    // Not via sessionRevision: that would redirect away from the calling
+    // screen before it can dismiss its loading overlay and navigate.
+    RiderSessionTeardown.reset(ref.invalidate);
   }
 
   String _messageOf<T>(Either<Failure, T> result) =>

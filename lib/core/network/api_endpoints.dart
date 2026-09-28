@@ -3,7 +3,7 @@
 /// Verified against the live backend — an invalid value returns
 /// `Role must be one of: customer, vendor, rider`.
 abstract final class AuthRoles {
-  static const rider = 'rider';
+  static const rider = 'delivery';
 }
 
 /// `purpose` values accepted by [ApiEndpoints.otpVerify].

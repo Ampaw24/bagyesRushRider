@@ -199,7 +199,9 @@ class FcmService {
     return switch (type) {
       'new_order' => '/dashboard',
       'order_accepted' => '/dashboard',
-      'payment' => '/dashboard/wallet',
+      // Wallet is a dashboard tab, not a route — the ledger is the
+      // nearest routable screen, and it's where a payment lands anyway.
+      'payment' => '/dashboard/wallet/transactions',
       'document' => '/dashboard/kyc',
       _ => '/dashboard/notifications',
     };

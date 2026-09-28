@@ -23,12 +23,18 @@ enum RiderDeliveryStage {
 ///
 /// HEURISTIC — `kRiderMeOrderStatuses` has no discrete arrived/picked-up/
 /// arrived-at-dropoff values, so this can only distinguish "not yet
-/// actioned" from "delivered" from "closed" (cancelled/rejected/refunded).
+/// actioned" from "out for delivery" (at least picked up) from "delivered"
+/// from "closed" (cancelled/rejected/refunded).
 /// VERIFY LIVE: if a real order payload turns out to carry per-stage
 /// timestamps (e.g. arrived_at_pickup_at / picked_up_at /
 /// arrived_at_dropoff_at), prefer those over this seed once confirmed.
 RiderDeliveryStage seedDeliveryStageFrom(String status) {
   switch (status) {
+    // The one coarse status that does imply progress: the package has left
+    // the pickup. Without this, a rider who restarts mid-delivery is shown
+    // "Arrived at Pickup" again for an order already in hand.
+    case 'out_for_delivery':
+      return RiderDeliveryStage.pickedUp;
     case 'delivered':
       return RiderDeliveryStage.delivered;
     case 'cancelled':

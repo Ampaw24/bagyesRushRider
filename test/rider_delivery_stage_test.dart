@@ -14,8 +14,15 @@ void main() {
       }
     });
 
-    test('maps every other documented status to notStarted', () {
-      // kRiderMeOrderStatuses has no discrete arrived/picked-up value, so
+    test('maps out_for_delivery to pickedUp', () {
+      // Survives an app restart mid-delivery instead of resetting the
+      // rider to "Arrived at Pickup".
+      expect(seedDeliveryStageFrom('out_for_delivery'),
+          RiderDeliveryStage.pickedUp);
+    });
+
+    test('maps every pre-pickup status to notStarted', () {
+      // kRiderMeOrderStatuses has no discrete arrived-at-pickup value, so
       // these can only ever seed as "not yet actioned" — the rest of the
       // sequence is tracked client-side once an action succeeds.
       for (final status in [
@@ -24,7 +31,6 @@ void main() {
         'accepted',
         'preparing',
         'ready',
-        'out_for_delivery',
       ]) {
         expect(seedDeliveryStageFrom(status), RiderDeliveryStage.notStarted,
             reason: status);

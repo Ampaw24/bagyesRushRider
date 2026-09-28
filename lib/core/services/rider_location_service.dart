@@ -68,6 +68,39 @@ class RiderLocationService {
         .whenComplete(() => _pendingPermission = null);
   }
 
+  // Mirrors _pendingPermission's de-dupe reasoning — startTracking() can be
+  // re-entered (idle -> active tier switch) while a prior request is still
+  // in flight.
+  static Future<bool>? _pendingBackgroundPermission;
+
+  /// Requests Android's separate "Allow all the time" grant
+  /// (`ACCESS_BACKGROUND_LOCATION`), without which `Location.enableBackgroundMode`
+  /// throws `PERMISSION_DENIED`. The `location` plugin's own
+  /// [ensurePermission] never asks for this — verified against its Android
+  /// source (`FlutterLocation.java`), which only ever requests
+  /// `ACCESS_FINE_LOCATION` — so `permission_handler` (already a dependency)
+  /// covers it instead.
+  ///
+  /// Foreground permission must already be granted before requesting this;
+  /// Android does not offer "all the time" as an option otherwise.
+  static Future<bool> ensureBackgroundPermission() {
+    return _pendingBackgroundPermission ??= _requestBackgroundPermission()
+        .whenComplete(() => _pendingBackgroundPermission = null);
+  }
+
+  static Future<bool> _requestBackgroundPermission() async {
+    try {
+      final current = await ph.Permission.locationAlways.status;
+      if (current.isGranted) return true;
+      final result = await ph.Permission.locationAlways.request();
+      return result.isGranted;
+    } catch (e, s) {
+      appLogger.e('[Location] background permission request failed',
+          error: e, stackTrace: s);
+      return false;
+    }
+  }
+
   /// Checks whether location services (GPS) are on, and on Android offers the
   /// in-app system dialog to switch them on when [prompt] is true.
   static Future<bool> ensureServiceEnabled({bool prompt = true}) {
