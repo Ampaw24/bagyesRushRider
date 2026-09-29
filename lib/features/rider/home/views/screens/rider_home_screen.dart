@@ -11,6 +11,7 @@ import 'package:delivery_boy/core/services/user_session_manager.dart';
 import 'package:delivery_boy/core/widgets/app_loading_overlay.dart';
 import 'package:delivery_boy/core/widgets/app_shimmer.dart';
 import 'package:delivery_boy/core/widgets/custom_dialogs.dart';
+import 'package:delivery_boy/core/widgets/notification_permission_prompt.dart';
 import 'package:delivery_boy/features/rider/auth/models/rider_user_model.dart';
 import 'package:delivery_boy/features/rider/auth/viewmodels/rider_auth_viewmodel.dart';
 import 'package:delivery_boy/features/rider/auth/views/widgets/delete_account_sheet.dart';
@@ -22,6 +23,7 @@ import 'package:delivery_boy/features/rider/home/views/widgets/rider_location_ch
 import 'package:delivery_boy/features/rider/notifications/providers/rider_notifications_providers.dart';
 import 'package:delivery_boy/features/rider/orders/models/rider_me_order_model.dart';
 import 'package:delivery_boy/features/rider/orders/providers/rider_me_order_providers.dart';
+import 'package:delivery_boy/features/rider/orders/views/widgets/rider_me_order_detail_sheet.dart';
 import 'package:delivery_boy/features/rider/orders/views/widgets/rider_me_order_status.dart';
 import 'package:delivery_boy/features/rider/profile/providers/rider_avatar_providers.dart';
 import 'package:delivery_boy/features/rider/profile/providers/rider_me_profile_providers.dart';
@@ -97,6 +99,7 @@ class _RiderHomeScreenState extends ConsumerState<RiderHomeScreen>
       ref.read(riderMeOrdersProvider.notifier).load(filter: 'active');
       ref.read(riderMeOrderHistoryProvider.notifier).load();
       ref.read(riderBannersProvider.notifier).load();
+      NotificationPermissionPrompt.maybeShow(context);
     });
   }
 
@@ -156,6 +159,21 @@ class _RiderHomeScreenState extends ConsumerState<RiderHomeScreen>
       confirmText: 'Continue',
       onConfirm: () => DeleteAccountSheet.show(context),
     );
+  }
+
+  /// Opens the same order sheet as the Orders tab, where the rider can move
+  /// the delivery to its next step; the active list is reloaded afterwards
+  /// since any action in the sheet changes what belongs on it.
+  Future<void> _openOrder(RiderMeOrderModel order) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => RiderMeOrderDetailSheet(initialOrder: order),
+    );
+    if (mounted) {
+      ref.read(riderMeOrdersProvider.notifier).load(filter: 'active');
+    }
   }
 
   @override
@@ -260,28 +278,10 @@ class _RiderHomeScreenState extends ConsumerState<RiderHomeScreen>
 
                               SizedBox(height: h * 0.026),
 
-                              // ── Active orders ────────────────────────────
-                              if (activeOrders.isNotEmpty) ...[
-                                Padding(
-                                  padding:
-                                      EdgeInsets.symmetric(horizontal: hPad),
-                                  child: _section(
-                                    2,
-                                    _ActiveOrdersSection(
-                                      orders: activeOrders,
-                                      onShowAll: widget.onViewAllOrders,
-                                      w: w,
-                                      h: h,
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(height: h * 0.026),
-                              ],
-
                               // ── Announcements ───────────────────────────
                               if (showBanners) ...[
                                 _section(
-                                  3,
+                                  2,
                                   _AnnouncementsSection(
                                     isLoading: bannersState.status ==
                                         RiderBannersStatus.loading,
@@ -293,6 +293,25 @@ class _RiderHomeScreenState extends ConsumerState<RiderHomeScreen>
                                     hPad: hPad,
                                     h: h,
                                     w: w,
+                                  ),
+                                ),
+                                SizedBox(height: h * 0.026),
+                              ],
+
+                              // ── Active orders ────────────────────────────
+                              if (activeOrders.isNotEmpty) ...[
+                                Padding(
+                                  padding:
+                                      EdgeInsets.symmetric(horizontal: hPad),
+                                  child: _section(
+                                    3,
+                                    _ActiveOrdersSection(
+                                      orders: activeOrders,
+                                      onShowAll: widget.onViewAllOrders,
+                                      onOpenOrder: _openOrder,
+                                      w: w,
+                                      h: h,
+                                    ),
                                   ),
                                 ),
                                 SizedBox(height: h * 0.026),
@@ -743,7 +762,7 @@ class _AnnouncementsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cardHeight = (h * 0.16).clamp(110.0, 150.0);
+    final cardHeight = (h * 0.19).clamp(130.0, 180.0);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -929,12 +948,14 @@ class _AnnouncementCard extends StatelessWidget {
 class _ActiveOrdersSection extends StatelessWidget {
   final List<RiderMeOrderModel> orders;
   final VoidCallback onShowAll;
+  final ValueChanged<RiderMeOrderModel> onOpenOrder;
   final double w;
   final double h;
 
   const _ActiveOrdersSection({
     required this.orders,
     required this.onShowAll,
+    required this.onOpenOrder,
     required this.w,
     required this.h,
   });
@@ -982,7 +1003,12 @@ class _ActiveOrdersSection extends StatelessWidget {
           ],
         ),
         SizedBox(height: h * 0.014),
-        ...orders.map((order) => _MiniOrderCard(order: order, w: w, h: h)),
+        ...orders.map((order) => _MiniOrderCard(
+              order: order,
+              w: w,
+              h: h,
+              onTap: () => onOpenOrder(order),
+            )),
       ],
     );
   }
@@ -1112,11 +1138,13 @@ class _MiniOrderCard extends StatelessWidget {
   final RiderMeOrderModel order;
   final double w;
   final double h;
+  final VoidCallback? onTap;
 
   const _MiniOrderCard({
     required this.order,
     required this.w,
     required this.h,
+    this.onTap,
   });
 
   Color get _statusColor => riderMeOrderStatusColor(order.status);
@@ -1125,7 +1153,7 @@ class _MiniOrderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final card = Container(
       margin: EdgeInsets.only(bottom: h * 0.012),
       padding: EdgeInsets.symmetric(
         horizontal: w * 0.04,
@@ -1242,6 +1270,17 @@ class _MiniOrderCard extends StatelessWidget {
             ],
           ),
         ],
+      ),
+    );
+
+    if (onTap == null) return card;
+    return Semantics(
+      button: true,
+      label: 'Open order ${order.reference ?? order.id}',
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: card,
       ),
     );
   }

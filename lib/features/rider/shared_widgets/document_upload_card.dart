@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
+import 'package:delivery_boy/core/widgets/custom_dialogs.dart';
 import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/features/rider/kyc/models/upload_state.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -146,8 +147,7 @@ class _UploadingCard extends StatelessWidget {
             height: 24,
             child: CircularProgressIndicator(
               strokeWidth: 2.5,
-              valueColor:
-                  AlwaysStoppedAnimation<Color>(AppColors.primary),
+              valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
             ),
           ),
           const SizedBox(height: 8),
@@ -239,12 +239,14 @@ class _DoneCard extends StatelessWidget {
                 Row(
                   children: [
                     _ActionChip(
-                        label: 'Replace', color: AppColors.primary,
+                        label: 'Replace',
+                        color: AppColors.primary,
                         onTap: onReplace),
                     if (onRemove != null) ...[
                       const SizedBox(width: 6),
                       _ActionChip(
-                          label: 'Remove', color: AppColors.error,
+                          label: 'Remove',
+                          color: AppColors.error,
                           onTap: () => _confirmRemove(context)),
                     ],
                   ],
@@ -259,32 +261,14 @@ class _DoneCard extends StatelessWidget {
   }
 
   void _confirmRemove(BuildContext context) {
-    showDialog(
+    CustomDialog.showConfirmation(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Remove document?',
-            style: TextStyle(
-                fontFamily: 'Mukta', fontWeight: FontWeight.w700)),
-        content: Text('Remove the uploaded $label?',
-            style: const TextStyle(fontFamily: 'Mukta')),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel',
-                style: TextStyle(fontFamily: 'Mukta')),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              onRemove?.call();
-            },
-            child: const Text('Remove',
-                style: TextStyle(
-                    fontFamily: 'Mukta', color: AppColors.error)),
-          ),
-        ],
-      ),
+      title: 'Remove document?',
+      subtitle: 'Remove the uploaded $label?',
+      confirmText: 'Remove',
+      isDestructive: true,
+      icon: HugeIcons.strokeRoundedDelete02,
+      onConfirm: () => onRemove?.call(),
     );
   }
 }
@@ -326,9 +310,7 @@ class _FailedCard extends StatelessWidget {
             Text(
               error ?? 'Upload failed',
               style: const TextStyle(
-                  fontFamily: 'Mukta',
-                  fontSize: 12,
-                  color: AppColors.error),
+                  fontFamily: 'Mukta', fontSize: 12, color: AppColors.error),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 4),
@@ -361,8 +343,7 @@ class _ActionChip extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding:
-            const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(6),

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui' show Color;
 
 import 'package:firebase_core/firebase_core.dart';
@@ -70,34 +71,13 @@ class FcmService {
     void Function(String token)? onTokenRefresh,
   }) async {
     // ── Permission ───────────────────────────────────────────────────────────
-    // On Android 13+ this raises the POST_NOTIFICATIONS dialog — but only
-    // because that permission is declared in AndroidManifest.xml. Without
-    // the declaration it returns silently with no prompt at all.
-    final settings = await FirebaseMessaging.instance.requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
-    );
-    appLogger.i(
-      '[FCM] notification permission: ${settings.authorizationStatus.name}',
-    );
+    await ensurePermission();
 
     // ── Store token ──────────────────────────────────────────────────────────
-    // Isolated: on the iOS Simulator there is no APNs, so getToken() throws.
-    // That must not skip the listener setup below, or foreground display and
-    // tap routing would be untestable there.
-    try {
-      final token = await getToken();
-      if (token != null) {
-        appLogger.i('[FCM] token: $token');
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString(_tokenKey, token);
-      } else {
-        appLogger.w('[FCM] getToken() returned null');
-      }
-    } catch (e) {
-      appLogger.w('[FCM] token unavailable: $e');
-    }
+    // Not awaited: on iOS getToken() may wait several seconds for APNs, and
+    // that must not hold up the listener setup below or the rest of the
+    // bootstrap. The backend registration fetches its own token anyway.
+    unawaited(_cacheToken());
 
     // Token refresh
     FirebaseMessaging.instance.onTokenRefresh.listen((newToken) async {
@@ -154,15 +134,88 @@ class FcmService {
     }
   }
 
-  /// The current FCM registration token, or null if one can't be issued.
-  static Future<String?> getToken() async {
-    if (defaultTargetPlatform == TargetPlatform.iOS) {
-      // On iOS an FCM token is only issued once APNs has assigned one.
-      // Returns null on the Simulator (no APNs), which makes the getToken()
-      // below throw — callers treat that as "no token yet" and move on.
-      await FirebaseMessaging.instance.getAPNSToken();
+  /// Latest known notification permission — null until first checked.
+  /// Refreshed on every app resume, so turning notifications on in the
+  /// Settings app is picked up without a relaunch.
+  static final ValueNotifier<AuthorizationStatus?> permissionStatus =
+      ValueNotifier(null);
+
+  static bool isPermitted(AuthorizationStatus? status) =>
+      status == AuthorizationStatus.authorized ||
+      status == AuthorizationStatus.provisional;
+
+  /// Shows the OS permission prompt only if the rider hasn't answered it
+  /// yet — iOS allows that dialog exactly once per install, so after a
+  /// "Don't Allow" the only way back is the Settings app (see
+  /// `NotificationPermissionPrompt`).
+  ///
+  /// On Android 13+ the request raises the POST_NOTIFICATIONS dialog — but
+  /// only because that permission is declared in AndroidManifest.xml.
+  static Future<AuthorizationStatus> ensurePermission() async {
+    final messaging = FirebaseMessaging.instance;
+    var settings = await messaging.getNotificationSettings();
+    if (settings.authorizationStatus == AuthorizationStatus.notDetermined) {
+      settings = await messaging.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
     }
-    return FirebaseMessaging.instance.getToken();
+    permissionStatus.value = settings.authorizationStatus;
+    appLogger.i(
+      '[FCM] notification permission: ${settings.authorizationStatus.name}',
+    );
+    return settings.authorizationStatus;
+  }
+
+  /// Re-reads the current permission without prompting.
+  static Future<AuthorizationStatus> refreshPermission() async {
+    final settings = await FirebaseMessaging.instance.getNotificationSettings();
+    permissionStatus.value = settings.authorizationStatus;
+    return settings.authorizationStatus;
+  }
+
+  static const _apnsAttempts = 10;
+  static const _apnsRetryDelay = Duration(seconds: 1);
+
+  /// The current FCM registration token, or null if one can't be issued.
+  ///
+  /// On iOS an FCM token only exists once APNs has handed the device its
+  /// own token, which arrives asynchronously — often a few seconds after
+  /// the permission prompt is answered on first launch. Asking FCM before
+  /// then throws `apns-token-not-set`, so this waits for the APNs token
+  /// first. Still null after the retries (e.g. the Simulator, which has no
+  /// APNs) → returns null rather than throwing.
+  static Future<String?> getToken() async {
+    final messaging = FirebaseMessaging.instance;
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      String? apnsToken;
+      for (var i = 0; i < _apnsAttempts; i++) {
+        apnsToken = await messaging.getAPNSToken();
+        if (apnsToken != null) break;
+        await Future<void>.delayed(_apnsRetryDelay);
+      }
+      if (apnsToken == null) {
+        appLogger.w(
+          '[FCM] no APNs token after ${_apnsAttempts}s — check the push '
+          'entitlement, and that an APNs key is uploaded in Firebase',
+        );
+        return null;
+      }
+    }
+    return messaging.getToken();
+  }
+
+  static Future<void> _cacheToken() async {
+    try {
+      final token = await getToken();
+      if (token == null) return;
+      appLogger.i('[FCM] token: $token');
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_tokenKey, token);
+    } catch (e) {
+      appLogger.w('[FCM] token unavailable: $e');
+    }
   }
 
   // ── Private helpers ────────────────────────────────────────────────────────

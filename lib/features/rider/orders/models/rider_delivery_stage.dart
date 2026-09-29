@@ -45,3 +45,28 @@ RiderDeliveryStage seedDeliveryStageFrom(String status) {
       return RiderDeliveryStage.notStarted;
   }
 }
+
+extension RiderDeliveryStageX on RiderDeliveryStage {
+  /// Label of the button that moves the order out of this stage, or `null`
+  /// when the rider has nothing left to do. A multi-stop order past pickup
+  /// is advanced per stop, so it gets a generic prompt instead.
+  String? nextActionLabel({required bool isMultiStop}) => switch (this) {
+        RiderDeliveryStage.notStarted => 'Arrived at Pickup',
+        RiderDeliveryStage.arrivedAtPickup => 'Confirm Pickup',
+        RiderDeliveryStage.pickedUp =>
+          isMultiStop ? 'Update Stops' : 'Arrived at Drop-off',
+        RiderDeliveryStage.arrivedAtDropoff => 'Complete Delivery',
+        RiderDeliveryStage.delivered || RiderDeliveryStage.closed => null,
+      };
+
+  /// How many of the four delivery milestones (at pickup, picked up, at
+  /// drop-off, delivered) are complete.
+  int get completedSteps => switch (this) {
+        RiderDeliveryStage.notStarted => 0,
+        RiderDeliveryStage.arrivedAtPickup => 1,
+        RiderDeliveryStage.pickedUp => 2,
+        RiderDeliveryStage.arrivedAtDropoff => 3,
+        RiderDeliveryStage.delivered => 4,
+        RiderDeliveryStage.closed => 0,
+      };
+}

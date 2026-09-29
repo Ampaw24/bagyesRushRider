@@ -7,6 +7,7 @@ import 'package:delivery_boy/features/rider/orders/models/rider_me_order_model.d
 import 'package:delivery_boy/features/rider/orders/providers/rider_me_order_providers.dart';
 import 'package:delivery_boy/features/rider/orders/views/widgets/rider_me_order_card.dart';
 import 'package:delivery_boy/features/rider/orders/views/widgets/rider_me_order_detail_sheet.dart';
+import 'package:delivery_boy/features/rider/orders/views/widgets/rider_orders_empty_state.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 class RiderOrderHistoryScreen extends ConsumerStatefulWidget {
@@ -48,86 +49,34 @@ class _RiderOrderHistoryScreenState
       return const ShimmerListPlaceholder(itemCount: 4, itemHeight: 110);
     }
 
+    Future<void> reload() =>
+        ref.read(riderMeOrderHistoryProvider.notifier).load();
+
     if (state.orders.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 90,
-              height: 90,
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.08),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(HugeIcons.strokeRoundedClock01,
-                  color: AppColors.primary.withValues(alpha: 0.6), size: 44),
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              'No Delivery History',
-              style: TextStyle(
-                fontFamily: 'Roboto',
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Completed deliveries will appear here.',
-              style: TextStyle(
-                  fontFamily: 'Roboto',
-                  fontSize: 14,
-                  color: Colors.grey.shade500),
-            ),
-          ],
-        ),
+      return RiderOrdersEmptyState(
+        icon: HugeIcons.strokeRoundedClock01,
+        title: 'No delivery history',
+        message: 'Completed deliveries will appear here.',
+        onRefresh: reload,
       );
     }
 
+    final w = MediaQuery.sizeOf(context).width;
     return RefreshIndicator(
       color: AppColors.primary,
-      onRefresh: () => ref.read(riderMeOrderHistoryProvider.notifier).load(),
-      child: ListView.builder(
+      onRefresh: reload,
+      child: ListView.separated(
         itemCount: state.orders.length,
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        physics: const BouncingScrollPhysics(),
+        padding: EdgeInsets.all(w * 0.04),
+        physics: const AlwaysScrollableScrollPhysics(),
+        separatorBuilder: (_, __) => SizedBox(height: w * 0.03),
         itemBuilder: (_, i) {
           final order = state.orders[i];
           return AnimatedListItem(
             index: i,
-            child: Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-              child: GestureDetector(
-                onTap: () => _openDetailSheet(order),
-                child: RiderMeOrderCard(
-                  order: order,
-                  actionButton: GestureDetector(
-                    onTap: () => _openDetailSheet(order),
-                    child: Container(
-                      height: 34,
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade100,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.grey.shade300),
-                      ),
-                      alignment: Alignment.center,
-                      child: const Text(
-                        'View',
-                        style: TextStyle(
-                          color: AppColors.textPrimary,
-                          fontFamily: 'Roboto',
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
+            child: RiderMeOrderCard(
+              order: order,
+              onTap: () => _openDetailSheet(order),
             ),
           );
         },

@@ -17,7 +17,9 @@ import 'package:delivery_boy/features/rider/orders/models/rider_me_order_model.d
 import 'package:delivery_boy/features/rider/orders/providers/rider_me_order_providers.dart';
 import 'package:delivery_boy/features/rider/orders/views/widgets/delivery_confirmation_sheet.dart';
 import 'package:delivery_boy/features/rider/orders/views/widgets/reason_input_sheet.dart';
+import 'package:delivery_boy/features/rider/orders/views/widgets/rider_delivery_progress.dart';
 import 'package:delivery_boy/features/rider/orders/views/widgets/rider_me_order_status.dart';
+import 'package:delivery_boy/features/rider/orders/views/widgets/rider_order_detail_sections.dart';
 import 'package:delivery_boy/features/rider/report/models/rider_report_flow_args.dart';
 import 'package:delivery_boy/features/rider/report/models/rider_report_model.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -132,12 +134,30 @@ class _RiderMeOrderDetailSheetState
     if (await canLaunchUrl(uri)) await launchUrl(uri);
   }
 
-  /// Cheap/fast path: hand the address straight to the rider's own Maps app,
-  /// no need to open [RiderOrderMapScreen] first. See
-  /// `ExternalNavigationLauncher` for why this is address-only (the backend
-  /// sends no coordinates) and why there's no in-app turn-by-turn.
-  Future<void> _navigateTo(String? address) async {
-    final ok = await ExternalNavigationLauncher.launch(address: address);
+  /// Cheap/fast path: hand the point straight to the rider's own Maps app,
+  /// no need to open [RiderOrderMapScreen] first. Server coordinates give an
+  /// exact pin; the address alone still works, since Maps geocodes it.
+  Future<void> _navigateTo(
+    String label,
+    String? address, {
+    double? latitude,
+    double? longitude,
+  }) async {
+    final hasTarget =
+        (latitude != null && longitude != null) || (address?.isNotEmpty ?? false);
+    if (!hasTarget) {
+      CustomDialog.showInfo(
+        context: context,
+        title: 'No Location Yet',
+        subtitle: "This order doesn't have a $label location to navigate to.",
+      );
+      return;
+    }
+    final ok = await ExternalNavigationLauncher.launch(
+      address: address,
+      latitude: latitude,
+      longitude: longitude,
+    );
     if (!ok && mounted) {
       CustomDialog.showError(
         context: context,
@@ -189,6 +209,16 @@ class _RiderMeOrderDetailSheetState
     final order = _currentOrder(ordersState);
     final stage = ordersState.stageFor(order);
 
+    final isOpen = stage != RiderDeliveryStage.delivered &&
+        stage != RiderDeliveryStage.closed;
+    // Past pickup, a multi-stop order is advanced stop by stop — a list too
+    // tall for the pinned footer, so its stop tiles sit in the body instead.
+    final stopsInBody =
+        order.isMultiStop && stage == RiderDeliveryStage.pickedUp;
+    final w = MediaQuery.sizeOf(context).width;
+    final gutter = w * 0.05;
+    final sectionGap = w * 0.06;
+
     return DraggableScrollableSheet(
       initialChildSize: 0.92,
       minChildSize: 0.5,
@@ -196,324 +226,151 @@ class _RiderMeOrderDetailSheetState
       expand: false,
       builder: (_, scrollCtrl) {
         return Container(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            borderRadius:
+                BorderRadius.vertical(top: Radius.circular(w * 0.05)),
           ),
-          child: ListView(
-            controller: scrollCtrl,
+          child: Column(
             children: [
-              const DragHandle(),
-
-              // ── Gradient header ────────────────────────────────────────
-              Container(
-                margin: const EdgeInsets.fromLTRB(16, 0, 16, 0),
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [AppColors.primary, Color(0xFFCA445D)],
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                  ),
-                  borderRadius: BorderRadius.circular(14),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.primary.withValues(alpha: 0.3),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Row(
+              Expanded(
+                child: ListView(
+                  controller: scrollCtrl,
+                  padding: EdgeInsets.fromLTRB(gutter, 0, gutter, sectionGap),
                   children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            order.reference ?? '#${order.id}',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              fontFamily: 'Roboto',
-                            ),
-                          ),
-                          if (order.isMultiStop) ...[
-                            const SizedBox(height: 4),
-                            Text(
-                              '${order.stops.length} stops',
-                              style: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.8),
-                                fontSize: 12,
-                                fontFamily: 'Roboto',
-                              ),
-                            ),
-                          ],
-                        ],
+                    const DragHandle(),
+                    OrderSheetHeader(
+                      reference: order.reference ?? '#${order.id}',
+                      statusLabel: riderMeOrderStatusLabel(order.status),
+                      statusColor: riderMeOrderStatusColor(order.status),
+                      amount: order.amountFormatted,
+                      stopCount: order.isMultiStop ? order.stops.length : null,
+                    ),
+                    if (isOpen) ...[
+                      SizedBox(height: w * 0.05),
+                      RiderDeliveryProgress(stage: stage),
+                    ],
+                    SizedBox(height: sectionGap),
+
+                    if (stopsInBody) ...[
+                      const OrderSectionLabel(title: 'Stops'),
+                      _buildActionPanel(order, stage),
+                      SizedBox(height: sectionGap),
+                    ],
+
+                    // ── Route ──────────────────────────────────────────────
+                    OrderSectionLabel(
+                      title: 'Route',
+                      trailing: OrderSectionAction(
+                        label: 'View map',
+                        icon: HugeIcons.strokeRoundedMapsLocation01,
+                        onTap: () => _openMap(order),
                       ),
                     ),
-                    StatusBadge(
-                      label: riderMeOrderStatusLabel(order.status),
-                      color: Colors.white.withValues(alpha: 0.25),
+                    OrderRouteTimeline(
+                      pickupAddress: order.pickupAddress,
+                      dropoffAddress: order.dropoffAddress,
+                      dropoffLabel:
+                          order.isMultiStop ? 'Final stop' : 'Drop-off',
+                      onNavigatePickup: () => _navigateTo(
+                        'pickup',
+                        order.pickupAddress,
+                        latitude: order.pickupLatitude,
+                        longitude: order.pickupLongitude,
+                      ),
+                      onNavigateDropoff: () => _navigateTo(
+                        'drop-off',
+                        order.dropoffAddress,
+                        latitude: order.dropoffLatitude,
+                        longitude: order.dropoffLongitude,
+                      ),
+                    ),
+                    SizedBox(height: sectionGap),
+
+                    // ── Customer ───────────────────────────────────────────
+                    const OrderSectionLabel(title: 'Customer'),
+                    OrderCustomerTile(
+                      name: order.customerName,
+                      phone: order.customerPhone,
+                      onCall: () => _callCustomer(order.customerPhone),
+                      onChat: () => _openChat(order),
+                    ),
+                    SizedBox(height: sectionGap),
+
+                    // ── Having trouble? ────────────────────────────────────
+                    const OrderSectionLabel(title: 'Having trouble?'),
+                    OrderIssueList(
+                      actions: [
+                        if (isOpen) ...[
+                          OrderIssueAction(
+                            icon: HugeIcons.strokeRoundedCallBlocked,
+                            title: "Can't reach customer",
+                            subtitle: 'Mark as unreachable after waiting',
+                            destructive: true,
+                            onTap: _actionBusy
+                                ? null
+                                : () => _openUnreachableSheet(order.id),
+                          ),
+                          OrderIssueAction(
+                            icon: HugeIcons.strokeRoundedArrowTurnBackward,
+                            title: 'Release order',
+                            subtitle: 'Hand it back so another rider can take it',
+                            onTap: _actionBusy
+                                ? null
+                                : () => _openReleaseSheet(order.id),
+                          ),
+                        ],
+                        OrderIssueAction(
+                          icon: HugeIcons.strokeRoundedFlag02,
+                          title: 'Report a problem',
+                          subtitle: 'Tell us what went wrong with this delivery',
+                          onTap: () => _openReport(order),
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ),
 
-              const SizedBox(height: 16),
-
-              // ── Locations ──────────────────────────────────────────────
-              _card(
-                title: 'Location',
-                headerAction: GestureDetector(
-                  onTap: () => _openMap(order),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(HugeIcons.strokeRoundedMapsLocation01,
-                          size: 14, color: AppColors.primary),
-                      SizedBox(width: 4),
-                      Text(
-                        'View Map',
-                        style: TextStyle(
-                          fontFamily: 'Roboto',
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    ],
-                  ),
+              // ── Pinned next step ───────────────────────────────────────
+              // Always on screen, so the rider never has to scroll past the
+              // order details to find how to move the delivery forward.
+              Container(
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  border: Border(top: BorderSide(color: AppColors.divider)),
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.all(14),
-                  child: Column(
-                    children: [
-                      _locationRow(
-                        icon: HugeIcons.strokeRoundedCheckmarkCircle01,
-                        iconColor: Colors.green,
-                        label: 'Pickup',
-                        value: order.pickupAddress ?? '-',
-                        onNavigate: () => _navigateTo(order.pickupAddress),
-                      ),
-                      const SizedBox(height: 10),
-                      _locationRow(
-                        icon: HugeIcons.strokeRoundedLocation01,
-                        iconColor: AppColors.primary,
-                        label: order.isMultiStop ? 'Final Stop' : 'Delivery',
-                        value: order.dropoffAddress ?? '-',
-                        onNavigate: () => _navigateTo(order.dropoffAddress),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              // ── Customer ───────────────────────────────────────────────
-              _card(
-                title: 'Customer',
-                child: Padding(
-                  padding: const EdgeInsets.all(14),
-                  child: Column(
-                    children: [
-                      _row('Name', order.customerName ?? '-'),
-                      const SizedBox(height: 10),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            'Phone',
-                            style: TextStyle(
-                              fontFamily: 'Roboto',
-                              fontSize: 14,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                          GestureDetector(
-                            onTap: () => _callCustomer(order.customerPhone),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  order.customerPhone ?? '-',
-                                  style: const TextStyle(
-                                    fontFamily: 'Roboto',
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500,
-                                    color: AppColors.primary,
-                                    decoration: TextDecoration.underline,
-                                  ),
-                                ),
-                                const SizedBox(width: 6),
-                                const Icon(HugeIcons.strokeRoundedCall,
-                                    size: 16, color: AppColors.primary),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            'Message',
-                            style: TextStyle(
-                              fontFamily: 'Roboto',
-                              fontSize: 14,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                          GestureDetector(
-                            onTap: () => _openChat(order),
-                            child: const Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  'Chat',
-                                  style: TextStyle(
-                                    fontFamily: 'Roboto',
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500,
-                                    color: AppColors.primary,
-                                    decoration: TextDecoration.underline,
-                                  ),
-                                ),
-                                SizedBox(width: 6),
-                                Icon(HugeIcons.strokeRoundedBubbleChat,
-                                    size: 16, color: AppColors.primary),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            'Problem with this delivery?',
-                            style: TextStyle(
-                              fontFamily: 'Roboto',
-                              fontSize: 14,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                          GestureDetector(
-                            onTap: () => _openReport(order),
-                            child: const Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  'Report',
-                                  style: TextStyle(
-                                    fontFamily: 'Roboto',
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500,
-                                    color: AppColors.error,
-                                    decoration: TextDecoration.underline,
-                                  ),
-                                ),
-                                SizedBox(width: 6),
-                                Icon(HugeIcons.strokeRoundedFlag02,
-                                    size: 16, color: AppColors.error),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              // ── Payment ────────────────────────────────────────────────
-              _card(
-                title: 'Payment',
-                child: Padding(
-                  padding: const EdgeInsets.all(14),
-                  child: _row(
-                      'Amount',
-                      order.amountFormatted.isEmpty
-                          ? '-'
-                          : order.amountFormatted,
-                      valueStyle: const TextStyle(
-                        fontFamily: 'Roboto',
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.primary,
-                      )),
-                ),
-              ),
-
-              const SizedBox(height: 8),
-
-              // ── Action panel ───────────────────────────────────────────
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: _buildActionPanel(order, stage),
-              ),
-
-              const SizedBox(height: 12),
-
-              // ── Release / Unreachable / Close ─────────────────────────
-              if (stage != RiderDeliveryStage.delivered &&
-                  stage != RiderDeliveryStage.closed)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: TextButton(
-                          onPressed: _actionBusy
-                              ? null
-                              : () => _openReleaseSheet(order.id),
-                          child: const Text('Release',
-                              style: TextStyle(
-                                  fontFamily: 'Roboto',
-                                  color: AppColors.textSecondary)),
-                        ),
-                      ),
-                      Expanded(
-                        child: TextButton(
-                          onPressed: _actionBusy
-                              ? null
-                              : () => _openUnreachableSheet(order.id),
-                          child: const Text('Unreachable',
-                              style: TextStyle(
-                                  fontFamily: 'Roboto',
-                                  color: AppColors.error)),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
-                child: OutlinedButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    minimumSize: const Size.fromHeight(46),
-                    side: BorderSide(color: Colors.grey.shade300),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                  ),
-                  child: const Text(
-                    'Close',
-                    style: TextStyle(
-                        fontFamily: 'Roboto',
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary),
-                  ),
+                padding: EdgeInsets.fromLTRB(gutter, w * 0.03, gutter, w * 0.03),
+                child: SafeArea(
+                  top: false,
+                  child: isOpen && !stopsInBody
+                      ? _buildActionPanel(order, stage)
+                      : _closeButton(),
                 ),
               ),
             ],
           ),
         );
       },
+    );
+  }
+
+  Widget _closeButton() {
+    final w = MediaQuery.sizeOf(context).width;
+    return OutlinedButton(
+      onPressed: () => Navigator.of(context).pop(),
+      style: OutlinedButton.styleFrom(
+        minimumSize: Size.fromHeight((w * 0.12).clamp(46.0, 56.0)),
+        side: const BorderSide(color: AppColors.border),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+      child: const Text(
+        'Close',
+        style: TextStyle(
+            fontFamily: 'Roboto',
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary),
+      ),
     );
   }
 
@@ -532,7 +389,7 @@ class _RiderMeOrderDetailSheetState
 
       case RiderDeliveryStage.arrivedAtPickup:
         return AppGradientButton(
-          label: 'Picked Up',
+          label: 'Confirm Pickup',
           isLoading: _actionBusy,
           onPressed: _actionBusy
               ? null
@@ -556,7 +413,7 @@ class _RiderMeOrderDetailSheetState
           );
         }
         return AppGradientButton(
-          label: 'Arrived at Dropoff',
+          label: 'Arrived at Drop-off',
           isLoading: _actionBusy,
           onPressed: _actionBusy
               ? null
@@ -567,7 +424,7 @@ class _RiderMeOrderDetailSheetState
 
       case RiderDeliveryStage.arrivedAtDropoff:
         return AppGradientButton(
-          label: 'Mark Delivered',
+          label: 'Complete Delivery',
           onPressed: () => _openDeliverySheet(order.id),
         );
 
@@ -575,139 +432,6 @@ class _RiderMeOrderDetailSheetState
       case RiderDeliveryStage.closed:
         return const SizedBox.shrink();
     }
-  }
-
-  // ── Shared card/row helpers (same visual language as the legacy sheet) ──
-
-  Widget _card({
-    required String title,
-    required Widget child,
-    Widget? headerAction,
-  }) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade100),
-        boxShadow: [
-          BoxShadow(
-            blurRadius: 6,
-            color: Colors.black.withValues(alpha: 0.05),
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade50,
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(12)),
-              border: Border(bottom: BorderSide(color: Colors.grey.shade100)),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontFamily: 'Roboto',
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textSecondary,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-                if (headerAction != null) headerAction,
-              ],
-            ),
-          ),
-          child,
-        ],
-      ),
-    );
-  }
-
-  Widget _row(String label, String value, {TextStyle? valueStyle}) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(label,
-            style: const TextStyle(
-                fontFamily: 'Roboto',
-                fontSize: 14,
-                color: AppColors.textSecondary)),
-        Flexible(
-          child: Text(
-            value,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.end,
-            style: valueStyle ??
-                const TextStyle(
-                    fontFamily: 'Roboto',
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.textPrimary),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _locationRow({
-    required IconData icon,
-    required Color iconColor,
-    required String label,
-    required String value,
-    required VoidCallback onNavigate,
-  }) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, color: iconColor, size: 20),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(label,
-                  style: TextStyle(
-                      fontFamily: 'Roboto',
-                      fontSize: 11,
-                      color: Colors.grey.shade500,
-                      fontWeight: FontWeight.w600)),
-              const SizedBox(height: 2),
-              Text(value,
-                  style: const TextStyle(
-                      fontFamily: 'Roboto',
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.textPrimary)),
-            ],
-          ),
-        ),
-        const SizedBox(width: 8),
-        GestureDetector(
-          onTap: onNavigate,
-          behavior: HitTestBehavior.opaque,
-          child: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Icon(HugeIcons.strokeRoundedNavigator02,
-                size: 16, color: AppColors.primary),
-          ),
-        ),
-      ],
-    );
   }
 }
 

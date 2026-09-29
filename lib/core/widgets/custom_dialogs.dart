@@ -21,6 +21,7 @@ class CustomDialogConfig {
     this.customColor,
     this.content,
     this.barrierDismissible = false,
+    this.icon,
   });
 
   final String title;
@@ -34,6 +35,9 @@ class CustomDialogConfig {
   final Color? customColor;
   final Widget? content;
   final bool barrierDismissible;
+
+  /// Overrides the icon [type] would otherwise pick.
+  final IconData? icon;
 }
 
 /// Animated modal dialog — the same component the vendor/customer app uses
@@ -109,6 +113,8 @@ class CustomDialog extends StatefulWidget {
     String cancelText = 'Cancel',
     bool barrierDismissible = false,
     Widget? content,
+    bool isDestructive = false,
+    IconData? icon,
   }) =>
       _show(
         context,
@@ -116,6 +122,10 @@ class CustomDialog extends StatefulWidget {
           title: title,
           subtitle: subtitle,
           type: DialogType.confirmation,
+          // Destructive or urgent actions (log out, remove, SOS) take the
+          // error accent so the confirm button reads as a serious step.
+          customColor: isDestructive ? AppColors.error : null,
+          icon: icon,
           onConfirm: onConfirm,
           onCancel: onCancel,
           confirmText: confirmText,
@@ -243,6 +253,7 @@ class _CustomDialogState extends State<CustomDialog>
   }
 
   IconData get _icon {
+    if (widget.config.icon != null) return widget.config.icon!;
     switch (widget.config.type) {
       case DialogType.error:
         return HugeIcons.strokeRoundedAlertCircle;

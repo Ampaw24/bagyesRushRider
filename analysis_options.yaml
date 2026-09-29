@@ -1,0 +1,11 @@
+analyzer:
+  exclude:
+    # Build output, including Swift Package Manager checkouts (e.g. the full
+    # FlutterFire repo under build/ios/SourcePackages) that aren't app code.
+    - build/**
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+    - android/**
+    - ios/**
+    - web/**
+    - windows/**

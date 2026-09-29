@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'dart:ui' show ImageFilter;
 import 'package:flutter/material.dart';
+import 'package:delivery_boy/features/rider/orders/views/widgets/rider_orders_tab_bar.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -253,9 +255,13 @@ class _RiderDashboardScreenState extends ConsumerState<RiderDashboardScreen>
         body: Stack(
           children: [
             // ── Tab content — pad bottom so nothing hides under the bar ──
+            // viewPadding too: a tab Scaffold positions its floating action
+            // button (e.g. the Orders tab's SOS button) from viewPadding,
+            // not padding, so without it the button sits behind the bar.
             MediaQuery(
               data: mq.copyWith(
                 padding: mq.padding.copyWith(bottom: contentPadBottom),
+                viewPadding: mq.viewPadding.copyWith(bottom: contentPadBottom),
               ),
               child: IndexedStack(
                 index: _currentIndex,
@@ -301,9 +307,9 @@ class NavItem {
 }
 
 const _navItems = [
-  NavItem(icon: HugeIcons.strokeRoundedHome01,        label: 'Home'),
+  NavItem(icon: HugeIcons.strokeRoundedHome01, label: 'Home'),
   NavItem(icon: HugeIcons.strokeRoundedDeliveryBox01, label: 'Orders'),
-  NavItem(icon: HugeIcons.strokeRoundedWallet01,      label: 'Wallet'),
+  NavItem(icon: HugeIcons.strokeRoundedWallet01, label: 'Wallet'),
   NavItem(
     icon: HugeIcons.strokeRoundedUser,
     label: 'Profile',
@@ -467,37 +473,72 @@ class _NavAvatar extends StatelessWidget {
   }
 }
 
-/// Orders tab — wraps the 3-tab order view with the online toggle + bell in AppBar
-class _OrdersTab extends ConsumerWidget {
+/// Push notifications are disabled app-wide (Firebase isn't initialized in
+/// main.dart), so polling is how a rider learns about new offers without
+/// pull-to-refreshing.
+const _kOfferPollInterval = Duration(seconds: 25);
+
+/// Orders tab — Active / New / History with the online toggle + bell in the
+/// AppBar. Owns the offers poll: the dashboard's IndexedStack keeps this tab
+/// mounted, so offers (and the New tab's badge) stay current whichever
+/// order tab — or dashboard tab — is showing.
+class _OrdersTab extends ConsumerStatefulWidget {
   final bool isOnline;
   final VoidCallback onToggle;
 
   const _OrdersTab({required this.isOnline, required this.onToggle});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final unreadCount =
-        ref.watch(riderNotificationsProvider).unreadCount;
-    final hasActiveOrders =
-        ref.watch(riderMeOrdersProvider).orders.isNotEmpty;
+  ConsumerState<_OrdersTab> createState() => _OrdersTabState();
+}
+
+class _OrdersTabState extends ConsumerState<_OrdersTab> {
+  Timer? _offerPoll;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(riderMeOffersProvider.notifier).load();
+      _offerPoll = Timer.periodic(
+        _kOfferPollInterval,
+        (_) => ref.read(riderMeOffersProvider.notifier).load(silent: true),
+      );
+    });
+  }
+
+  @override
+  void dispose() {
+    _offerPoll?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isOnline = widget.isOnline;
+    final onToggle = widget.onToggle;
+    final w = MediaQuery.sizeOf(context).width;
+    final unreadCount = ref.watch(riderNotificationsProvider).unreadCount;
+    final hasActiveOrders = ref.watch(riderMeOrdersProvider).orders.isNotEmpty;
 
     return DefaultTabController(
       length: 3,
       child: Scaffold(
         backgroundColor: AppColors.scaffold,
-        floatingActionButton: hasActiveOrders
-            ? const SosFloatingButton()
-            : null,
+        floatingActionButton:
+            hasActiveOrders ? const SosFloatingButton() : null,
         appBar: AppBar(
           automaticallyImplyLeading: false,
           backgroundColor: Colors.white,
+          surfaceTintColor: Colors.transparent,
           elevation: 0,
-          titleSpacing: 20,
-          title: const Text(
-            'Bagyes Rush',
+          scrolledUnderElevation: 0,
+          titleSpacing: w * 0.04,
+          title: Text(
+            'Orders',
             style: TextStyle(
               fontFamily: 'Roboto',
-              fontSize: 20,
+              fontSize: w * 0.052,
               fontWeight: FontWeight.w700,
               color: AppColors.textPrimary,
             ),
@@ -516,8 +557,7 @@ class _OrdersTab extends ConsumerWidget {
                 IconButton(
                   icon: const Icon(HugeIcons.strokeRoundedNotification01,
                       color: AppColors.textPrimary, size: 26),
-                  onPressed: () =>
-                      context.push(AppRoutes.notifications),
+                  onPressed: () => context.push(AppRoutes.notifications),
                 ),
                 if (unreadCount > 0)
                   Positioned(
@@ -550,8 +590,7 @@ class _OrdersTab extends ConsumerWidget {
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 300),
                 curve: Curves.easeInOut,
-                margin:
-                    const EdgeInsets.only(right: 16, top: 12, bottom: 12),
+                margin: const EdgeInsets.only(right: 16, top: 12, bottom: 12),
                 padding: const EdgeInsets.symmetric(horizontal: 10),
                 decoration: BoxDecoration(
                   color: isOnline
@@ -573,8 +612,7 @@ class _OrdersTab extends ConsumerWidget {
                         width: 8,
                         height: 8,
                         decoration: BoxDecoration(
-                          color:
-                              isOnline ? AppColors.success : Colors.grey,
+                          color: isOnline ? AppColors.success : Colors.grey,
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -600,36 +638,19 @@ class _OrdersTab extends ConsumerWidget {
               ),
             ),
           ],
-          bottom: TabBar(
-            unselectedLabelColor: Colors.grey.shade400,
-            labelColor: AppColors.primary,
-            indicatorColor: AppColors.primary,
-            indicatorWeight: 3,
-            labelStyle: const TextStyle(
-              fontFamily: 'Roboto',
-              fontWeight: FontWeight.w600,
-              fontSize: 13,
-            ),
-            unselectedLabelStyle: const TextStyle(
-              fontFamily: 'Roboto',
-              fontWeight: FontWeight.w500,
-              fontSize: 13,
-            ),
-            tabs: const [
-              Tab(text: 'New'),
-              Tab(text: 'Active'),
-              Tab(text: 'History'),
-            ],
-          ),
         ),
         body: Column(
           children: [
+            const RiderOrdersTabBar(),
+            const Divider(height: 1, color: AppColors.divider),
             _KycBanner(),
             const Expanded(
               child: TabBarView(
                 children: [
-                  RiderNewOrdersScreen(),
+                  // Order must match RiderOrdersTabBar and
+                  // kRiderActiveOrdersTabIndex.
                   RiderActiveOrdersScreen(),
+                  RiderNewOrdersScreen(),
                   RiderOrderHistoryScreen(),
                 ],
               ),
@@ -719,14 +740,10 @@ class _KycBanner extends ConsumerWidget {
         margin: const EdgeInsets.fromLTRB(12, 8, 12, 0),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: isPending
-              ? Colors.blue.shade50
-              : Colors.amber.shade50,
+          color: isPending ? Colors.blue.shade50 : Colors.amber.shade50,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isPending
-                ? Colors.blue.shade200
-                : Colors.amber.shade300,
+            color: isPending ? Colors.blue.shade200 : Colors.amber.shade300,
           ),
         ),
         child: Row(
@@ -737,9 +754,7 @@ class _KycBanner extends ConsumerWidget {
                   ? HugeIcons.strokeRoundedHourglass
                   : HugeIcons.strokeRoundedUserCheck01,
               size: 18,
-              color: isPending
-                  ? Colors.blue.shade600
-                  : Colors.amber.shade700,
+              color: isPending ? Colors.blue.shade600 : Colors.amber.shade700,
             ),
             const SizedBox(width: 10),
             Expanded(
@@ -809,8 +824,7 @@ class _KycBanner extends ConsumerWidget {
                                 .read(kycBannerDismissedProvider.notifier)
                                 .state = true;
                             final prefs = sl<SharedPreferences>();
-                            await prefs.setBool(
-                                'kyc_banner_dismissed', true);
+                            await prefs.setBool('kyc_banner_dismissed', true);
                           },
                           child: Text(
                             'Later',

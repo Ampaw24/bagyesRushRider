@@ -9,6 +9,7 @@ import 'package:delivery_boy/features/rider/chat/models/rider_chat_message_model
 import 'package:delivery_boy/features/rider/chat/providers/rider_chat_thread_args.dart';
 import 'package:delivery_boy/features/rider/chat/providers/rider_chat_thread_providers.dart';
 import 'package:delivery_boy/features/rider/chat/views/widgets/rider_chat_composer.dart';
+import 'package:delivery_boy/features/rider/chat/views/widgets/rider_chat_timeline.dart';
 import 'package:delivery_boy/features/rider/chat/views/widgets/rider_message_bubble.dart';
 import 'package:delivery_boy/features/rider/chat/views/widgets/rider_quick_actions_grid.dart';
 
@@ -49,14 +50,24 @@ class _RiderChatThreadSheetBody extends ConsumerWidget {
         expand: false,
         builder: (context, scrollController) {
           return Container(
+            clipBehavior: Clip.antiAlias,
             decoration: BoxDecoration(
-              color: AppColors.scaffold,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(w * 0.06)),
+              // Soft grey behind the thread so white peer bubbles read as
+              // surfaces; header and composer stay white.
+              color: AppColors.surfaceVariant,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(w * 0.05)),
             ),
             child: Column(
               children: [
-                const DragHandle(),
-                _SheetHeader(w: w, args: args, state: state),
+                ColoredBox(
+                  color: Colors.white,
+                  child: Column(
+                    children: [
+                      const DragHandle(),
+                      _SheetHeader(w: w, args: args, state: state),
+                    ],
+                  ),
+                ),
                 const Divider(height: 1, color: AppColors.divider),
                 Expanded(
                   child: switch (state.status) {
@@ -78,6 +89,7 @@ class _RiderChatThreadSheetBody extends ConsumerWidget {
                         messages: state.messages,
                         isLoadingOlder: state.isLoadingOlder,
                         peerReadAt: state.peerReadAt,
+                        peerTyping: state.peerTyping,
                         onRetryMessage: notifier.retry,
                         onLoadOlder: notifier.loadOlderMessages,
                       ),
@@ -86,9 +98,12 @@ class _RiderChatThreadSheetBody extends ConsumerWidget {
                 if (state.status == RiderChatThreadStatus.loaded &&
                     state.conversation!.isOpen &&
                     state.conversation!.quickReplies.isNotEmpty)
-                  RiderQuickActionsGrid(
+                  ColoredBox(
+                    color: AppColors.surfaceVariant,
+                    child: RiderQuickActionsGrid(
                     replies: state.conversation!.quickReplies,
                     onSelected: notifier.sendMessage,
+                    ),
                   ),
                 RiderChatComposer(
                   enabled: state.status == RiderChatThreadStatus.loaded &&
@@ -112,6 +127,12 @@ class _SheetHeader extends StatelessWidget {
   final RiderChatThreadArgs args;
   final RiderChatThreadState state;
 
+  String _initials(String name) {
+    final parts = name.trim().split(RegExp(r'\s+')).where((p) => p.isNotEmpty);
+    final letters = parts.take(2).map((p) => p[0].toUpperCase()).join();
+    return letters.isEmpty ? '?' : letters;
+  }
+
   @override
   Widget build(BuildContext context) {
     final conversation = state.conversation;
@@ -119,29 +140,21 @@ class _SheetHeader extends StatelessWidget {
     final title = counterpart?.name ?? args.peerName ?? 'Chat';
     final order = conversation?.order;
     final peerTyping = state.peerTyping;
-    final subtitleParts = <String>[
-      if (counterpart != null) counterpart.roleLabel,
-      if (order != null) order.orderNumber,
-    ];
-    final subtitle = peerTyping ? 'typing…' : subtitleParts.join(' · ');
     final phone = args.peerPhone;
+    final avatar = (w * 0.11).clamp(40.0, 48.0);
 
     return Padding(
-      padding: EdgeInsets.fromLTRB(w * 0.045, w * 0.01, w * 0.03, w * 0.03),
+      padding: EdgeInsets.fromLTRB(w * 0.045, 0, w * 0.03, w * 0.03),
       child: Row(
         children: [
-          Container(
-            width: w * 0.11,
-            height: w * 0.11,
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.1),
-              shape: BoxShape.circle,
-            ),
-            alignment: Alignment.center,
+          CircleAvatar(
+            radius: avatar / 2,
+            backgroundColor: AppColors.primary.withValues(alpha: 0.1),
             child: Text(
-              title.isNotEmpty ? title[0].toUpperCase() : '?',
+              _initials(title),
               style: TextStyle(
-                fontSize: w * 0.042,
+                fontFamily: 'Roboto',
+                fontSize: (w * 0.038).clamp(14.0, 17.0),
                 fontWeight: FontWeight.w700,
                 color: AppColors.primary,
               ),
@@ -158,37 +171,48 @@ class _SheetHeader extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: w * 0.042,
+                    fontFamily: 'Roboto',
+                    fontSize: (w * 0.042).clamp(15.0, 18.0),
                     fontWeight: FontWeight.w700,
                     color: AppColors.textPrimary,
                   ),
                 ),
-                if (subtitle.isNotEmpty)
-                  Text(
-                    subtitle,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: w * 0.029,
-                      fontStyle: peerTyping ? FontStyle.italic : FontStyle.normal,
-                      color: peerTyping ? AppColors.primary : AppColors.textSecondary,
-                    ),
-                  ),
+                SizedBox(height: w * 0.006),
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 200),
+                  child: peerTyping
+                      ? Text(
+                          'typing…',
+                          key: const ValueKey('typing'),
+                          style: TextStyle(
+                            fontFamily: 'Roboto',
+                            fontSize: (w * 0.031).clamp(12.0, 14.0),
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.primary,
+                          ),
+                        )
+                      : _HeaderMeta(
+                          key: const ValueKey('meta'),
+                          w: w,
+                          role: counterpart?.roleLabel,
+                          orderNumber: order?.orderNumber,
+                        ),
+                ),
               ],
             ),
           ),
           if (phone != null && phone.trim().isNotEmpty)
-            IconButton(
-              onPressed: () => _callPhone(phone),
-              icon: HugeIcon(
-                icon: HugeIcons.strokeRoundedCall,
-                color: AppColors.primary,
-                size: w * 0.052,
-              ),
+            _HeaderButton(
+              icon: HugeIcons.strokeRoundedCall,
+              tooltip: 'Call',
+              color: AppColors.primary,
+              onTap: () => _callPhone(phone),
             ),
-          IconButton(
-            onPressed: () => Navigator.of(context).maybePop(),
-            icon: Icon(Icons.close_rounded, color: AppColors.textHint, size: w * 0.06),
+          _HeaderButton(
+            icon: HugeIcons.strokeRoundedCancel01,
+            tooltip: 'Close',
+            color: AppColors.textSecondary,
+            onTap: () => Navigator.of(context).maybePop(),
           ),
         ],
       ),
@@ -198,6 +222,85 @@ class _SheetHeader extends StatelessWidget {
   Future<void> _callPhone(String phone) async {
     final uri = Uri.parse('tel:$phone');
     if (await canLaunchUrl(uri)) await launchUrl(uri);
+  }
+}
+
+/// "Customer · [#ORD-123]" — the order number as a small chip so it reads
+/// as context, not as part of the name.
+class _HeaderMeta extends StatelessWidget {
+  const _HeaderMeta({super.key, required this.w, this.role, this.orderNumber});
+
+  final double w;
+  final String? role;
+  final String? orderNumber;
+
+  @override
+  Widget build(BuildContext context) {
+    final fontSize = (w * 0.03).clamp(11.0, 13.0);
+    return Wrap(
+      spacing: w * 0.015,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        if (role != null && role!.isNotEmpty)
+          Text(
+            role!,
+            style: TextStyle(
+              fontFamily: 'Roboto',
+              fontSize: fontSize,
+              color: AppColors.textSecondary,
+            ),
+          ),
+        if (orderNumber != null && orderNumber!.isNotEmpty)
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: w * 0.018, vertical: w * 0.004),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceVariant,
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Text(
+              orderNumber!,
+              style: TextStyle(
+                fontFamily: 'Roboto',
+                fontSize: fontSize,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _HeaderButton extends StatelessWidget {
+  const _HeaderButton({
+    required this.icon,
+    required this.tooltip,
+    required this.color,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String tooltip;
+  final Color color;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final w = MediaQuery.sizeOf(context).width;
+    return Padding(
+      padding: EdgeInsets.only(left: w * 0.015),
+      child: IconButton.filledTonal(
+        onPressed: onTap,
+        tooltip: tooltip,
+        style: IconButton.styleFrom(
+          backgroundColor: AppColors.surfaceVariant,
+          minimumSize: const Size.square(48),
+        ),
+        icon: Icon(icon, color: color, size: (w * 0.05).clamp(18.0, 22.0)),
+      ),
+    );
   }
 }
 
@@ -213,6 +316,7 @@ class _MessageList extends StatefulWidget {
     required this.messages,
     required this.isLoadingOlder,
     required this.peerReadAt,
+    required this.peerTyping,
     required this.onRetryMessage,
     required this.onLoadOlder,
   });
@@ -222,6 +326,7 @@ class _MessageList extends StatefulWidget {
   final List<RiderChatMessageModel> messages;
   final bool isLoadingOlder;
   final DateTime? peerReadAt;
+  final bool peerTyping;
   final ValueChanged<RiderChatMessageModel> onRetryMessage;
   final VoidCallback onLoadOlder;
 
@@ -250,52 +355,129 @@ class _MessageListState extends State<_MessageList> {
     }
   }
 
+  /// Messages closer together than this, from the same sender and on the
+  /// same day, are drawn as one group.
+  static const _groupGap = Duration(minutes: 2);
+
+  bool _sameGroup(RiderChatMessageModel a, RiderChatMessageModel b) =>
+      a.isMine == b.isMine &&
+      isSameDay(a.createdAt, b.createdAt) &&
+      a.createdAt.difference(b.createdAt).abs() <= _groupGap;
+
   @override
   Widget build(BuildContext context) {
     final w = widget.w;
-    if (widget.messages.isEmpty) {
-      return Center(
-        child: Text(
-          'Say hello 👋',
-          style: TextStyle(fontSize: w * 0.036, color: AppColors.textHint),
-        ),
-      );
+    if (widget.messages.isEmpty && !widget.peerTyping) {
+      return _EmptyThread(w: w);
     }
 
+    // The list is reversed (newest at the bottom, index 0), so for message i
+    // the newer neighbour is i - 1 and the older one is i + 1.
     final descending = widget.messages.reversed.toList();
-    final itemCount = descending.length + (widget.isLoadingOlder ? 1 : 0);
+    final items = <Widget>[
+      if (widget.peerTyping) const RiderTypingIndicator(key: ValueKey('typing')),
+    ];
+    final now = DateTime.now();
+
+    for (var i = 0; i < descending.length; i++) {
+      final message = descending[i];
+      final newer = i > 0 ? descending[i - 1] : null;
+      final older = i < descending.length - 1 ? descending[i + 1] : null;
+      final peerReadAt = widget.peerReadAt;
+
+      items.add(RiderMessageBubble(
+        key: ValueKey(message.clientUuid ?? 'id-${message.id}'),
+        message: message,
+        isRead: message.isMine &&
+            peerReadAt != null &&
+            !message.createdAt.isAfter(peerReadAt),
+        isFirstInGroup: older == null || !_sameGroup(message, older),
+        isLastInGroup: newer == null || !_sameGroup(message, newer),
+        // Only the newest bubble, and only if it just arrived — never on
+        // history loads or when scrolling back through old pages.
+        animateIn: i == 0 && now.difference(message.createdAt).inSeconds.abs() < 5,
+        onRetry: message.deliveryStatus == MessageDeliveryStatus.failed
+            ? () => widget.onRetryMessage(message)
+            : null,
+      ));
+
+      if (older == null || !isSameDay(message.createdAt, older.createdAt)) {
+        items.add(RiderChatDaySeparator(date: message.createdAt));
+      }
+    }
+
+    if (widget.isLoadingOlder) {
+      items.add(Padding(
+        padding: EdgeInsets.symmetric(vertical: w * 0.03),
+        child: const Center(
+          child: SizedBox.square(
+            dimension: 20,
+            child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
+          ),
+        ),
+      ));
+    }
 
     return ListView.builder(
       controller: widget.scrollController,
       reverse: true,
-      padding: EdgeInsets.symmetric(horizontal: w * 0.04, vertical: w * 0.03),
-      itemCount: itemCount,
-      itemBuilder: (context, index) {
-        if (index >= descending.length) {
-          return Padding(
-            padding: EdgeInsets.symmetric(vertical: w * 0.03),
-            child: const Center(
-              child: SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
+      padding: EdgeInsets.fromLTRB(w * 0.04, w * 0.02, w * 0.04, w * 0.03),
+      itemCount: items.length,
+      itemBuilder: (_, index) => items[index],
+    );
+  }
+}
+
+class _EmptyThread extends StatelessWidget {
+  const _EmptyThread({required this.w});
+
+  final double w;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: w * 0.12),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: (w * 0.16).clamp(56.0, 72.0),
+              height: (w * 0.16).clamp(56.0, 72.0),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.08),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                HugeIcons.strokeRoundedBubbleChat,
+                size: (w * 0.07).clamp(24.0, 30.0),
+                color: AppColors.primary,
               ),
             ),
-          );
-        }
-        final message = descending[index];
-        final peerReadAt = widget.peerReadAt;
-        final isRead = message.isMine &&
-            peerReadAt != null &&
-            !message.createdAt.isAfter(peerReadAt);
-        return RiderMessageBubble(
-          message: message,
-          isRead: isRead,
-          onRetry: message.deliveryStatus == MessageDeliveryStatus.failed
-              ? () => widget.onRetryMessage(message)
-              : null,
-        );
-      },
+            SizedBox(height: w * 0.04),
+            Text(
+              'No messages yet',
+              style: TextStyle(
+                fontFamily: 'Roboto',
+                fontSize: (w * 0.042).clamp(15.0, 18.0),
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            SizedBox(height: w * 0.015),
+            Text(
+              'Send a message or tap a quick reply to update the customer.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: 'Roboto',
+                fontSize: (w * 0.033).clamp(12.0, 15.0),
+                color: AppColors.textSecondary,
+                height: 1.4,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

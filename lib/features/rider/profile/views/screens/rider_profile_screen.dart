@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:delivery_boy/core/widgets/custom_dialogs.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:delivery_boy/constant/app_theme.dart';
@@ -42,45 +43,20 @@ class RiderProfileScreen extends ConsumerWidget {
         .toUpperCase();
 
     void showLogoutDialog() {
-      showDialog(
+      CustomDialog.showConfirmation(
         context: context,
-        barrierDismissible: false,
-        builder: (ctx) => AlertDialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: const Text(
-            'Log Out',
-            style: TextStyle(fontFamily: 'Mukta', fontWeight: FontWeight.w700),
-          ),
-          content: const Text(
-            'Are you sure you want to log out?',
-            style: TextStyle(fontFamily: 'Mukta'),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancel', style: TextStyle(fontFamily: 'Mukta')),
-            ),
-            TextButton(
-              onPressed: () async {
-                Navigator.pop(ctx);
-                AppLoadingOverlay.show(context, message: 'Logging out...');
-                await ref.read(riderAuthProvider.notifier).logout();
-                if (!context.mounted) return;
-                AppLoadingOverlay.hide(context);
-                context.go(AppRoutes.login);
-              },
-              child: const Text(
-                'Log Out',
-                style: TextStyle(
-                  fontFamily: 'Mukta',
-                  color: AppColors.error,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          ],
-        ),
+        title: 'Log Out',
+        subtitle: 'Are you sure you want to log out?',
+        confirmText: 'Log Out',
+        isDestructive: true,
+        icon: HugeIcons.strokeRoundedLogout03,
+        onConfirm: () async {
+          AppLoadingOverlay.show(context, message: 'Logging out...');
+          await ref.read(riderAuthProvider.notifier).logout();
+          if (!context.mounted) return;
+          AppLoadingOverlay.hide(context);
+          context.go(AppRoutes.login);
+        },
       );
     }
 
@@ -138,8 +114,7 @@ class RiderProfileScreen extends ConsumerWidget {
                             _ProfileTile(
                               icon: HugeIcons.strokeRoundedUserEdit01,
                               label: 'Edit Profile',
-                              onTap: () =>
-                                  context.push(AppRoutes.editProfile),
+                              onTap: () => context.push(AppRoutes.editProfile),
                               w: w,
                             ),
                             _ProfileTile(

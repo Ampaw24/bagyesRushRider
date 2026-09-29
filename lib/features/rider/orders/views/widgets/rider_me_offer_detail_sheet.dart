@@ -30,15 +30,14 @@ class _RiderMeOfferDetailSheetState
 
   Future<void> _accept() async {
     setState(() => _busy = true);
-    final ok = await ref.read(riderMeOffersProvider.notifier).accept(widget.offer.id);
+    final ok =
+        await ref.read(riderMeOffersProvider.notifier).accept(widget.offer.id);
     if (!mounted) return;
     setState(() => _busy = false);
     if (ok) {
-      Navigator.pop(context);
       HapticFeedback.mediumImpact();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Order accepted!'), backgroundColor: AppColors.success),
-      );
+      // The offers screen confirms and switches to the Active tab.
+      Navigator.pop(context, true);
     } else {
       CustomDialog.showError(
         context: context,
@@ -95,21 +94,22 @@ class _RiderMeOfferDetailSheetState
               ),
               const SizedBox(height: 16),
               _detailRow(HugeIcons.strokeRoundedCheckmarkCircle01, Colors.green,
-                  'Pickup', offer.pickupAddress ?? '-'),
+                  'Pickup', offer.pickupAddress ?? 'Pickup not provided'),
               const SizedBox(height: 10),
               _detailRow(HugeIcons.strokeRoundedLocation01, AppColors.primary,
-                  'Dropoff', offer.dropoffAddress ?? '-'),
+                  'Dropoff', offer.dropoffAddress ?? 'Drop-off not provided'),
               const SizedBox(height: 16),
               Row(
                 children: [
                   if (offer.distanceKm != null)
                     Expanded(
-                      child: _statTile('Distance', '${offer.distanceKm!.toStringAsFixed(1)} km'),
+                      child: _statTile('Distance',
+                          '${offer.distanceKm!.toStringAsFixed(1)} km'),
                     ),
                   if (offer.estimatedFare != null)
                     Expanded(
-                      child: _statTile(
-                          'Est. Fare', 'GHS ${offer.estimatedFare!.toStringAsFixed(2)}'),
+                      child: _statTile('Est. Fare',
+                          'GHS ${offer.estimatedFare!.toStringAsFixed(2)}'),
                     ),
                 ],
               ),
@@ -154,7 +154,8 @@ class _RiderMeOfferDetailSheetState
     );
   }
 
-  Widget _detailRow(IconData icon, Color iconColor, String label, String value) {
+  Widget _detailRow(
+      IconData icon, Color iconColor, String label, String value) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -196,7 +197,10 @@ class _RiderMeOfferDetailSheetState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(label,
-              style: TextStyle(fontFamily: 'Roboto', fontSize: 11, color: Colors.grey.shade500)),
+              style: TextStyle(
+                  fontFamily: 'Roboto',
+                  fontSize: 11,
+                  color: Colors.grey.shade500)),
           const SizedBox(height: 2),
           Text(value,
               style: const TextStyle(

@@ -1,226 +1,470 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:location/location.dart' as loc;
+import 'package:url_launcher/url_launcher.dart';
 
 import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/constant/map_style.dart';
+import 'package:delivery_boy/core/services/rider_directions_service.dart';
+import 'package:delivery_boy/core/services/rider_location_service.dart';
 import 'package:delivery_boy/core/services/rider_places_service.dart';
+import 'package:delivery_boy/core/utils/app_logger.dart';
 import 'package:delivery_boy/core/utils/external_navigation_launcher.dart';
-import 'package:delivery_boy/core/widgets/drag_handle.dart';
+import 'package:delivery_boy/features/rider/chat/providers/rider_chat_thread_args.dart';
+import 'package:delivery_boy/features/rider/chat/views/widgets/rider_chat_thread_sheet.dart';
+import 'package:delivery_boy/features/rider/orders/models/rider_delivery_stage.dart';
 import 'package:delivery_boy/features/rider/orders/models/rider_me_order_model.dart';
+import 'package:delivery_boy/features/rider/orders/providers/rider_me_order_providers.dart';
+import 'package:delivery_boy/features/rider/orders/views/widgets/order_map_sheet.dart';
+import 'package:delivery_boy/features/rider/orders/views/widgets/rider_me_order_status.dart';
 
-enum _PointKind { pickup, pending, delivered, failed }
-
-class _RoutePoint {
-  final String label;
-  final String? address;
-  final _PointKind kind;
-  LatLng? latLng;
-
-  _RoutePoint({required this.label, required this.address, required this.kind});
-}
-
-/// Visual reference map for an order's pickup/delivery points — deliberately
-/// not turn-by-turn (no route line, no rerouting, no voice guidance): that's
-/// left to [ExternalNavigationLauncher], which hands the rider off to their
-/// own Maps app. This screen just answers "where, roughly, am I headed" and
-/// offers the same external-navigate action per point for when a rider wants
-/// to skip the map entirely.
+/// Route overview for an order: the road route through every stop, drawn
+/// with the brand marker, plus a compact trip sheet. Turn-by-turn guidance
+/// is still handed off to the rider's own Maps app via
+/// [ExternalNavigationLauncher].
 ///
-/// The backend sends orders as address strings only, so every marker here is
-/// a best-effort geocode of that text — see [RiderPlacesService.geocodeAddress].
-/// A point that fails to geocode still gets a working Navigate button, since
-/// Maps geocodes free text itself.
-class RiderOrderMapScreen extends StatefulWidget {
+/// Points use the server's coordinates when the order carries them; the rest
+/// fall back to geocoding the address text. If the Routes API call fails,
+/// the stops are joined with a dashed straight line instead.
+class RiderOrderMapScreen extends ConsumerStatefulWidget {
   final RiderMeOrderModel order;
 
   const RiderOrderMapScreen({super.key, required this.order});
 
   @override
-  State<RiderOrderMapScreen> createState() => _RiderOrderMapScreenState();
+  ConsumerState<RiderOrderMapScreen> createState() =>
+      _RiderOrderMapScreenState();
 }
 
-class _RiderOrderMapScreenState extends State<RiderOrderMapScreen> {
-  late final List<_RoutePoint> _points = _buildPoints(widget.order);
-  bool _resolving = true;
+class _RiderOrderMapScreenState extends ConsumerState<RiderOrderMapScreen>
+    with SingleTickerProviderStateMixin {
+  static const _markerAsset = 'assets/images/mapmarker.png';
+  static const _accra = LatLng(5.6037, -0.1870);
+
+  // Sheet sizes as fractions of screen height. The map's bottom padding
+  // follows the collapsed size so the fitted route stays above the sheet.
+  static const _sheetMin = 0.22;
+  static const _sheetInitial = 0.3;
+  static const _sheetMax = 0.8;
+
+  late final List<OrderMapStop> _stops = _buildStops(widget.order);
   GoogleMapController? _mapController;
+  BitmapDescriptor? _markerIcon;
+  RiderRoute? _route;
+  bool _resolving = true;
+  bool _routeLoading = true;
+  // Google only draws the blue "my location" dot once permission is already
+  // granted — it never asks itself — so it's switched on after [_ensureLocation].
+  bool _locationGranted = false;
+
+  // Draw-on reveal of the route: [_revealed] is the visible prefix of the
+  // route, grown along its length (not by point count, which is uneven) so
+  // the line traces at a steady speed.
+  late final AnimationController _reveal = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1400),
+  )..addListener(_onRevealTick);
+  List<double> _cumulative = const [];
+  List<LatLng> _revealed = const [];
 
   @override
   void initState() {
     super.initState();
-    _resolvePoints();
+    _loadMarkerIcon();
+    _ensureLocation();
+    _resolveStopsAndRoute();
   }
 
   @override
   void dispose() {
+    _reveal.dispose();
     // GoogleMapController owns a platform-side MapView/method-channel pair
-    // that outlives the widget unless released explicitly — the widget's
-    // own PlatformView teardown does not call this for us.
+    // that outlives the widget unless released explicitly.
     _mapController?.dispose();
     super.dispose();
   }
 
-  List<_RoutePoint> _buildPoints(RiderMeOrderModel order) {
-    final points = [
-      _RoutePoint(
+  // ── Data ────────────────────────────────────────────────────────────────
+
+  List<OrderMapStop> _buildStops(RiderMeOrderModel order) {
+    final stops = [
+      OrderMapStop(
         label: 'Pickup',
         address: order.pickupAddress,
-        kind: _PointKind.pickup,
+        kind: OrderMapStopKind.pickup,
+        latitude: order.pickupLatitude,
+        longitude: order.pickupLongitude,
       ),
     ];
 
     if (order.isMultiStop) {
       for (final stop in order.stops) {
-        points.add(_RoutePoint(
-          label: 'Stop ${stop.sequence ?? points.length}',
+        stops.add(OrderMapStop(
+          label: 'Stop ${stop.sequence ?? stops.length}',
           address: stop.address,
+          latitude: stop.latitude,
+          longitude: stop.longitude,
           kind: stop.isDelivered
-              ? _PointKind.delivered
+              ? OrderMapStopKind.delivered
               : stop.isFailed
-                  ? _PointKind.failed
-                  : _PointKind.pending,
+                  ? OrderMapStopKind.failed
+                  : OrderMapStopKind.pending,
         ));
       }
     } else {
-      points.add(_RoutePoint(
-        label: 'Delivery',
+      stops.add(OrderMapStop(
+        label: 'Drop-off',
         address: order.dropoffAddress,
-        kind: _PointKind.pending,
+        kind: OrderMapStopKind.pending,
+        latitude: order.dropoffLatitude,
+        longitude: order.dropoffLongitude,
       ));
     }
-
-    return points;
+    return stops;
   }
 
-  Future<void> _resolvePoints() async {
-    await Future.wait(_points.map((point) async {
-      final address = point.address;
+  Future<void> _loadMarkerIcon() async {
+    try {
+      final icon = await BitmapDescriptor.asset(
+        const ImageConfiguration(),
+        _markerAsset,
+        width: 40,
+        height: 40,
+      );
+      if (mounted) setState(() => _markerIcon = icon);
+    } catch (e, s) {
+      appLogger.e('[OrderMap] marker asset failed to load',
+          error: e, stackTrace: s);
+    }
+  }
+
+  Future<void> _ensureLocation() async {
+    final status = await RiderLocationService.ensurePermission();
+    final granted = status == loc.PermissionStatus.granted ||
+        status == loc.PermissionStatus.grantedLimited;
+    if (mounted && granted) setState(() => _locationGranted = true);
+  }
+
+  Future<void> _resolveStopsAndRoute() async {
+    await Future.wait(_stops.map((stop) async {
+      if (stop.latLng != null) return; // Server coordinates — exact already.
+      final address = stop.address;
       if (address == null || address.isEmpty) return;
       final result = await RiderPlacesService.geocodeAddress(address);
-      if (result != null) point.latLng = LatLng(result.$1, result.$2);
+      if (result != null) stop.latLng = LatLng(result.$1, result.$2);
     }));
-
     if (!mounted) return;
     setState(() => _resolving = false);
     _fitCamera();
+
+    final route = await RiderDirectionsService.route(_resolvedPoints);
+    if (!mounted) return;
+    setState(() {
+      _route = route;
+      _routeLoading = false;
+    });
+    if (route != null) _startReveal(route.points);
+    // The road route can bulge past the straight-line bounds; refit to it.
+    if (route != null) _fitCamera();
   }
+
+  List<LatLng> get _resolvedPoints =>
+      _stops.map((s) => s.latLng).whereType<LatLng>().toList();
+
+  /// Where the rider should head now: the pickup until it's collected, then
+  /// the first stop that's neither delivered nor failed.
+  OrderMapStop? _nextStop(RiderDeliveryStage stage) {
+    switch (stage) {
+      case RiderDeliveryStage.notStarted:
+      case RiderDeliveryStage.arrivedAtPickup:
+        return _stops.first;
+      case RiderDeliveryStage.pickedUp:
+      case RiderDeliveryStage.arrivedAtDropoff:
+        return _stops.skip(1).where((s) => !s.isDone).firstOrNull;
+      case RiderDeliveryStage.delivered:
+      case RiderDeliveryStage.closed:
+        return null;
+    }
+  }
+
+  // ── Map ─────────────────────────────────────────────────────────────────
 
   Future<void> _fitCamera() async {
     final controller = _mapController;
-    final resolved = _points.map((p) => p.latLng).whereType<LatLng>().toList();
-    if (controller == null || resolved.isEmpty) return;
+    final points = _route?.points ?? _resolvedPoints;
+    if (controller == null || points.isEmpty) return;
 
-    if (resolved.length == 1) {
-      await controller.animateCamera(
-        CameraUpdate.newLatLngZoom(resolved.first, 14),
-      );
+    if (points.length == 1) {
+      await controller.animateCamera(CameraUpdate.newLatLngZoom(points.first, 15));
       return;
     }
 
-    var minLat = resolved.first.latitude, maxLat = resolved.first.latitude;
-    var minLng = resolved.first.longitude, maxLng = resolved.first.longitude;
-    for (final p in resolved) {
-      minLat = p.latitude < minLat ? p.latitude : minLat;
-      maxLat = p.latitude > maxLat ? p.latitude : maxLat;
-      minLng = p.longitude < minLng ? p.longitude : minLng;
-      maxLng = p.longitude > maxLng ? p.longitude : maxLng;
+    var minLat = points.first.latitude, maxLat = minLat;
+    var minLng = points.first.longitude, maxLng = minLng;
+    for (final p in points) {
+      if (p.latitude < minLat) minLat = p.latitude;
+      if (p.latitude > maxLat) maxLat = p.latitude;
+      if (p.longitude < minLng) minLng = p.longitude;
+      if (p.longitude > maxLng) maxLng = p.longitude;
     }
+    final w = MediaQuery.sizeOf(context).width;
     await controller.animateCamera(CameraUpdate.newLatLngBounds(
       LatLngBounds(
         southwest: LatLng(minLat, minLng),
         northeast: LatLng(maxLat, maxLng),
       ),
-      64,
+      w * 0.15,
     ));
   }
 
-  double _hueFor(_PointKind kind) => switch (kind) {
-        _PointKind.pickup => BitmapDescriptor.hueGreen,
-        _PointKind.pending => BitmapDescriptor.hueRed,
-        _PointKind.delivered => BitmapDescriptor.hueAzure,
-        _PointKind.failed => BitmapDescriptor.hueOrange,
+  Set<Marker> get _markers => {
+        for (final stop in _stops)
+          if (stop.latLng != null)
+            Marker(
+              markerId: MarkerId(stop.label),
+              position: stop.latLng!,
+              icon: _markerIcon ?? BitmapDescriptor.defaultMarker,
+              // Finished stops fade back so the remaining route stands out.
+              alpha: stop.isDone ? 0.45 : 1,
+              infoWindow: InfoWindow(title: stop.label, snippet: stop.address),
+            ),
       };
 
-  Future<void> _navigate(_RoutePoint point) async {
+  /// A dark route line over a wider white casing — the layered look of
+  /// modern ride/delivery maps, readable over any road colour. Falls back to
+  /// a dashed straight line when no road route is available.
+  void _startReveal(List<LatLng> points) {
+    if (points.length < 2) return;
+    // Respect the OS "reduce motion" setting — show the full route at once.
+    if (MediaQuery.of(context).disableAnimations) {
+      setState(() => _revealed = points);
+      return;
+    }
+    final cumulative = <double>[0];
+    for (var i = 1; i < points.length; i++) {
+      cumulative.add(cumulative.last + _distance(points[i - 1], points[i]));
+    }
+    _cumulative = cumulative;
+    _reveal.forward(from: 0);
+  }
+
+  void _onRevealTick() {
+    final points = _route?.points;
+    if (points == null || _cumulative.isEmpty) return;
+    final target =
+        Curves.easeInOutCubic.transform(_reveal.value) * _cumulative.last;
+
+    // Last fully-covered vertex, then an interpolated tip on the next segment.
+    var i = 1;
+    while (i < points.length && _cumulative[i] <= target) {
+      i++;
+    }
+    final visible = points.sublist(0, i);
+    if (i < points.length) {
+      final segment = _cumulative[i] - _cumulative[i - 1];
+      final t = segment == 0 ? 0.0 : (target - _cumulative[i - 1]) / segment;
+      final a = points[i - 1], b = points[i];
+      visible.add(LatLng(
+        a.latitude + (b.latitude - a.latitude) * t,
+        a.longitude + (b.longitude - a.longitude) * t,
+      ));
+    }
+    setState(() => _revealed = visible);
+  }
+
+  /// Equirectangular approximation — plenty for relative lengths within a
+  /// city-scale route, and far cheaper than haversine per frame.
+  static double _distance(LatLng a, LatLng b) {
+    final meanLat = (a.latitude + b.latitude) / 2 * math.pi / 180;
+    final dx = (b.longitude - a.longitude) * math.cos(meanLat);
+    final dy = b.latitude - a.latitude;
+    return math.sqrt(dx * dx + dy * dy);
+  }
+
+  /// A slim brand-red route over a thin white casing, drawn on progressively
+  /// by [_reveal]. Falls back to a dashed straight line when no road route
+  /// is available.
+  Set<Polyline> get _polylines {
+    final route = _route;
+    if (route != null && route.points.length > 1) {
+      if (_revealed.length < 2) return const {};
+      return {
+        Polyline(
+          polylineId: const PolylineId('route_casing'),
+          points: _revealed,
+          color: Colors.white,
+          width: 6,
+          zIndex: 1,
+          jointType: JointType.round,
+          startCap: Cap.roundCap,
+          endCap: Cap.roundCap,
+        ),
+        Polyline(
+          polylineId: const PolylineId('route'),
+          points: _revealed,
+          color: AppColors.primary,
+          width: 4,
+          zIndex: 2,
+          jointType: JointType.round,
+          startCap: Cap.roundCap,
+          endCap: Cap.roundCap,
+        ),
+      };
+    }
+
+    final points = _resolvedPoints;
+    if (_routeLoading || points.length < 2) return const {};
+    return {
+      Polyline(
+        polylineId: const PolylineId('route_fallback'),
+        points: points,
+        color: AppColors.primary,
+        width: 3,
+        geodesic: true,
+        patterns: [PatternItem.dash(18), PatternItem.gap(10)],
+      ),
+    };
+  }
+
+  // ── Actions ─────────────────────────────────────────────────────────────
+
+  Future<void> _navigate(OrderMapStop stop) async {
     final ok = await ExternalNavigationLauncher.launch(
-      address: point.address,
-      latitude: point.latLng?.latitude,
-      longitude: point.latLng?.longitude,
+      address: stop.address,
+      latitude: stop.latLng?.latitude,
+      longitude: stop.latLng?.longitude,
     );
     if (!ok && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Couldn't open a maps app")),
-      );
+      final hasTarget =
+          stop.latLng != null || (stop.address?.isNotEmpty ?? false);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(hasTarget
+            ? "Couldn't open a maps app"
+            : 'No location for ${stop.label.toLowerCase()} yet'),
+      ));
     }
   }
+
+  Future<void> _callCustomer() async {
+    final phone = widget.order.customerPhone;
+    if (phone == null || phone.isEmpty) return;
+    final uri = Uri.parse('tel:$phone');
+    if (await canLaunchUrl(uri)) await launchUrl(uri);
+  }
+
+  void _openChat() {
+    final order = widget.order;
+    RiderChatThreadSheet.show(
+      context,
+      args: RiderChatThreadArgs(
+        orderId: order.id,
+        peerName: order.customerName,
+        peerPhone: order.customerPhone,
+      ),
+    );
+  }
+
+  // ── UI ──────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
     final order = widget.order;
-    final w = MediaQuery.sizeOf(context).width;
-    final resolvedAny = _points.any((p) => p.latLng != null);
+    final stage = ref.watch(riderMeOrdersProvider).stageFor(order);
+    final size = MediaQuery.sizeOf(context);
+    final w = size.width;
+    final topInset = MediaQuery.paddingOf(context).top;
 
     return Scaffold(
-      backgroundColor: AppColors.scaffold,
-      appBar: AppBar(
-        title: Text(order.reference ?? '#${order.id}'),
-        backgroundColor: AppColors.scaffold,
-        elevation: 0,
-      ),
-      // Fixed 50/50 split — `Expanded(flex:)` rather than a MediaQuery
-      // fraction, so it holds exactly half on any screen size/orientation
-      // without a manual height computation.
-      body: Column(
+      backgroundColor: AppColors.surfaceVariant,
+      body: Stack(
         children: [
-          Expanded(
-            flex: 1,
+          Positioned.fill(
             child: _resolving
                 ? const Center(
                     child: CircularProgressIndicator(color: AppColors.primary),
                   )
-                : resolvedAny
-                    ? GoogleMap(
+                : _resolvedPoints.isEmpty
+                    ? Padding(
+                        padding: EdgeInsets.only(bottom: size.height * _sheetInitial),
+                        child: _MapUnavailable(w: w),
+                      )
+                    : GoogleMap(
                         style: kRiderMapStyle,
                         initialCameraPosition: CameraPosition(
-                          target: _points
-                                  .map((p) => p.latLng)
-                                  .whereType<LatLng>()
-                                  .firstOrNull ??
-                              const LatLng(5.6037, -0.1870),
+                          target: _resolvedPoints.firstOrNull ?? _accra,
                           zoom: 13,
+                        ),
+                        padding: EdgeInsets.only(
+                          top: topInset + w * 0.12,
+                          bottom: size.height * _sheetInitial,
                         ),
                         onMapCreated: (controller) {
                           _mapController = controller;
                           _fitCamera();
                         },
-                        markers: _points
-                            .where((p) => p.latLng != null)
-                            .map((p) => Marker(
-                                  markerId: MarkerId(p.label),
-                                  position: p.latLng!,
-                                  infoWindow: InfoWindow(
-                                    title: p.label,
-                                    snippet: p.address,
-                                  ),
-                                  icon: BitmapDescriptor.defaultMarkerWithHue(
-                                    _hueFor(p.kind),
-                                  ),
-                                ))
-                            .toSet(),
-                        // The rider's own live position — Google's stock blue
-                        // dot, deliberately left un-styled so it stays
-                        // instantly recognisable against the custom pickup/
-                        // delivery pins above.
-                        myLocationEnabled: true,
-                        myLocationButtonEnabled: true,
+                        markers: _markers,
+                        polylines: _polylines,
+                        // Rider's live position — Google's stock blue dot,
+                        // never a custom marker; the brand pin is only for
+                        // the order's pickup and drop-off points.
+                        myLocationEnabled: _locationGranted,
+                        myLocationButtonEnabled: false,
                         zoomControlsEnabled: false,
-                      )
-                    : _MapUnavailable(w: w),
+                        mapToolbarEnabled: false,
+                        compassEnabled: false,
+                      ),
           ),
-          Expanded(
-            flex: 1,
-            child:
-                _RoutePointsPanel(points: _points, onNavigate: _navigate, w: w),
+
+          // ── Floating controls ──────────────────────────────────────────
+          Positioned(
+            top: topInset + w * 0.03,
+            left: w * 0.04,
+            right: w * 0.04,
+            child: Row(
+              children: [
+                _MapFab(
+                  icon: HugeIcons.strokeRoundedArrowLeft01,
+                  tooltip: 'Back',
+                  onTap: () => Navigator.of(context).maybePop(),
+                ),
+                const Spacer(),
+                if (_resolvedPoints.isNotEmpty)
+                  _MapFab(
+                    icon: HugeIcons.strokeRoundedRoute01,
+                    tooltip: 'Show whole route',
+                    onTap: _fitCamera,
+                  ),
+              ],
+            ),
+          ),
+
+          // ── Trip sheet ─────────────────────────────────────────────────
+          DraggableScrollableSheet(
+            initialChildSize: _sheetInitial,
+            minChildSize: _sheetMin,
+            maxChildSize: _sheetMax,
+            snap: true,
+            snapSizes: const [_sheetInitial],
+            builder: (_, scrollController) => OrderMapSheet(
+              scrollController: scrollController,
+              reference: order.reference ?? '#${order.id}',
+              amount: order.amountFormatted,
+              statusLabel: riderMeOrderStatusLabel(order.status),
+              statusColor: riderMeOrderStatusColor(order.status),
+              route: _route,
+              routeLoading: _routeLoading,
+              stops: _stops,
+              nextStop: _nextStop(stage),
+              customerName: order.customerName,
+              customerPhone: order.customerPhone,
+              onNavigate: _navigate,
+              onCall: _callCustomer,
+              onChat: _openChat,
+            ),
           ),
         ],
       ),
@@ -228,11 +472,41 @@ class _RiderOrderMapScreenState extends State<RiderOrderMapScreen> {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Fallback when nothing geocoded (bad network, missing/rate-limited key) —
-// the route list below still works since Navigate doesn't need a resolved pin.
-// ─────────────────────────────────────────────────────────────────────────────
+class _MapFab extends StatelessWidget {
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback onTap;
 
+  const _MapFab({required this.icon, required this.tooltip, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final w = MediaQuery.sizeOf(context).width;
+    final size = (w * 0.12).clamp(48.0, 56.0);
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: Colors.white,
+        shape: const CircleBorder(),
+        elevation: 2,
+        shadowColor: Colors.black26,
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: onTap,
+          child: SizedBox(
+            width: size,
+            height: size,
+            child: Icon(icon, size: size * 0.42, color: AppColors.textPrimary),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Shown when no point could be placed (bad network, missing/rate-limited
+/// key) — the sheet's per-stop Navigate still works, since Maps geocodes
+/// free text itself.
 class _MapUnavailable extends StatelessWidget {
   final double w;
   const _MapUnavailable({required this.w});
@@ -255,7 +529,7 @@ class _MapUnavailable extends StatelessWidget {
               'Map preview unavailable',
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontFamily: 'Mukta',
+                fontFamily: 'Roboto',
                 fontSize: (w * 0.038).clamp(13.0, 16.0),
                 fontWeight: FontWeight.w600,
                 color: AppColors.textSecondary,
@@ -266,177 +540,13 @@ class _MapUnavailable extends StatelessWidget {
               'Use Navigate below to get directions',
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontFamily: 'Mukta',
+                fontFamily: 'Roboto',
                 fontSize: (w * 0.032).clamp(11.0, 13.0),
                 color: AppColors.textHint,
               ),
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Route points panel — every pickup/stop with a one-tap external Navigate.
-// ─────────────────────────────────────────────────────────────────────────────
-
-class _RoutePointsPanel extends StatelessWidget {
-  final List<_RoutePoint> points;
-  final ValueChanged<_RoutePoint> onNavigate;
-  final double w;
-
-  const _RoutePointsPanel({
-    required this.points,
-    required this.onNavigate,
-    required this.w,
-  });
-
-  Color _colorFor(_PointKind kind) => switch (kind) {
-        _PointKind.pickup => AppColors.success,
-        _PointKind.pending => AppColors.primary,
-        _PointKind.delivered => AppColors.info,
-        _PointKind.failed => AppColors.error,
-      };
-
-  @override
-  Widget build(BuildContext context) {
-    final h = MediaQuery.sizeOf(context).height;
-
-    // Rounded-top "sheet" resting on the map, matching this app's other
-    // bottom sheets — fixed at half the screen (its parent `Expanded(flex:
-    // 1)`), so the list scrolls internally instead of the sheet growing.
-    return DecoratedBox(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        boxShadow: [
-          BoxShadow(
-            color: Color(0x14000000),
-            blurRadius: 16,
-            offset: Offset(0, -4),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          const DragHandle(),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: w * 0.05),
-            child: Row(
-              children: [
-                Text(
-                  'Route',
-                  style: TextStyle(
-                    fontFamily: 'Mukta',
-                    fontSize: (w * 0.04).clamp(14.0, 17.0),
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: ListView.separated(
-              padding: EdgeInsets.fromLTRB(
-                w * 0.05,
-                h * 0.012,
-                w * 0.05,
-                h * 0.02,
-              ),
-              itemCount: points.length,
-              separatorBuilder: (_, __) => SizedBox(height: h * 0.012),
-              itemBuilder: (_, i) {
-                final point = points[i];
-                final color = _colorFor(point.kind);
-                return Row(
-                  children: [
-                    Container(
-                      width: (w * 0.09).clamp(30.0, 36.0),
-                      height: (w * 0.09).clamp(30.0, 36.0),
-                      decoration: BoxDecoration(
-                        color: color.withValues(alpha: 0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        HugeIcons.strokeRoundedLocation01,
-                        size: (w * 0.045).clamp(16.0, 18.0),
-                        color: color,
-                      ),
-                    ),
-                    SizedBox(width: w * 0.03),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            point.label,
-                            style: TextStyle(
-                              fontFamily: 'Mukta',
-                              fontSize: (w * 0.032).clamp(11.0, 13.0),
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.textHint,
-                            ),
-                          ),
-                          Text(
-                            point.address?.isNotEmpty == true
-                                ? point.address!
-                                : '-',
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontFamily: 'Mukta',
-                              fontSize: (w * 0.034).clamp(12.0, 14.0),
-                              fontWeight: FontWeight.w500,
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    SizedBox(width: w * 0.02),
-                    GestureDetector(
-                      onTap: () => onNavigate(point),
-                      behavior: HitTestBehavior.opaque,
-                      child: Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: w * 0.03,
-                          vertical: h * 0.009,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary,
-                          borderRadius: BorderRadius.circular(w * 0.02),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              HugeIcons.strokeRoundedNavigator02,
-                              size: (w * 0.036).clamp(13.0, 15.0),
-                              color: Colors.white,
-                            ),
-                            SizedBox(width: w * 0.012),
-                            Text(
-                              'Navigate',
-                              style: TextStyle(
-                                fontFamily: 'Mukta',
-                                fontSize: (w * 0.032).clamp(11.0, 13.0),
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                );
-              },
-            ),
-          ),
-        ],
       ),
     );
   }

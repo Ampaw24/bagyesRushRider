@@ -115,18 +115,23 @@ class RiderChatThreadNotifier
   @override
   RiderChatThreadState build(RiderChatThreadArgs args) {
     ref.onDispose(_teardown);
-    _init(args);
+    // [_load] must not write `state` before its first await: `build()` hasn't
+    // returned yet, so the state isn't initialised and Riverpod throws
+    // "Tried to read the state of an uninitialized provider". The initial
+    // state below already reports `loading`, so none is needed up front.
+    _load(args);
     return const RiderChatThreadState();
   }
 
   /// Re-runs the initial conversation + first-page-of-messages fetch —
   /// exposed for the error state's "Retry" / unavailable state's "Check
   /// again" actions.
-  Future<void> retryLoad() => _init(arg);
-
-  Future<void> _init(RiderChatThreadArgs args) async {
+  Future<void> retryLoad() {
     state = state.copyWith(status: RiderChatThreadStatus.loading, message: null);
+    return _load(arg);
+  }
 
+  Future<void> _load(RiderChatThreadArgs args) async {
     final conversationResult = args.conversationId != null
         ? await _repo.getConversation(args.conversationId!)
         : await _repo.getConversationForOrder(args.orderId!);
