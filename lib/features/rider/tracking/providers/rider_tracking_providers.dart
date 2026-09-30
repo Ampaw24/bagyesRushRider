@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:location/location.dart' as loc;
 import 'package:delivery_boy/core/services/rider_location_service.dart';
 import 'package:delivery_boy/core/utils/app_logger.dart';
+import 'package:delivery_boy/features/rider/location/providers/rider_location_providers.dart';
 import 'package:delivery_boy/features/rider/orders/providers/rider_me_order_providers.dart';
 import 'package:delivery_boy/features/rider/profile/models/rider_me_profile_model.dart';
 import 'package:delivery_boy/features/rider/profile/providers/rider_me_profile_providers.dart';
@@ -182,6 +183,7 @@ class RiderTrackingNotifier extends Notifier<RiderTrackingState> {
       );
 
       unawaited(_reportFix(data));
+      _updateHeaderAddress(data);
     });
 
     state = state.copyWith(isTracking: true);
@@ -228,10 +230,19 @@ class RiderTrackingNotifier extends Notifier<RiderTrackingState> {
       final data = await location.getLocation();
       if (data.latitude == null || data.longitude == null) return;
       state = state.copyWith(latitude: data.latitude, longitude: data.longitude);
+      _updateHeaderAddress(data);
       await _reportFix(data);
     } catch (e, s) {
       appLogger.w('[Tracking] heartbeat fix failed', error: e, stackTrace: s);
     }
+  }
+
+  /// Keeps the home header's address in step with the rider while online;
+  /// [RiderLocationNotifier.updateFromTracking] throttles by distance.
+  void _updateHeaderAddress(loc.LocationData data) {
+    unawaited(ref
+        .read(riderLocationProvider.notifier)
+        .updateFromTracking(data.latitude!, data.longitude!));
   }
 
   /// Sends one live fix; buffers it for catch-up if the send fails instead

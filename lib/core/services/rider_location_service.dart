@@ -122,6 +122,7 @@ class RiderLocationService {
   static Future<RiderLocationFix> getCurrentFix({
     bool resolveAddress = true,
     bool promptService = true,
+    bool promptPermission = true,
     Duration timeLimit = const Duration(seconds: 20),
   }) async {
     if (!await ensureServiceEnabled(prompt: promptService)) {
@@ -131,7 +132,10 @@ class RiderLocationService {
       );
     }
 
-    final permission = await ensurePermission();
+    // A silent refresh (e.g. on app resume) only checks: re-asking there
+    // would pop the permission dialog every time the rider reopens the app.
+    final permission =
+        promptPermission ? await ensurePermission() : await _currentPermission();
     if (permission == loc.PermissionStatus.deniedForever) {
       return const RiderLocationFix(
         status: RiderLocationStatus.permissionDeniedForever,
@@ -214,7 +218,21 @@ class RiderLocationService {
     );
   }
 
+  /// Names a position that was obtained elsewhere (e.g. the tracking
+  /// stream), falling back to a coordinate string. Never throws.
+  static Future<String> addressFor(double lat, double lng) async =>
+      await _resolveAddress(lat, lng) ?? _coordinateString(lat, lng);
+
   // ── Private ────────────────────────────────────────────────────────────────
+
+  static Future<loc.PermissionStatus> _currentPermission() async {
+    try {
+      return await _location.hasPermission();
+    } catch (e, s) {
+      appLogger.e('[Location] permission check failed', error: e, stackTrace: s);
+      return loc.PermissionStatus.denied;
+    }
+  }
 
   static Future<loc.PermissionStatus> _requestPermission() async {
     try {

@@ -20,6 +20,7 @@ import 'package:delivery_boy/features/rider/home/models/rider_banner_model.dart'
 import 'package:delivery_boy/features/rider/home/providers/rider_banner_providers.dart';
 import 'package:delivery_boy/features/rider/home/views/widgets/customer_drawer.dart';
 import 'package:delivery_boy/features/rider/home/views/widgets/rider_location_chip.dart';
+import 'package:delivery_boy/features/rider/location/providers/rider_location_providers.dart';
 import 'package:delivery_boy/features/rider/notifications/providers/rider_notifications_providers.dart';
 import 'package:delivery_boy/features/rider/orders/models/rider_me_order_model.dart';
 import 'package:delivery_boy/features/rider/orders/providers/rider_me_order_providers.dart';
@@ -147,6 +148,7 @@ class _RiderHomeScreenState extends ConsumerState<RiderHomeScreen>
         ref.read(riderMeOrderHistoryProvider.notifier).load(),
         ref.read(riderBannersProvider.notifier).load(),
         ref.read(riderMeProfileProvider.notifier).load(),
+        ref.read(riderLocationProvider.notifier).refresh(promptService: false),
       ]);
 
   void _handleDeleteAccount() {

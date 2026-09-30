@@ -78,5 +78,15 @@
             <action android:name="android.intent.action.DIAL" />
             <data android:scheme="tel" />
         </intent>
+        <!-- Android 11+ package visibility: without these, canLaunchUrl()
+             reports false for web links (legal pages, Google Maps
+             navigation) and in-app Custom Tabs can't be found. -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="https" />
+        </intent>
+        <intent>
+            <action android:name="android.support.customtabs.action.CustomTabsService" />
+        </intent>
     </queries>
 </manifest>

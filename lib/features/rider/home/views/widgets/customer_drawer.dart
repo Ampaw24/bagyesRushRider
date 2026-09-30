@@ -6,6 +6,7 @@ import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/core/di/service_locator.dart';
 import 'package:delivery_boy/core/router/app_routes.dart';
 import 'package:delivery_boy/core/services/user_session_manager.dart';
+import 'package:delivery_boy/core/utils/legal_links.dart';
 import 'package:delivery_boy/features/rider/shared_widgets/rider_avatar.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -121,6 +122,12 @@ class _CustomerDrawerState extends State<CustomerDrawer>
         _close().then((_) => widget.onWallet());
       case 'Transactions':
         _close().then((_) { if (mounted) context.push(AppRoutes.walletTransactions); });
+      case 'Privacy Policy':
+        _openLegal(LegalDocument.privacyPolicy);
+      case 'Rider Agreement':
+        _openLegal(LegalDocument.riderAgreement);
+      case 'Terms & Conditions':
+        _openLegal(LegalDocument.termsConditions);
       case 'Delete Account':
         _close().then((_) => widget.onDeleteAccount());
       case 'Logout':
@@ -128,6 +135,14 @@ class _CustomerDrawerState extends State<CustomerDrawer>
       default:
         _close();
     }
+  }
+
+  /// Opens the page before closing the drawer: the in-app browser sits on
+  /// top of the app, and the drawer's context must still be mounted to show
+  /// an error if the page can't be opened.
+  Future<void> _openLegal(LegalDocument doc) async {
+    await LegalLinks.open(context, doc);
+    await _close();
   }
 
   @override
@@ -166,6 +181,8 @@ class _CustomerDrawerState extends State<CustomerDrawer>
       const _TileData(icon: HugeIcons.strokeRoundedTransactionHistory, label: 'Transactions',   color: Color(0xFF0891B2)),
       const _TileData(icon: HugeIcons.strokeRoundedCreditCard,       label: 'Payment Methods',  color: Color(0xFF7C3AED)),
       const _TileData(icon: HugeIcons.strokeRoundedShield01,         label: 'Privacy Policy',   color: Color(0xFF0369A1)),
+      const _TileData(icon: HugeIcons.strokeRoundedAgreement01,      label: 'Rider Agreement',  color: Color(0xFF0369A1)),
+      const _TileData(icon: HugeIcons.strokeRoundedFileEdit,         label: 'Terms & Conditions', color: Color(0xFF0369A1)),
       const _TileData(icon: HugeIcons.strokeRoundedHeadphones,       label: 'Help & Support',   color: Color(0xFFD97706)),
     ];
 

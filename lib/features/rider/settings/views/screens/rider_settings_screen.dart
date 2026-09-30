@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:delivery_boy/core/utils/legal_links.dart';
 import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/core/di/service_locator.dart';
 import 'package:delivery_boy/core/router/app_routes.dart';
@@ -125,14 +125,22 @@ class _RiderSettingsScreenState extends ConsumerState<RiderSettingsScreen> {
           _tile(
             icon: HugeIcons.strokeRoundedFileEdit,
             iconColor: Colors.teal,
-            title: 'Terms of Service',
-            onTap: () => _launch('https://bagyesrush.com/terms'),
+            title: LegalDocument.termsConditions.title,
+            onTap: () =>
+                LegalLinks.open(context, LegalDocument.termsConditions),
+          ),
+          _tile(
+            icon: HugeIcons.strokeRoundedAgreement01,
+            iconColor: Colors.teal,
+            title: LegalDocument.riderAgreement.title,
+            onTap: () =>
+                LegalLinks.open(context, LegalDocument.riderAgreement),
           ),
           _tile(
             icon: HugeIcons.strokeRoundedShield01,
             iconColor: Colors.indigo,
-            title: 'Privacy Policy',
-            onTap: () => _launch('https://bagyesrush.com/privacy'),
+            title: LegalDocument.privacyPolicy.title,
+            onTap: () => LegalLinks.open(context, LegalDocument.privacyPolicy),
           ),
           _sectionHeader('Danger Zone'),
           _tile(
@@ -273,11 +281,6 @@ class _RiderSettingsScreenState extends ConsumerState<RiderSettingsScreen> {
         ),
       ),
     );
-  }
-
-  Future<void> _launch(String url) async {
-    final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) await launchUrl(uri);
   }
 
   void _showDeleteDialog(BuildContext context) {
