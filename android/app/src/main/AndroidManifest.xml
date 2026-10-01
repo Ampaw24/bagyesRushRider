@@ -15,8 +15,10 @@
    <application
         android:label="BagyesRIDER"
         android:icon="@mipmap/launcher_icon">
+        <!-- Injected from G_CLIENTID_ANDROID in the project .env by
+             android/app/build.gradle — edit the key there, not here. -->
         <meta-data android:name="com.google.android.geo.API_KEY"
-               android:value="AIzaSyA6QwaWqE4gtpQq4tTXGVIxLmeEeVKhYUc"/>
+               android:value="${MAPS_API_KEY}"/>
         <!-- Channel id must match FcmService._androidChannel.id, otherwise
              FCM-delivered notifications land on a default low-importance
              channel and never make a sound. -->

@@ -9,7 +9,14 @@ import UserNotifications
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
-    GMSServices.provideAPIKey("AIzaSyA6QwaWqE4gtpQq4tTXGVIxLmeEeVKhYUc")
+    // Read from the project .env (bundled as a Flutter asset for
+    // flutter_dotenv), so the Maps SDK key can never drift from it — edit
+    // G_CLIENTID_IOS there, not here.
+    if let mapsApiKey = Self.dotenvValue("G_CLIENTID_IOS") {
+      GMSServices.provideAPIKey(mapsApiKey)
+    } else {
+      NSLog("[Maps] G_CLIENTID_IOS missing from .env — Google Maps will not load")
+    }
 
     // Lets flutter_local_notifications present alerts while the app is in
     // the foreground. FlutterAppDelegate already conforms to the protocol.
@@ -27,5 +34,29 @@ import UserNotifications
 
     GeneratedPluginRegistrant.register(with: self)
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  }
+
+  /// One value from the bundled `.env` asset. Splits on the first `=` and
+  /// strips matching surrounding quotes, the same way flutter_dotenv and
+  /// android/app/build.gradle read the file.
+  private static func dotenvValue(_ key: String) -> String? {
+    let assetKey = FlutterDartProject.lookupKey(forAsset: ".env")
+    guard let path = Bundle.main.path(forResource: assetKey, ofType: nil),
+          let contents = try? String(contentsOfFile: path, encoding: .utf8)
+    else { return nil }
+
+    for rawLine in contents.components(separatedBy: .newlines) {
+      let line = rawLine.trimmingCharacters(in: .whitespaces)
+      guard !line.hasPrefix("#"), let separator = line.firstIndex(of: "=") else { continue }
+      guard line[..<separator].trimmingCharacters(in: .whitespaces) == key else { continue }
+
+      var value = line[line.index(after: separator)...].trimmingCharacters(in: .whitespaces)
+      if value.count >= 2, let first = value.first, first == "\"" || first == "'",
+         value.last == first {
+        value = String(value.dropFirst().dropLast())
+      }
+      return value.isEmpty ? nil : value
+    }
+    return nil
   }
 }

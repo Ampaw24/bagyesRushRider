@@ -15,6 +15,29 @@ if (localPropertiesFile.exists()) {
     }
 }
 
+// The project's .env (also bundled into the app by flutter_dotenv) is the
+// single source of truth for API keys, so the Maps SDK key in the manifest
+// can never drift from it. Parsed by hand rather than with Properties, which
+// would keep surrounding quotes and treat ':' as a separator.
+def dotenv = [:]
+def dotenvFile = rootProject.file('../.env')
+if (dotenvFile.exists()) {
+    dotenvFile.eachLine('UTF-8') { line ->
+        def trimmed = line.trim()
+        if (!trimmed || trimmed.startsWith('#') || !trimmed.contains('=')) return
+        def separator = trimmed.indexOf('=')
+        def value = trimmed.substring(separator + 1).trim()
+        if (value.length() >= 2 && (value[0] == '"' || value[0] == "'") && value[-1] == value[0]) {
+            value = value.substring(1, value.length() - 1)
+        }
+        dotenv[trimmed.substring(0, separator).trim()] = value
+    }
+}
+def mapsApiKey = dotenv['G_CLIENTID_ANDROID']
+if (!mapsApiKey) {
+    throw new GradleException('G_CLIENTID_ANDROID is missing from .env — the Google Maps SDK needs it.')
+}
+
 def flutterVersionCode = localProperties.getProperty('flutter.versionCode')
 if (flutterVersionCode == null) {
     flutterVersionCode = '1'
@@ -48,6 +71,7 @@ android {
         targetSdk 35
         versionCode 2
         versionName '2.0'
+        manifestPlaceholders += [MAPS_API_KEY: mapsApiKey]
     }
 
     compileOptions {

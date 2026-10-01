@@ -1,4 +1,5 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'package:delivery_boy/core/services/fcm_service.dart';
@@ -32,6 +33,14 @@ class NotificationPermissionPrompt {
         await FcmService.ensurePermission();
       case AuthorizationStatus.denied:
         _shownThisSession = true;
+        // Android reports an unanswered or once-dismissed prompt as
+        // `denied` too, and still lets it be shown — only send the rider to
+        // Settings once the OS itself refuses to ask again.
+        if (defaultTargetPlatform == TargetPlatform.android &&
+            FcmService.isPermitted(await FcmService.ensurePermission())) {
+          return;
+        }
+        if (!context.mounted) return;
         await CustomDialog.showConfirmation(
           context: context,
           title: 'Turn on notifications',

@@ -144,17 +144,28 @@ class FcmService {
       status == AuthorizationStatus.authorized ||
       status == AuthorizationStatus.provisional;
 
-  /// Shows the OS permission prompt only if the rider hasn't answered it
-  /// yet — iOS allows that dialog exactly once per install, so after a
-  /// "Don't Allow" the only way back is the Settings app (see
-  /// `NotificationPermissionPrompt`).
+  /// Shows the OS permission prompt if it can still be shown. Called at app
+  /// launch (see `RiderAppBootstrap`), before sign-in. iOS allows that
+  /// dialog exactly once per install, so after a "Don't Allow" the only way
+  /// back is the Settings app (see `NotificationPermissionPrompt`); Android
+  /// allows it until the rider blocks it permanently.
   ///
   /// On Android 13+ the request raises the POST_NOTIFICATIONS dialog — but
   /// only because that permission is declared in AndroidManifest.xml.
   static Future<AuthorizationStatus> ensurePermission() async {
     final messaging = FirebaseMessaging.instance;
     var settings = await messaging.getNotificationSettings();
-    if (settings.authorizationStatus == AuthorizationStatus.notDetermined) {
+    final status = settings.authorizationStatus;
+    // Android never reports `notDetermined`: an unanswered POST_NOTIFICATIONS
+    // (Android 13+) reads as `denied`. Gating on notDetermined alone meant
+    // the launch prompt never appeared on Android, and riders first met the
+    // "Open Settings" fallback on the home screen after login. Requesting on
+    // `denied` is safe there — once permanently denied, the OS returns
+    // immediately without showing anything.
+    final shouldAsk = status == AuthorizationStatus.notDetermined ||
+        (defaultTargetPlatform == TargetPlatform.android &&
+            status == AuthorizationStatus.denied);
+    if (shouldAsk) {
       settings = await messaging.requestPermission(
         alert: true,
         badge: true,

@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:delivery_boy/core/di/service_locator.dart';
 import 'package:delivery_boy/core/services/rider_app_bootstrap.dart';
 import 'package:delivery_boy/core/services/rider_session_teardown.dart';
