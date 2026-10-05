@@ -64,6 +64,13 @@ class RiderMeProfileNotifier extends Notifier<RiderMeProfileState> {
     );
   }
 
+  /// Adopts the profile a mutation returned, so the app reflects it without
+  /// a second `GET /rider/me`.
+  void applyProfile(RiderMeProfileModel profile) => state = state.copyWith(
+        status: RiderMeProfileStatus.loaded,
+        profile: profile,
+      );
+
   Future<bool> _runAction(Future<void> Function() action) async {
     state = state.copyWith(
         actionStatus: RiderMeActionStatus.inProgress, clearActionMessage: true);

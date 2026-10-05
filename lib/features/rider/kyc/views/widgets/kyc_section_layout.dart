@@ -67,7 +67,7 @@ class KycSectionLayout extends StatelessWidget {
                 ),
               ),
             ),
-            _ActionBar(
+            KycActionBar(
               label: primaryLabel,
               onPressed: onPrimary,
               isBusy: isBusy,
@@ -241,13 +241,16 @@ class _Intro extends StatelessWidget {
   }
 }
 
-class _ActionBar extends StatelessWidget {
-  const _ActionBar({
+/// The primary action pinned under a verification screen, with an optional
+/// secondary one beneath it.
+class KycActionBar extends StatelessWidget {
+  const KycActionBar({
+    super.key,
     required this.label,
     required this.onPressed,
     required this.isBusy,
-    required this.secondary,
     required this.metrics,
+    this.secondary,
   });
 
   final String label;

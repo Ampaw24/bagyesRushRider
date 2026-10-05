@@ -13,6 +13,7 @@ import 'package:delivery_boy/features/rider/dashboard/views/screens/rider_dashbo
 import 'package:delivery_boy/features/rider/profile/providers/rider_avatar_providers.dart';
 import 'package:delivery_boy/features/rider/kyc/providers/kyc_providers.dart';
 import 'package:delivery_boy/features/rider/shared_widgets/rider_avatar.dart';
+import 'package:delivery_boy/features/rider/vehicles/views/widgets/vehicle_profile_card.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 class RiderProfileScreen extends ConsumerWidget {
@@ -96,6 +97,7 @@ class RiderProfileScreen extends ConsumerWidget {
                     ),
                     child: Column(
                       children: [
+                        const VehicleProfileCard(),
                         _SectionCard(
                           label: 'Account',
                           w: w,

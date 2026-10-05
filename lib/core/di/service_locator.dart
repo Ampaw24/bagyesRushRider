@@ -42,6 +42,10 @@ import 'package:delivery_boy/features/rider/home/repositories/rider_banner_repos
 import 'package:delivery_boy/features/rider/vehicles/service/rider_vehicle_catalog_api_service.dart';
 import 'package:delivery_boy/features/rider/vehicles/repository/vehicle_catalog_repository.dart';
 import 'package:delivery_boy/features/rider/vehicles/repository/vehicle_catalog_repository_impl.dart';
+// Vehicle verification photos (/rider/me/vehicle-photos/:side)
+import 'package:delivery_boy/features/rider/vehicles/service/rider_vehicle_photo_api_service.dart';
+import 'package:delivery_boy/features/rider/vehicles/repository/vehicle_verification_repository.dart';
+import 'package:delivery_boy/features/rider/vehicles/repository/vehicle_verification_repository_impl.dart';
 // Chat (shared /conversations API — see chat-apis.md)
 import 'package:delivery_boy/features/rider/chat/services/rider_chat_api_service.dart';
 import 'package:delivery_boy/features/rider/chat/repositories/rider_chat_repository.dart';
@@ -133,6 +137,12 @@ Future<void> initServiceLocator() async {
   sl.registerLazySingleton(() => RiderVehicleCatalogApiService(sl<Dio>()));
   sl.registerLazySingleton<VehicleCatalogRepository>(
     () => VehicleCatalogRepositoryImpl(sl<RiderVehicleCatalogApiService>()),
+  );
+
+  // ── Vehicle verification photos ─────────────────────────────────────────
+  sl.registerLazySingleton(() => RiderVehiclePhotoApiService(sl<Dio>()));
+  sl.registerLazySingleton<VehicleVerificationRepository>(
+    () => VehicleVerificationRepositoryImpl(sl<RiderVehiclePhotoApiService>()),
   );
 
   // ── Chat (shared /conversations API) ────────────────────────────────────

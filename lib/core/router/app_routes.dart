@@ -37,4 +37,7 @@ abstract final class AppRoutes {
 
   /// One checklist step, by `KycSection.slug`.
   static String kycSection(String slug) => '$kyc/$slug';
+
+  /// Live-camera vehicle photos and their verification status.
+  static const vehicleVerification = '/dashboard/vehicle-verification';
 }

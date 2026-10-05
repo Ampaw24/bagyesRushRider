@@ -15,6 +15,13 @@ class NetworkFailure extends Failure {
   const NetworkFailure(super.message);
 }
 
+/// A 401: `RiderDioInterceptor` has already cleared the session and woken
+/// the router's login redirect. Callers stop any follow-up requests rather
+/// than retrying them.
+class SessionExpiredFailure extends Failure {
+  const SessionExpiredFailure(super.message);
+}
+
 /// A 422 carrying per-field messages, e.g.
 /// `{phone: ["The phone has already been taken."]}`.
 ///

@@ -41,6 +41,7 @@ import 'package:delivery_boy/features/rider/report/views/screens/rider_report_de
 import 'package:delivery_boy/features/rider/kyc/models/kyc_section.dart';
 import 'package:delivery_boy/features/rider/kyc/views/screens/kyc_hub_screen.dart';
 import 'package:delivery_boy/features/rider/kyc/views/screens/kyc_section_screen.dart';
+import 'package:delivery_boy/features/rider/vehicles/views/screens/vehicle_verification_screen.dart';
 // ── Orders ────────────────────────────────────────────────────────────────────
 import 'package:delivery_boy/features/rider/orders/models/rider_me_order_model.dart';
 import 'package:delivery_boy/features/rider/orders/views/screens/rider_order_map_screen.dart';
@@ -331,6 +332,11 @@ GoRouter createAppRouter() {
                 ),
               ),
             ],
+          ),
+          GoRoute(
+            path: 'vehicle-verification',
+            pageBuilder: (_, state) =>
+                _slideRight(state, const VehicleVerificationScreen()),
           ),
         ],
       ),

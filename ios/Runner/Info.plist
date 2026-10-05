@@ -27,7 +27,7 @@
 		<key>LSRequiresIPhoneOS</key>
 		<true/>
 		<key>NSCameraUsageDescription</key>
-		<string>BagyesRIDER uses your camera to capture documents and verify your identity with a live selfie.</string>
+		<string>BagyesRIDER uses your camera to capture documents, photograph your vehicle for verification, and verify your identity with a live selfie.</string>
 		<key>NSPhotoLibraryUsageDescription</key>
 		<string>BagyesRIDER uses your photo library so you can upload verification documents, your profile photo and proof-of-delivery photos.</string>
 		<key>UIApplicationSupportsIndirectInputEvents</key>

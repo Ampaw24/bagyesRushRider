@@ -109,6 +109,11 @@ class RiderMeProfileModel extends Equatable {
   final String? vehicleColour;
   final int? vehicleYear;
   final String? vehicleOwnership; // owned | authorised
+  final String? vehicleOwnershipLabel;
+
+  /// `vehicle.photos`, keyed by the API's side (`front`, `back`). Sides with
+  /// no photo are absent rather than null.
+  final Map<String, String> vehiclePhotos;
 
   final String? licenceNumber;
   final String? licenceClass;
@@ -184,6 +189,8 @@ class RiderMeProfileModel extends Equatable {
     this.vehicleColour,
     this.vehicleYear,
     this.vehicleOwnership,
+    this.vehicleOwnershipLabel,
+    this.vehiclePhotos = const {},
     this.licenceNumber,
     this.licenceClass,
     this.licenceExpiresAt,
@@ -259,6 +266,11 @@ class RiderMeProfileModel extends Equatable {
       vehicleColour: nonEmptyString(vehicle['colour']),
       vehicleYear: _int(vehicle['year']),
       vehicleOwnership: nonEmptyString(vehicle['ownership']),
+      vehicleOwnershipLabel: nonEmptyString(vehicle['ownership_label']),
+      vehiclePhotos: {
+        for (final entry in _map(vehicle['photos']).entries)
+          if (nonEmptyString(entry.value) case final url?) entry.key: url,
+      },
       licenceNumber: nonEmptyString(licence['number']),
       licenceClass: nonEmptyString(licence['class']),
       licenceExpiresAt: nonEmptyString(licence['expires_at']),
@@ -325,6 +337,8 @@ class RiderMeProfileModel extends Equatable {
       vehicleColour: vehicleColour,
       vehicleYear: vehicleYear,
       vehicleOwnership: vehicleOwnership,
+      vehicleOwnershipLabel: vehicleOwnershipLabel,
+      vehiclePhotos: vehiclePhotos,
       licenceNumber: licenceNumber,
       licenceClass: licenceClass,
       licenceExpiresAt: licenceExpiresAt,
@@ -368,6 +382,9 @@ class RiderMeProfileModel extends Equatable {
         lastName,
         photoUrl,
         plateNumber,
+        vehicleMakeId,
+        vehicleModelId,
+        vehiclePhotos,
         status,
         isOnline,
         canGoOnline,

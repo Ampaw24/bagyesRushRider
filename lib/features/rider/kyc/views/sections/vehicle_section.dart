@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
 
+import 'package:delivery_boy/core/errors/failures.dart';
+import 'package:delivery_boy/core/router/app_routes.dart';
+import 'package:delivery_boy/core/widgets/custom_dialogs.dart';
 import 'package:delivery_boy/features/rider/kyc/models/kyc_section.dart';
 import 'package:delivery_boy/features/rider/kyc/providers/kyc_providers.dart';
 import 'package:delivery_boy/features/rider/kyc/views/widgets/kyc_document_field.dart';
@@ -14,6 +18,8 @@ import 'package:delivery_boy/features/rider/shared_widgets/app_text_field.dart';
 import 'package:delivery_boy/features/rider/vehicles/model/vehicle_make_model.dart';
 import 'package:delivery_boy/features/rider/vehicles/model/vehicle_model_model.dart';
 import 'package:delivery_boy/features/rider/vehicles/viewmodel/vehicle_catalog_viewmodel.dart';
+import 'package:delivery_boy/features/rider/vehicles/viewmodel/vehicle_kyc_viewmodel.dart';
+import 'package:delivery_boy/features/rider/vehicles/views/widgets/vehicle_photos_entry_tile.dart';
 
 const _ownershipOptions = {
   'owned': 'I own this vehicle',
@@ -41,6 +47,9 @@ class _VehicleSectionState extends ConsumerState<VehicleSection>
       TextEditingController(text: widget.profile.vehicleColour);
   late final _yearCtrl =
       TextEditingController(text: widget.profile.vehicleYear?.toString());
+
+  /// Set when the old vehicle's photos couldn't be removed after a change.
+  Failure? _photoClearFailure;
 
   @override
   void initState() {
@@ -172,6 +181,11 @@ class _VehicleSectionState extends ConsumerState<VehicleSection>
             },
             validator: (_) => serverError('vehicle_ownership'),
           ),
+          const KycSubheading(
+            'Vehicle photos',
+            caption: 'Taken live with your camera.',
+          ),
+          const VehiclePhotosEntryTile(),
           const KycSubheading('Vehicle documents'),
           const KycDocumentField(slug: 'vehicle_registration'),
           if (needsAuthorisation)
@@ -194,17 +208,71 @@ class _VehicleSectionState extends ConsumerState<VehicleSection>
     return null;
   }
 
-  void _save() {
+  /// A different make or model is a different vehicle: its photos — and
+  /// any verification they earned — must not carry over.
+  bool get _changesVerifiedVehicle {
+    final profile = widget.profile;
+    if (profile.vehiclePhotos.isEmpty) return false;
+    return (profile.vehicleMakeId != null &&
+            _makeId != profile.vehicleMakeId) ||
+        (profile.vehicleModelId != null && _modelId != profile.vehicleModelId);
+  }
+
+  Future<void> _save() async {
+    final changesVehicle = _changesVerifiedVehicle;
+    if (changesVehicle && !await _confirmVehicleChange()) return;
+
     final colour = _colourCtrl.text.trim();
     final year = int.tryParse(_yearCtrl.text.trim());
     submit(
-      () => ref.read(kycActionsProvider.notifier).saveProfile({
-        'vehicle_make_id': _makeId,
-        'vehicle_model_id': _modelId,
-        'vehicle_ownership': _ownership,
-        if (colour.isNotEmpty) 'vehicle_colour': colour,
-        if (year != null) 'vehicle_year': year,
-      }),
+      () async {
+        final failure =
+            await ref.read(kycActionsProvider.notifier).saveProfile({
+          'vehicle_make_id': _makeId,
+          'vehicle_model_id': _modelId,
+          'vehicle_ownership': _ownership,
+          if (colour.isNotEmpty) 'vehicle_colour': colour,
+          if (year != null) 'vehicle_year': year,
+        });
+        if (failure != null || !changesVehicle) return failure;
+        // The new details are saved either way; a failure here is reported
+        // once the rider is on the photos screen, where retaking fixes it.
+        _photoClearFailure = await ref
+            .read(vehicleKycProvider.notifier)
+            .clearPhotosForVehicleChange();
+        return null;
+      },
+      onSaved: changesVehicle ? _openVehiclePhotos : null,
     );
+  }
+
+  Future<bool> _confirmVehicleChange() async {
+    var confirmed = false;
+    await CustomDialog.showConfirmation(
+      context: context,
+      title: 'Change vehicle?',
+      subtitle: 'Changing your vehicle requires new verification before it '
+          'can be used for deliveries. You will need to take new photos of '
+          'it.',
+      confirmText: 'Continue',
+      icon: HugeIcons.strokeRoundedMotorbike01,
+      onConfirm: () => confirmed = true,
+    );
+    return confirmed;
+  }
+
+  void _openVehiclePhotos() {
+    final failure = _photoClearFailure;
+    _photoClearFailure = null;
+    context.pushReplacement(AppRoutes.vehicleVerification);
+    if (failure != null) {
+      CustomDialog.showWarning(
+        context: context,
+        title: 'Retake your photos',
+        subtitle: "We couldn't remove the photos of your previous vehicle "
+            '(${failure.message}). Retake each photo so they show your new '
+            'one.',
+      );
+    }
   }
 }

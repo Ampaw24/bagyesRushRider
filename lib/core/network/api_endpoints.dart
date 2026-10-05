@@ -155,6 +155,11 @@ abstract final class ApiEndpoints {
   static const riderMePhoto = '/rider/me/photo';
   static const riderMeSubmitReview = '/rider/me/submit-review';
 
+  /// Multipart `photo` (POST) or no body (DELETE). [side] is `front` or
+  /// `back` — anything else is a 404. Both return the full rider profile.
+  static String riderMeVehiclePhoto(String side) =>
+      '/rider/me/vehicle-photos/$side';
+
   // ── Rider Me: Orders ──────────────────────────────────────────────────────
   static const riderMeOffers = '/rider/me/offers';
   static String riderMeOfferAccept(int id) => '/rider/me/offers/$id/accept';

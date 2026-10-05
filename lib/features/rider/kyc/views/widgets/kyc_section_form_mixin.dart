@@ -31,8 +31,12 @@ mixin KycSectionFormMixin<T extends ConsumerStatefulWidget> on ConsumerState<T> 
     setState(() => _serverErrors = {..._serverErrors}..remove(field));
   }
 
-  /// Validates, runs [save], and moves on when it succeeds.
-  Future<void> submit(Future<Failure?> Function() save) async {
+  /// Validates, runs [save], and moves on when it succeeds — to the next
+  /// step, or wherever [onSaved] goes instead.
+  Future<void> submit(
+    Future<Failure?> Function() save, {
+    VoidCallback? onSaved,
+  }) async {
     FocusManager.instance.primaryFocus?.unfocus();
     if (_serverErrors.isNotEmpty) setState(() => _serverErrors = const {});
     if (!(formKey.currentState?.validate() ?? true)) return;
@@ -44,7 +48,7 @@ mixin KycSectionFormMixin<T extends ConsumerStatefulWidget> on ConsumerState<T> 
       return;
     }
     HapticFeedback.lightImpact();
-    continueToNextStep();
+    (onSaved ?? continueToNextStep)();
   }
 
   void showFailure(Failure failure) {
