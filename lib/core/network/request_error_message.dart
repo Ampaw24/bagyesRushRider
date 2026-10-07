@@ -36,6 +36,7 @@ String dioErrorMessage(DioException e, {String fallback = _generic}) {
     case DioExceptionType.connectionTimeout:
     case DioExceptionType.sendTimeout:
     case DioExceptionType.receiveTimeout:
+    case DioExceptionType.transformTimeout:
       return _timedOut;
     case DioExceptionType.badCertificate:
       return "Couldn't connect securely to the server. Please try again later.";

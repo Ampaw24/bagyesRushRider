@@ -11,7 +11,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 void main() {
   // Guards against an unhandled-exception gap in pusher_client_socket: its
-  // private-channel auth call runs inside an un-awaited async method with
+  // private-channel auth call runs inside an un-await0ed async method with
   // no try/catch, so a network hiccup during a channel subscribe throws
   // into this zone instead of anywhere Realtime­Service can catch it.
   runZonedGuarded(() async {
@@ -21,8 +21,7 @@ void main() {
 
     await initServiceLocator();
     await SystemChrome.setPreferredOrientations(
-        [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
-
+      [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
     // Owned explicitly so the launch bootstrap can push results — the
     // location fix, device-token registration — into the same Riverpod
     // graph the widget tree reads from. Never disposed: this is the root

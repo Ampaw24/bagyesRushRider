@@ -15,16 +15,16 @@ let package = Package(
         .library(name: "FlutterGeneratedPluginSwiftPackage", type: .static, targets: ["FlutterGeneratedPluginSwiftPackage"])
     ],
     dependencies: [
-        .package(name: "camera_avfoundation", path: "../.packages/camera_avfoundation-0.10.3"),
+        .package(name: "camera_avfoundation", path: "../.packages/camera_avfoundation-0.10.3+1"),
         .package(name: "device_info_plus", path: "../.packages/device_info_plus-12.4.0"),
         .package(name: "firebase_core", path: "../.packages/firebase_core-3.15.2"),
         .package(name: "firebase_messaging", path: "../.packages/firebase_messaging-15.2.10"),
         .package(name: "geocoding_ios", path: "../.packages/geocoding_ios-3.1.0"),
-        .package(name: "image_picker_ios", path: "../.packages/image_picker_ios-0.8.13+6"),
+        .package(name: "image_picker_ios", path: "../.packages/image_picker_ios-0.8.13+9"),
         .package(name: "package_info_plus", path: "../.packages/package_info_plus-9.0.1"),
-        .package(name: "permission_handler_apple", path: "../.packages/permission_handler_apple-9.6.1"),
-        .package(name: "shared_preferences_foundation", path: "../.packages/shared_preferences_foundation-2.5.6"),
-        .package(name: "url_launcher_ios", path: "../.packages/url_launcher_ios-6.4.1"),
+        .package(name: "permission_handler_apple", path: "../.packages/permission_handler_apple-9.6.2"),
+        .package(name: "shared_preferences_foundation", path: "../.packages/shared_preferences_foundation-2.5.7"),
+        .package(name: "url_launcher_ios", path: "../.packages/url_launcher_ios-6.4.2"),
         .package(name: "FlutterFramework", path: "../.packages/FlutterFramework")
     ],
     targets: [

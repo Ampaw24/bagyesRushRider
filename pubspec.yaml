@@ -60,6 +60,11 @@ dependencies:
   # the customer app so both register devices in an identical format.
   device_info_plus: ^12.4.0
   flutter_html: ^3.0.0
+  # Not used directly. flutter_html 3.0.0 (the latest) calls the top-level
+  # `matches()` in html's private src/query_selector.dart, which html 0.15.7
+  # turned into a method — the build fails with "Method not found: 'matches'".
+  # Remove this pin once a flutter_html release builds against html 0.15.7+.
+  html: 0.15.6
   camera: ^0.12.1
   google_mlkit_face_detection: ^0.15.1
   permission_handler: ^11.3.1

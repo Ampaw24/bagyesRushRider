@@ -533,6 +533,7 @@ class _OrdersTabState extends ConsumerState<_OrdersTab> {
           surfaceTintColor: Colors.transparent,
           elevation: 0,
           scrolledUnderElevation: 0,
+          centerTitle: false,
           titleSpacing: w * 0.04,
           title: Text(
             'Orders',
@@ -544,12 +545,13 @@ class _OrdersTabState extends ConsumerState<_OrdersTab> {
             ),
           ),
           actions: [
-            // Order chats
-            IconButton(
-              icon: const Icon(HugeIcons.strokeRoundedBubbleChat,
-                  color: AppColors.textPrimary, size: 24),
-              onPressed: () => context.push(AppRoutes.chat),
-            ),
+            // Order chats — only an active order has someone to chat with.
+            if (hasActiveOrders)
+              IconButton(
+                icon: const Icon(HugeIcons.strokeRoundedBubbleChat,
+                    color: AppColors.textPrimary, size: 24),
+                onPressed: () => context.push(AppRoutes.chat),
+              ),
             // Notifications bell with unread badge
             Stack(
               alignment: Alignment.topRight,

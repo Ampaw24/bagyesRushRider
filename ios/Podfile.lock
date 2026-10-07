@@ -123,7 +123,7 @@ SPEC CHECKSUMS:
   flutter_secure_storage: 1ed9476fba7e7a782b22888f956cce43e2c62f13
   fluttertoast: 2c67e14dce98bbdb200df9e1acf610d7a6264ea1
   Google-Maps-iOS-Utils: 66d6de12be1ce6d3742a54661e7a79cb317a9321
-  google_maps_flutter_ios: 0cf046caf50b00d95071f79e8031fcd5ef902beb
+  google_maps_flutter_ios: 17552876e72723da1d41accc22f03b5f7afbde69
   google_mlkit_commons: b2c0a76e7ef4ff555e70e5d71f21d66ce3d08a97
   google_mlkit_face_detection: 84144f185c47be63638e22fdd81bbb781875a35b
   GoogleDataTransport: a24e58982ab3ba2f64d79613e027fe7f57e88539
