@@ -4,6 +4,13 @@
 /// `Role must be one of: customer, vendor, rider`.
 abstract final class AuthRoles {
   static const rider = 'delivery';
+
+  /// Roles that make an account a rider's when the server reports it back.
+  /// [rider] is an undocumented alias the server accepts on `/register`; its
+  /// own role enum calls the role `rider` — which one `/login` returns for a
+  /// rider isn't documented, so both count. Anything else (customer, vendor,
+  /// admin) is turned away at login.
+  static const riderAccountRoles = {'rider', rider};
 }
 
 /// `purpose` values accepted by [ApiEndpoints.otpVerify].

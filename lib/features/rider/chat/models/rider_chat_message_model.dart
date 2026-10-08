@@ -84,14 +84,30 @@ class RiderChatMessageModel extends Equatable {
         deliveryStatus: MessageDeliveryStatus.sending,
       );
 
-  RiderChatMessageModel copyWith({MessageDeliveryStatus? deliveryStatus}) =>
+  /// Re-derives [isMine] from [sender] against [myUserId] — this session's
+  /// own participant id. A `message.sent` socket event is broadcast once to
+  /// every participant carrying the *sender's* `is_mine`, so the payload flag
+  /// can't be trusted there: without this, the customer's live replies render
+  /// on the rider's own side of the thread. Keeps the payload flag when
+  /// either id is unknown (e.g. an optimistic bubble, which has no sender id).
+  RiderChatMessageModel resolvedFor(int? myUserId) {
+    final senderId = sender.id;
+    if (myUserId == null || senderId == null) return this;
+    final mine = senderId == myUserId;
+    return mine == isMine ? this : copyWith(isMine: mine);
+  }
+
+  RiderChatMessageModel copyWith({
+    MessageDeliveryStatus? deliveryStatus,
+    bool? isMine,
+  }) =>
       RiderChatMessageModel(
         id: id,
         conversationId: conversationId,
         type: type,
         body: body,
         sender: sender,
-        isMine: isMine,
+        isMine: isMine ?? this.isMine,
         createdAt: createdAt,
         clientUuid: clientUuid,
         deliveryStatus: deliveryStatus ?? this.deliveryStatus,

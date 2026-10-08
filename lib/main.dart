@@ -16,9 +16,7 @@ void main() {
   // into this zone instead of anywhere Realtime­Service can catch it.
   runZonedGuarded(() async {
     WidgetsFlutterBinding.ensureInitialized();
-
     await dotenv.load(fileName: '.env');
-
     await initServiceLocator();
     await SystemChrome.setPreferredOrientations(
       [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);

@@ -1,10 +1,23 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import 'package:delivery_boy/constant/app_theme.dart';
+import 'package:delivery_boy/features/rider/chat/views/widgets/rider_chat_avatar.dart';
 
 const _months = [
-  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
 ];
 const _weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
@@ -21,7 +34,8 @@ String _dayLabel(DateTime date) {
   final diff = today.difference(day).inDays;
   if (diff == 0) return 'Today';
   if (diff == 1) return 'Yesterday';
-  final base = '${_weekdays[local.weekday - 1]}, ${local.day} ${_months[local.month - 1]}';
+  final base =
+      '${_weekdays[local.weekday - 1]}, ${local.day} ${_months[local.month - 1]}';
   return local.year == now.year ? base : '$base ${local.year}';
 }
 
@@ -38,7 +52,8 @@ class RiderChatDaySeparator extends StatelessWidget {
       padding: EdgeInsets.symmetric(vertical: w * 0.03),
       child: Center(
         child: Container(
-          padding: EdgeInsets.symmetric(horizontal: w * 0.03, vertical: w * 0.01),
+          padding:
+              EdgeInsets.symmetric(horizontal: w * 0.03, vertical: w * 0.01),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(12),
@@ -59,10 +74,15 @@ class RiderChatDaySeparator extends StatelessWidget {
   }
 }
 
-/// Peer-side bubble with three pulsing dots, shown while the peer types.
-/// Static dots when the OS asks for reduced motion.
+/// Peer-side bubble with three bouncing dots, shown while the peer types.
+/// Fades in on appearance; dots stay static when the OS asks for reduced
+/// motion.
 class RiderTypingIndicator extends StatefulWidget {
-  const RiderTypingIndicator({super.key});
+  const RiderTypingIndicator(
+      {super.key, required this.peerName, this.peerPhotoUrl});
+
+  final String peerName;
+  final String? peerPhotoUrl;
 
   @override
   State<RiderTypingIndicator> createState() => _RiderTypingIndicatorState();
@@ -70,6 +90,8 @@ class RiderTypingIndicator extends StatefulWidget {
 
 class _RiderTypingIndicatorState extends State<RiderTypingIndicator>
     with SingleTickerProviderStateMixin {
+  static const _dotCount = 3;
+
   late final AnimationController _controller = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 1100),
@@ -95,36 +117,55 @@ class _RiderTypingIndicatorState extends State<RiderTypingIndicator>
   Widget build(BuildContext context) {
     final w = MediaQuery.sizeOf(context).width;
     final dot = (w * 0.018).clamp(6.0, 8.0);
+    final big = Radius.circular((w * 0.045).clamp(16.0, 20.0));
+    final avatarSize = (w * 0.08).clamp(28.0, 36.0);
 
     return Align(
       alignment: Alignment.centerLeft,
-      child: Container(
-        margin: EdgeInsets.only(top: w * 0.015),
-        padding: EdgeInsets.symmetric(horizontal: w * 0.04, vertical: w * 0.032),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          border: Border.all(color: AppColors.border),
-          borderRadius: BorderRadius.circular(18),
-        ),
-        child: AnimatedBuilder(
-          animation: _controller,
-          builder: (_, __) => Row(
+      child: TweenAnimationBuilder<double>(
+        tween: Tween(begin: 0, end: 1),
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
+        builder: (_, t, child) => Opacity(opacity: t, child: child),
+        child: Padding(
+          padding: EdgeInsets.only(top: w * 0.015),
+          child: Row(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              for (var i = 0; i < 3; i++) ...[
-                if (i > 0) SizedBox(width: dot * 0.6),
-                Opacity(
-                  opacity: _opacityFor(i),
-                  child: Container(
-                    width: dot,
-                    height: dot,
-                    decoration: const BoxDecoration(
-                      color: AppColors.textSecondary,
-                      shape: BoxShape.circle,
-                    ),
+              RiderChatAvatar(
+                name: widget.peerName,
+                photoUrl: widget.peerPhotoUrl,
+                size: avatarSize,
+              ),
+              SizedBox(width: w * 0.02),
+              Container(
+                padding: EdgeInsets.symmetric(
+                    horizontal: w * 0.04, vertical: w * 0.032),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: Border.all(color: AppColors.border),
+                  // Peer-side tail, matching [RiderMessageBubble].
+                  borderRadius: BorderRadius.only(
+                    topLeft: big,
+                    topRight: big,
+                    bottomRight: big,
+                    bottomLeft: const Radius.circular(6),
                   ),
                 ),
-              ],
+                child: AnimatedBuilder(
+                  animation: _controller,
+                  builder: (_, __) => Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (var i = 0; i < _dotCount; i++) ...[
+                        if (i > 0) SizedBox(width: dot * 0.7),
+                        _BouncingDot(size: dot, phase: _phaseFor(i)),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
             ],
           ),
         ),
@@ -132,11 +173,32 @@ class _RiderTypingIndicatorState extends State<RiderTypingIndicator>
     );
   }
 
-  /// Each dot peaks a third of a cycle after the previous one.
-  double _opacityFor(int index) {
-    if (!_controller.isAnimating) return 0.6;
-    final phase = (_controller.value - index / 3) % 1.0;
-    final wave = phase < 0.5 ? phase * 2 : (1 - phase) * 2;
-    return 0.3 + 0.7 * wave;
+  /// 0→1→0 wave, each dot a third of a cycle behind the previous one.
+  double _phaseFor(int index) {
+    if (!_controller.isAnimating) return 0;
+    final t = (_controller.value - index / _dotCount) % 1.0;
+    return math.sin(t * math.pi).clamp(0.0, 1.0);
+  }
+}
+
+class _BouncingDot extends StatelessWidget {
+  const _BouncingDot({required this.size, required this.phase});
+
+  final double size;
+  final double phase;
+
+  @override
+  Widget build(BuildContext context) {
+    return Transform.translate(
+      offset: Offset(0, -size * 0.6 * phase),
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          color: Color.lerp(AppColors.textHint, AppColors.primary, phase),
+          shape: BoxShape.circle,
+        ),
+      ),
+    );
   }
 }

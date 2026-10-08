@@ -113,10 +113,22 @@ class FcmService {
             AndroidFlutterLocalNotificationsPlugin>()
         ?.createNotificationChannel(_androidChannel);
 
-    // Foreground messages → show as local notification
-    FirebaseMessaging.onMessage.listen((message) {
-      _showLocalNotification(message);
-    });
+    // Foreground messages. iOS presents them natively, with the options set
+    // here. They must be set: firebase_messaging registers before
+    // flutter_local_notifications, so its willPresentNotification answers
+    // first — with "present nothing" by default, which also hid the local
+    // notification Android uses below. Android never shows a push while
+    // the app is open, so there it's re-posted as a local notification.
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      await FirebaseMessaging.instance
+          .setForegroundNotificationPresentationOptions(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+    } else {
+      FirebaseMessaging.onMessage.listen(_showLocalNotification);
+    }
 
     // Notification tap while app was in background
     FirebaseMessaging.onMessageOpenedApp.listen((message) {

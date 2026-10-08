@@ -3,14 +3,7 @@ import 'package:hugeicons/hugeicons.dart';
 
 import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/features/rider/chat/models/rider_conversation_model.dart';
-
-String _initials(String name) {
-  final parts = name.trim().split(RegExp(r'\s+'));
-  if (parts.isEmpty || parts.first.isEmpty) return '?';
-  final first = parts.first[0];
-  final second = parts.length > 1 && parts.last.isNotEmpty ? parts.last[0] : '';
-  return (first + second).toUpperCase();
-}
+import 'package:delivery_boy/features/rider/chat/views/widgets/rider_chat_avatar.dart';
 
 String riderConversationRelativeTime(DateTime? dt) {
   if (dt == null) return '';
@@ -59,23 +52,7 @@ class RiderConversationTile extends StatelessWidget {
               Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  Container(
-                    width: avatarSize,
-                    height: avatarSize,
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      _initials(name),
-                      style: TextStyle(
-                        fontSize: avatarSize * 0.36,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                  ),
+                  RiderChatAvatar(name: name, size: avatarSize),
                   if (!conversation.isOpen)
                     Positioned(
                       right: -w * 0.005,

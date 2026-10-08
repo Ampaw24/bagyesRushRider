@@ -3,6 +3,7 @@ import 'package:hugeicons/hugeicons.dart';
 
 import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/features/rider/chat/models/rider_chat_message_model.dart';
+import 'package:delivery_boy/features/rider/chat/views/widgets/rider_chat_avatar.dart';
 
 String _formatTime(DateTime dt) {
   final local = dt.toLocal();
@@ -24,6 +25,8 @@ class RiderMessageBubble extends StatelessWidget {
   const RiderMessageBubble({
     super.key,
     required this.message,
+    required this.peerName,
+    this.peerPhotoUrl,
     this.isRead = false,
     this.onRetry,
     this.isFirstInGroup = true,
@@ -32,6 +35,11 @@ class RiderMessageBubble extends StatelessWidget {
   });
 
   final RiderChatMessageModel message;
+
+  /// The other participant, shown as an avatar beside their last bubble in
+  /// a group.
+  final String peerName;
+  final String? peerPhotoUrl;
 
   /// True once the peer's `conversation.read` timestamp is at/after this
   /// (own) message's `createdAt` — swaps the single tick for a double tick.
@@ -127,16 +135,18 @@ class RiderMessageBubble extends StatelessWidget {
       bubble = GestureDetector(onTap: onRetry, child: bubble);
     }
 
+    final column = Column(
+      crossAxisAlignment:
+          isMine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+      children: [
+        bubble,
+        if (failed) _FailedNote(onRetry: onRetry),
+      ],
+    );
+
     Widget content = Padding(
       padding: EdgeInsets.only(top: isFirstInGroup ? w * 0.025 : w * 0.006),
-      child: Column(
-        crossAxisAlignment:
-            isMine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-        children: [
-          bubble,
-          if (failed) _FailedNote(onRetry: onRetry),
-        ],
-      ),
+      child: isMine ? column : _withPeerAvatar(w, column),
     );
 
     if (animateIn && !MediaQuery.of(context).disableAnimations) {
@@ -158,6 +168,32 @@ class RiderMessageBubble extends StatelessWidget {
     return Align(
       alignment: isMine ? Alignment.centerRight : Alignment.centerLeft,
       child: content,
+    );
+  }
+}
+
+extension on RiderMessageBubble {
+  /// The avatar slot is always reserved so a group's bubbles line up; only
+  /// the last bubble of the group fills it.
+  Widget _withPeerAvatar(double w, Widget bubbleColumn) {
+    final avatarSize = (w * 0.08).clamp(28.0, 36.0);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        SizedBox.square(
+          dimension: avatarSize,
+          child: isLastInGroup
+              ? RiderChatAvatar(
+                  name: peerName,
+                  photoUrl: peerPhotoUrl,
+                  size: avatarSize,
+                )
+              : null,
+        ),
+        SizedBox(width: w * 0.02),
+        Flexible(child: bubbleColumn),
+      ],
     );
   }
 }

@@ -14,7 +14,6 @@ import 'package:delivery_boy/core/widgets/custom_dialogs.dart';
 import 'package:delivery_boy/core/widgets/notification_permission_prompt.dart';
 import 'package:delivery_boy/features/rider/auth/models/rider_user_model.dart';
 import 'package:delivery_boy/features/rider/auth/viewmodels/rider_auth_viewmodel.dart';
-import 'package:delivery_boy/features/rider/auth/views/widgets/delete_account_sheet.dart';
 import 'package:delivery_boy/features/rider/dashboard/views/screens/rider_dashboard_screen.dart';
 import 'package:delivery_boy/features/rider/home/models/rider_banner_model.dart';
 import 'package:delivery_boy/features/rider/home/providers/rider_banner_providers.dart';
@@ -155,11 +154,11 @@ class _RiderHomeScreenState extends ConsumerState<RiderHomeScreen>
     CustomDialog.showConfirmation(
       context: context,
       title: 'Delete Account',
-      subtitle:
-          'This permanently deletes your account and all associated data. '
-          'This action cannot be undone.',
+      subtitle: 'This action is permanent and cannot be undone. All your '
+          'delivery history and personal data will be permanently deleted.',
       confirmText: 'Continue',
-      onConfirm: () => DeleteAccountSheet.show(context),
+      cancelText: 'Cancel',
+      onConfirm: () => context.push(AppRoutes.deleteAccount),
     );
   }
 
@@ -357,6 +356,7 @@ class _RiderHomeScreenState extends ConsumerState<RiderHomeScreen>
               isVerified:
                   ref.watch(riderKycStatusProvider) == KycStatus.approved,
               photoUrl: photoUrl,
+              notificationBadgeCount: unread,
             ),
         ],
       ),

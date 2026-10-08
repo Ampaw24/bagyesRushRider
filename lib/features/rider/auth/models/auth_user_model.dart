@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+import 'package:delivery_boy/core/network/api_endpoints.dart';
 import 'package:delivery_boy/core/utils/json_utils.dart';
 
 /// The account returned by `/register`, `/login` and `/profile`.
@@ -44,7 +45,9 @@ class AuthUserModel extends Equatable {
       .where((e) => e.trim().isNotEmpty)
       .join(' ');
 
-  bool get isRider => role == 'rider';
+  /// Tolerates the server's casing drifting.
+  bool get isRider =>
+      AuthRoles.riderAccountRoles.contains(role?.trim().toLowerCase());
 
   factory AuthUserModel.fromJson(Map<String, dynamic> json) {
     final profile = json['profile'];

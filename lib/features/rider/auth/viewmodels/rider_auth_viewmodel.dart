@@ -13,6 +13,8 @@ import 'package:delivery_boy/core/services/rider_session_teardown.dart';
 import 'package:delivery_boy/core/services/user_session_manager.dart';
 import 'package:delivery_boy/core/utils/app_logger.dart';
 import 'package:delivery_boy/core/utils/device_info_utils.dart';
+import 'package:delivery_boy/core/utils/network_utility.dart'
+    show sessionRevision;
 import 'package:delivery_boy/features/rider/auth/models/auth_user_model.dart';
 import 'package:delivery_boy/features/rider/auth/repositories/rider_auth_repository.dart';
 import 'package:delivery_boy/features/rider/notifications/repositories/device_token_repository.dart';
@@ -97,7 +99,20 @@ class RiderAuthState extends Equatable {
 
 class RiderAuthNotifier extends Notifier<RiderAuthState> {
   @override
-  RiderAuthState build() => const RiderAuthState();
+  RiderAuthState build() {
+    // A 401 clears the session out of band (RiderDioInterceptor), without
+    // going through logout() — so the token registration is forgotten here.
+    void onSessionRevision() {
+      if (!_session.isLoggedIn) unawaited(_forgetDeviceToken());
+    }
+
+    sessionRevision.addListener(onSessionRevision);
+    ref.onDispose(() {
+      sessionRevision.removeListener(onSessionRevision);
+      _tokenRetry?.cancel();
+    });
+    return const RiderAuthState();
+  }
 
   RiderAuthRepository get _repo => sl<RiderAuthRepository>();
   UserSessionManager get _session => sl<UserSessionManager>();
@@ -107,10 +122,33 @@ class RiderAuthNotifier extends Notifier<RiderAuthState> {
   /// rather than secure storage: a push token is an address, not a
   /// credential, and reads need to be synchronous.
   ///
-  /// Cleared on logout — see [logout]. Without that, the next rider to sign
-  /// in on this device is skipped as "already registered" and silently never
-  /// receives a notification.
+  /// Cleared whenever the session ends — logout, account deletion, or a 401
+  /// (see [build]). Without that, the next rider to sign in on this device
+  /// is skipped as "already registered" and silently never receives a
+  /// notification.
   static const _registeredTokenKey = 'registered_device_token';
+
+  /// Waits before re-trying a registration that couldn't complete — most
+  /// often an iOS APNs token that arrived late. Riders keep the app open for
+  /// a whole shift, so waiting for the next app resume could mean no push
+  /// for hours. After the last delay, resume and the next launch still
+  /// retry.
+  static const _tokenRetryDelays = [
+    Duration(seconds: 15),
+    Duration(seconds: 30),
+    Duration(minutes: 1),
+    Duration(minutes: 2),
+    Duration(minutes: 5),
+  ];
+  Timer? _tokenRetry;
+  int _tokenRetryAttempt = 0;
+
+  /// Registrations run one at a time. Launch, login, app resume, token
+  /// refresh and the retry timer can all ask at once; queued rather than
+  /// merged, so a request made just after login is never swallowed by one
+  /// that started before it — the later ones find the token registered and
+  /// skip the POST.
+  Future<void> _registration = Future.value();
 
   /// Consent captured on the terms screen but not yet sent, because
   /// `/register` deferred issuing a token. Flushed the moment a session
@@ -145,7 +183,13 @@ class RiderAuthNotifier extends Notifier<RiderAuthState> {
   ///
   /// Safe to call repeatedly: it no-ops when Firebase is unavailable, when
   /// there's no session, or when the token hasn't changed since last time.
-  Future<void> registerDeviceToken() async {
+  /// When it can't finish — no token yet, or the request failed — it tries
+  /// again on its own (see [_tokenRetryDelays]).
+  Future<void> registerDeviceToken() =>
+      _registration = _registration.then((_) => _registerDeviceToken());
+
+  Future<void> _registerDeviceToken() async {
+    _tokenRetry?.cancel();
     try {
       if (!FirebaseBootstrap.isAvailable) return;
       if (!_session.isLoggedIn) return;
@@ -153,6 +197,7 @@ class RiderAuthNotifier extends Notifier<RiderAuthState> {
       final token = await FcmService.getToken();
       if (token == null || token.isEmpty) {
         appLogger.w('[DeviceToken] no FCM token available');
+        _scheduleTokenRetry();
         return;
       }
 
@@ -170,16 +215,38 @@ class RiderAuthNotifier extends Notifier<RiderAuthState> {
       );
 
       await result.fold(
-        (f) async => appLogger.w('[DeviceToken] register failed: ${f.message}'),
+        (f) async {
+          appLogger.w('[DeviceToken] register failed: ${f.message}');
+          _scheduleTokenRetry();
+        },
         (_) async {
           await prefs.setString(_registeredTokenKey, token);
+          _tokenRetryAttempt = 0;
           appLogger.i('[DeviceToken] registered (${device.platform})');
         },
       );
     } catch (e, s) {
       // Push is best-effort; never let it break a login.
       appLogger.e('[DeviceToken] unexpected error', error: e, stackTrace: s);
+      _scheduleTokenRetry();
     }
+  }
+
+  void _scheduleTokenRetry() {
+    // The session may have ended while the request was in flight.
+    if (!_session.isLoggedIn) return;
+    if (_tokenRetryAttempt >= _tokenRetryDelays.length) return;
+    final delay = _tokenRetryDelays[_tokenRetryAttempt++];
+    appLogger.i('[DeviceToken] retrying in ${delay.inSeconds}s');
+    _tokenRetry = Timer(delay, () => unawaited(registerDeviceToken()));
+  }
+
+  /// Drops this device's registration record when the session ends, so the
+  /// next rider to sign in here registers their own token.
+  Future<void> _forgetDeviceToken() async {
+    _tokenRetry?.cancel();
+    _tokenRetryAttempt = 0;
+    await sl<SharedPreferences>().remove(_registeredTokenKey);
   }
 
   /// Returns true on success, so the view can navigate.
@@ -606,7 +673,7 @@ class RiderAuthNotifier extends Notifier<RiderAuthState> {
 
     await sl<RealtimeService>().disconnect();
     await _session.clearSession();
-    await sl<SharedPreferences>().remove(_registeredTokenKey);
+    await _forgetDeviceToken();
 
     state = const RiderAuthState();
     // Not via sessionRevision: that would redirect away from the calling
@@ -659,7 +726,7 @@ class RiderAuthNotifier extends Notifier<RiderAuthState> {
     // clearSession() only wipes secure storage; the dedupe key lives in
     // SharedPreferences and must be cleared explicitly so the next rider on
     // this device registers their own token.
-    await sl<SharedPreferences>().remove(_registeredTokenKey);
+    await _forgetDeviceToken();
 
     state = const RiderAuthState();
     // Not via sessionRevision: that would redirect away from the calling

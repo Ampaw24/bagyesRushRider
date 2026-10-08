@@ -41,6 +41,7 @@ import 'package:delivery_boy/features/rider/report/views/screens/rider_report_de
 import 'package:delivery_boy/features/rider/kyc/models/kyc_section.dart';
 import 'package:delivery_boy/features/rider/kyc/views/screens/kyc_hub_screen.dart';
 import 'package:delivery_boy/features/rider/kyc/views/screens/kyc_section_screen.dart';
+import 'package:delivery_boy/features/rider/auth/views/screens/rider_delete_account_screen.dart';
 import 'package:delivery_boy/features/rider/vehicles/views/screens/vehicle_verification_screen.dart';
 // ── Orders ────────────────────────────────────────────────────────────────────
 import 'package:delivery_boy/features/rider/orders/models/rider_me_order_model.dart';
@@ -256,6 +257,11 @@ GoRouter createAppRouter() {
             path: 'settings',
             pageBuilder: (_, state) =>
                 _slideRight(state, const RiderSettingsScreen()),
+          ),
+          GoRoute(
+            path: 'delete-account',
+            pageBuilder: (_, state) =>
+                _slideRight(state, const RiderDeleteAccountScreen()),
           ),
           GoRoute(
             path: 'wallet/transactions',

@@ -16,14 +16,18 @@ import 'package:delivery_boy/features/rider/shared_widgets/rider_avatar.dart';
 class _TileData {
   final IconData icon;
   final String label;
-  final Color color;
-  final bool isDestructive;
+
+  /// Set only for the destructive actions (warning / error). Every other
+  /// item takes the brand colour — the same scheme as the customer and
+  /// vendor drawers.
+  final Color? color;
+  final int badgeCount;
 
   const _TileData({
     required this.icon,
     required this.label,
-    required this.color,
-    this.isDestructive = false,
+    this.color,
+    this.badgeCount = 0,
   });
 }
 
@@ -46,6 +50,9 @@ class CustomerDrawer extends StatefulWidget {
   /// From `riderAvatarUrlProvider`; initials are shown when null.
   final String? photoUrl;
 
+  /// Unread notifications, badged on the Notifications item.
+  final int notificationBadgeCount;
+
   const CustomerDrawer({
     super.key,
     required this.onClose,
@@ -56,6 +63,7 @@ class CustomerDrawer extends StatefulWidget {
     required this.onDeleteAccount,
     this.isVerified = false,
     this.photoUrl,
+    this.notificationBadgeCount = 0,
   });
 
   @override
@@ -174,21 +182,40 @@ class _CustomerDrawerState extends State<CustomerDrawer>
         .toUpperCase();
 
     final regularItems = <_TileData>[
-      const _TileData(icon: HugeIcons.strokeRoundedUser,             label: 'My Profile',       color: AppColors.primary),
-      const _TileData(icon: HugeIcons.strokeRoundedDeliveryBox01,    label: 'My Orders',        color: Color(0xFF3182CE)),
-      const _TileData(icon: HugeIcons.strokeRoundedNotification01,   label: 'Notifications',    color: Color(0xFF2D3748)),
-      const _TileData(icon: HugeIcons.strokeRoundedWallet01,         label: 'Wallet',           color: Color(0xFF059669)),
-      const _TileData(icon: HugeIcons.strokeRoundedTransactionHistory, label: 'Transactions',   color: Color(0xFF0891B2)),
-      const _TileData(icon: HugeIcons.strokeRoundedCreditCard,       label: 'Payment Methods',  color: Color(0xFF7C3AED)),
-      const _TileData(icon: HugeIcons.strokeRoundedShield01,         label: 'Privacy Policy',   color: Color(0xFF0369A1)),
-      const _TileData(icon: HugeIcons.strokeRoundedAgreement01,      label: 'Rider Agreement',  color: Color(0xFF0369A1)),
-      const _TileData(icon: HugeIcons.strokeRoundedFileEdit,         label: 'Terms & Conditions', color: Color(0xFF0369A1)),
-      const _TileData(icon: HugeIcons.strokeRoundedHeadphones,       label: 'Help & Support',   color: Color(0xFFD97706)),
+      const _TileData(icon: HugeIcons.strokeRoundedUser, label: 'My Profile'),
+      const _TileData(
+          icon: HugeIcons.strokeRoundedDeliveryBox01, label: 'My Orders'),
+      _TileData(
+        icon: HugeIcons.strokeRoundedNotification01,
+        label: 'Notifications',
+        badgeCount: widget.notificationBadgeCount,
+      ),
+      const _TileData(icon: HugeIcons.strokeRoundedWallet01, label: 'Wallet'),
+      const _TileData(
+          icon: HugeIcons.strokeRoundedTransactionHistory,
+          label: 'Transactions'),
+      const _TileData(
+          icon: HugeIcons.strokeRoundedShieldKey, label: 'Privacy Policy'),
+      const _TileData(
+          icon: HugeIcons.strokeRoundedAgreement01, label: 'Rider Agreement'),
+      const _TileData(
+          icon: HugeIcons.strokeRoundedLegalDocument01,
+          label: 'Terms & Conditions'),
+      const _TileData(
+          icon: HugeIcons.strokeRoundedHelpCircle, label: 'Help & Support'),
     ];
 
-    final bottomItems = <_TileData>[
-      const _TileData(icon: HugeIcons.strokeRoundedDelete01,  label: 'Delete Account', color: AppColors.warning, isDestructive: true),
-      const _TileData(icon: HugeIcons.strokeRoundedLogout01,  label: 'Logout',         color: AppColors.error,   isDestructive: true),
+    const bottomItems = <_TileData>[
+      _TileData(
+        icon: HugeIcons.strokeRoundedDelete02,
+        label: 'Delete Account',
+        color: AppColors.warning,
+      ),
+      _TileData(
+        icon: HugeIcons.strokeRoundedLogout01,
+        label: 'Logout',
+        color: AppColors.error,
+      ),
     ];
 
     return SizedBox.expand(
@@ -216,10 +243,13 @@ class _CustomerDrawerState extends State<CustomerDrawer>
               ),
 
               // ── Sliding panel ──────────────────────────────────────────────
+              // Inset like the customer/vendor drawer's SafeArea + margin.
+              // Inside the dashboard, viewPadding.bottom already includes
+              // the floating nav bar, so the panel ends just above it.
               Positioned(
                 left: 0,
-                top: h * 0.09,
-                bottom: viewPadding.bottom + w * 0.22,
+                top: viewPadding.top + h * 0.02,
+                bottom: viewPadding.bottom + h * 0.02,
                 child: Transform.translate(
                   offset: Offset(_slideAnim.value * drawerWidth, 0),
                   child: Container(
@@ -254,7 +284,14 @@ class _CustomerDrawerState extends State<CustomerDrawer>
                             h: h,
                           ),
 
-                          Divider(color: AppColors.divider, height: 1),
+                          Padding(
+                            padding:
+                                EdgeInsets.symmetric(horizontal: w * 0.05),
+                            child: const Divider(
+                              color: AppColors.divider,
+                              height: 1,
+                            ),
+                          ),
 
                           // Scrollable menu items
                           Expanded(
@@ -276,7 +313,14 @@ class _CustomerDrawerState extends State<CustomerDrawer>
                             ),
                           ),
 
-                          Divider(color: AppColors.divider, height: 1),
+                          Padding(
+                            padding:
+                                EdgeInsets.symmetric(horizontal: w * 0.05),
+                            child: const Divider(
+                              color: AppColors.divider,
+                              height: 1,
+                            ),
+                          ),
 
                           // Bottom destructive actions
                           Padding(
@@ -412,18 +456,33 @@ class _DrawerHeader extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Name
-                      Text(
-                        name,
-                        style: TextStyle(
-                          fontFamily: 'Mukta',
-                          fontSize: (w * 0.042).clamp(14.0, 18.0),
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary,
-                          height: 1.15,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                      // Name, with the verified tick
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              name,
+                              style: TextStyle(
+                                fontFamily: 'Mukta',
+                                fontSize: (w * 0.042).clamp(14.0, 18.0),
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textPrimary,
+                                height: 1.15,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          if (isVerified) ...[
+                            SizedBox(width: w * 0.012),
+                            Icon(
+                              HugeIcons.strokeRoundedCheckmarkBadge01,
+                              size: (w * 0.045).clamp(16.0, 20.0),
+                              color: AppColors.info,
+                              semanticLabel: 'Verified',
+                            ),
+                          ],
+                        ],
                       ),
 
                       // Email
@@ -442,53 +501,6 @@ class _DrawerHeader extends StatelessWidget {
                         ),
                       ],
 
-                      SizedBox(height: h * 0.007),
-
-                      // Verification status chip
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: w * 0.025,
-                          vertical: h * 0.004,
-                        ),
-                        decoration: BoxDecoration(
-                          color: isVerified
-                              ? const Color(0xFF38A169).withValues(alpha: 0.12)
-                              : const Color(0xFFDD6B20).withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(w * 0.04),
-                          border: Border.all(
-                            color: isVerified
-                                ? const Color(0xFF38A169).withValues(alpha: 0.35)
-                                : const Color(0xFFDD6B20).withValues(alpha: 0.35),
-                            width: 1,
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              isVerified
-                                  ? HugeIcons.strokeRoundedCheckmarkBadge01
-                                  : HugeIcons.strokeRoundedAlert01,
-                              size: (w * 0.032).clamp(11.0, 14.0),
-                              color: isVerified
-                                  ? const Color(0xFF38A169)
-                                  : const Color(0xFFDD6B20),
-                            ),
-                            SizedBox(width: w * 0.014),
-                            Text(
-                              isVerified ? 'Verified' : 'Not Verified',
-                              style: TextStyle(
-                                fontFamily: 'Mukta',
-                                fontSize: (w * 0.028).clamp(10.0, 12.0),
-                                fontWeight: FontWeight.w600,
-                                color: isVerified
-                                    ? const Color(0xFF38A169)
-                                    : const Color(0xFFDD6B20),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
                     ],
                   ),
                 ),
@@ -544,6 +556,9 @@ class _DrawerTile extends StatelessWidget {
       ),
     );
 
+    final iconColor = item.color ?? AppColors.primary;
+    final labelColor = item.color ?? AppColors.textPrimary;
+
     return SlideTransition(
       position: slideAnim,
       child: FadeTransition(
@@ -552,8 +567,8 @@ class _DrawerTile extends StatelessWidget {
           color: Colors.transparent,
           child: InkWell(
             onTap: onTap,
-            splashColor: item.color.withValues(alpha: 0.08),
-            highlightColor: item.color.withValues(alpha: 0.04),
+            splashColor: iconColor.withValues(alpha: 0.08),
+            highlightColor: iconColor.withValues(alpha: 0.04),
             child: Padding(
               padding: EdgeInsets.symmetric(
                 horizontal: w * 0.048,
@@ -565,13 +580,13 @@ class _DrawerTile extends StatelessWidget {
                   Container(
                     padding: EdgeInsets.all(w * 0.022),
                     decoration: BoxDecoration(
-                      color: item.color.withValues(alpha: 0.1),
+                      color: iconColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(w * 0.025),
                     ),
                     child: Icon(
                       item.icon,
                       size: (w * 0.052).clamp(18.0, 24.0),
-                      color: item.color,
+                      color: iconColor,
                     ),
                   ),
                   SizedBox(width: w * 0.038),
@@ -583,18 +598,39 @@ class _DrawerTile extends StatelessWidget {
                         fontFamily: 'Mukta',
                         fontSize: (w * 0.038).clamp(13.0, 16.0),
                         fontWeight: FontWeight.w500,
-                        color: item.isDestructive
-                            ? item.color
-                            : AppColors.textPrimary,
+                        color: labelColor,
                       ),
                     ),
                   ),
-                  // Arrow — hidden for destructive items
-                  if (!item.isDestructive)
+                  if (item.badgeCount > 0) ...[
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: w * 0.02,
+                        vertical: w * 0.004,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        borderRadius: BorderRadius.circular(w * 0.03),
+                      ),
+                      child: Text(
+                        '${item.badgeCount}',
+                        semanticsLabel: '${item.badgeCount} unread',
+                        style: TextStyle(
+                          fontFamily: 'Mukta',
+                          fontSize: (w * 0.028).clamp(10.0, 12.0),
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: w * 0.02),
+                  ],
+                  // Arrow — hidden for the destructive actions
+                  if (item.color == null)
                     Icon(
                       HugeIcons.strokeRoundedArrowRight01,
                       size: (w * 0.04).clamp(14.0, 18.0),
-                      color: AppColors.textHint,
+                      color: AppColors.primary,
                     ),
                 ],
               ),

@@ -154,7 +154,9 @@ class RiderChatThreadNotifier
         state = state.copyWith(
           status: RiderChatThreadStatus.loaded,
           conversation: conversation,
-          messages: page.items.reversed.toList(),
+          messages: [
+            for (final m in page.items.reversed) m.resolvedFor(conversation.me?.userId),
+          ],
           hasMoreOlder: page.hasMore,
           message: null,
         );
@@ -201,7 +203,7 @@ class RiderChatThreadNotifier
   void _onIncomingMessageEvent(RealtimeMessageSentEvent event) {
     final conversation = state.conversation;
     if (conversation == null || event.conversationId != conversation.id) return;
-    _onIncomingMessage(_toModel(event.message));
+    _onIncomingMessage(_toModel(event.message).resolvedFor(conversation.me?.userId));
   }
 
   void _onIncomingMessage(RiderChatMessageModel message) {
@@ -262,7 +264,10 @@ class RiderChatThreadNotifier
       (page) {
         _nextCursor = page.nextCursor;
         state = state.copyWith(
-          messages: [...page.items.reversed, ...state.messages],
+          messages: [
+            for (final m in page.items.reversed) m.resolvedFor(conversation.me?.userId),
+            ...state.messages,
+          ],
           hasMoreOlder: page.hasMore,
           isLoadingOlder: false,
         );
@@ -294,7 +299,7 @@ class RiderChatThreadNotifier
         appLogger.w('RiderChatThreadNotifier.sendMessage → failed: ${f.message}');
         _markFailed(clientUuid);
       },
-      (sent) => _replaceByClientUuid(clientUuid, sent),
+      (sent) => _replaceByClientUuid(clientUuid, sent.resolvedFor(conversation.me?.userId)),
     );
   }
 
@@ -318,7 +323,7 @@ class RiderChatThreadNotifier
         appLogger.w('RiderChatThreadNotifier.retry → failed: ${f.message}');
         _markFailed(clientUuid);
       },
-      (sent) => _replaceByClientUuid(clientUuid, sent),
+      (sent) => _replaceByClientUuid(clientUuid, sent.resolvedFor(conversation.me?.userId)),
     );
   }
 

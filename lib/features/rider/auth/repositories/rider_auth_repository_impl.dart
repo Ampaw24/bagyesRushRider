@@ -4,6 +4,7 @@ import 'package:delivery_boy/core/errors/failures.dart';
 import 'package:delivery_boy/core/network/api_endpoints.dart';
 import 'package:delivery_boy/core/network/api_error_parser.dart';
 import 'package:delivery_boy/core/network/request_error_message.dart';
+import 'package:delivery_boy/core/utils/app_logger.dart';
 import 'package:delivery_boy/features/rider/auth/models/auth_user_model.dart';
 import 'package:delivery_boy/features/rider/auth/models/rider_agreement_model.dart';
 import 'package:delivery_boy/features/rider/auth/repositories/rider_auth_repository.dart';
@@ -45,15 +46,35 @@ class RiderAuthRepositoryImpl implements RiderAuthRepository {
         return _parseAuth(response);
       });
 
+  /// What the server answers for a wrong phone or password (a 422 with
+  /// `{message: "Invalid credentials", errors: {email: [...]}}`, checked
+  /// against the live API), reproduced so that turning away another app's
+  /// account looks exactly the same.
+  static const _invalidCredentials = ValidationFailure('Invalid credentials', {
+    'email': ['Invalid credentials'],
+  });
+
+  /// `/login` is shared by every app, so a customer's or vendor's correct
+  /// password succeeds here too. Only riders get in; anyone else gets the
+  /// wrong-credentials error — before the caller stores the session, so
+  /// the next launch can't restore it, and without revealing that the
+  /// account exists under another role.
   @override
   Future<Either<Failure, AuthResult>> login({
     required String phone,
     required String password,
-  }) =>
-      _run(() async {
-        final response = await _api.login(phone: phone, password: password);
-        return _parseAuth(response);
-      });
+  }) async {
+    final result = await _run(() async {
+      final response = await _api.login(phone: phone, password: password);
+      return _parseAuth(response);
+    });
+    return result.flatMap((auth) {
+      if (auth.user.isRider) return Right(auth);
+      appLogger.w('[Auth] login refused: account ${auth.user.id} has role '
+          '"${auth.user.role}", not a rider');
+      return const Left(_invalidCredentials);
+    });
+  }
 
   @override
   Future<Either<Failure, void>> sendPhoneCode({required String phone}) =>

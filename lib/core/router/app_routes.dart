@@ -17,6 +17,10 @@ abstract final class AppRoutes {
   static const notifications = '/dashboard/notifications';
   static const chat = '/dashboard/chat';
   static const settings = '/dashboard/settings';
+
+  /// Reason + password, then a final confirmation — the same flow as the
+  /// customer/vendor app.
+  static const deleteAccount = '/dashboard/delete-account';
   static const walletTransactions = '/dashboard/wallet/transactions';
   static const walletWithdrawals = '/dashboard/wallet/withdrawals';
   static const helpSupport = '/dashboard/help-support';

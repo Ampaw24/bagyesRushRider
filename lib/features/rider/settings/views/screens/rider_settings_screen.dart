@@ -9,7 +9,6 @@ import 'package:delivery_boy/core/router/app_routes.dart';
 import 'package:delivery_boy/core/services/user_session_manager.dart';
 import 'package:delivery_boy/core/widgets/custom_dialogs.dart';
 import 'package:delivery_boy/features/rider/auth/views/widgets/change_password_sheet.dart';
-import 'package:delivery_boy/features/rider/auth/views/widgets/delete_account_sheet.dart';
 import 'package:delivery_boy/features/rider/auth/views/widgets/phone_change_flow_sheet.dart';
 import 'package:hugeicons/hugeicons.dart';
 
@@ -287,11 +286,11 @@ class _RiderSettingsScreenState extends ConsumerState<RiderSettingsScreen> {
     CustomDialog.showConfirmation(
       context: context,
       title: 'Delete Account',
-      subtitle:
-          'This permanently deletes your account and all associated data. '
-          'This action cannot be undone.',
+      subtitle: 'This action is permanent and cannot be undone. All your '
+          'delivery history and personal data will be permanently deleted.',
       confirmText: 'Continue',
-      onConfirm: () => DeleteAccountSheet.show(context),
+      cancelText: 'Cancel',
+      onConfirm: () => context.push(AppRoutes.deleteAccount),
     );
   }
 }

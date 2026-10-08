@@ -8,6 +8,7 @@ import 'package:delivery_boy/core/widgets/drag_handle.dart';
 import 'package:delivery_boy/features/rider/chat/models/rider_chat_message_model.dart';
 import 'package:delivery_boy/features/rider/chat/providers/rider_chat_thread_args.dart';
 import 'package:delivery_boy/features/rider/chat/providers/rider_chat_thread_providers.dart';
+import 'package:delivery_boy/features/rider/chat/views/widgets/rider_chat_avatar.dart';
 import 'package:delivery_boy/features/rider/chat/views/widgets/rider_chat_composer.dart';
 import 'package:delivery_boy/features/rider/chat/views/widgets/rider_chat_timeline.dart';
 import 'package:delivery_boy/features/rider/chat/views/widgets/rider_message_bubble.dart';
@@ -40,6 +41,7 @@ class _RiderChatThreadSheetBody extends ConsumerWidget {
     final w = MediaQuery.sizeOf(context).width;
     final state = ref.watch(riderChatThreadProvider(args));
     final notifier = ref.read(riderChatThreadProvider(args).notifier);
+    final peerName = state.conversation?.counterpart?.name ?? args.peerName ?? 'Customer';
 
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
@@ -87,6 +89,8 @@ class _RiderChatThreadSheetBody extends ConsumerWidget {
                         w: w,
                         scrollController: scrollController,
                         messages: state.messages,
+                        peerName: peerName,
+                        peerPhotoUrl: args.peerPhotoUrl,
                         isLoadingOlder: state.isLoadingOlder,
                         peerReadAt: state.peerReadAt,
                         peerTyping: state.peerTyping,
@@ -127,12 +131,6 @@ class _SheetHeader extends StatelessWidget {
   final RiderChatThreadArgs args;
   final RiderChatThreadState state;
 
-  String _initials(String name) {
-    final parts = name.trim().split(RegExp(r'\s+')).where((p) => p.isNotEmpty);
-    final letters = parts.take(2).map((p) => p[0].toUpperCase()).join();
-    return letters.isEmpty ? '?' : letters;
-  }
-
   @override
   Widget build(BuildContext context) {
     final conversation = state.conversation;
@@ -147,18 +145,10 @@ class _SheetHeader extends StatelessWidget {
       padding: EdgeInsets.fromLTRB(w * 0.045, 0, w * 0.03, w * 0.03),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: avatar / 2,
-            backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-            child: Text(
-              _initials(title),
-              style: TextStyle(
-                fontFamily: 'Roboto',
-                fontSize: (w * 0.038).clamp(14.0, 17.0),
-                fontWeight: FontWeight.w700,
-                color: AppColors.primary,
-              ),
-            ),
+          RiderChatAvatar(
+            name: title,
+            photoUrl: args.peerPhotoUrl,
+            size: avatar,
           ),
           SizedBox(width: w * 0.03),
           Expanded(
@@ -314,6 +304,8 @@ class _MessageList extends StatefulWidget {
     required this.w,
     required this.scrollController,
     required this.messages,
+    required this.peerName,
+    required this.peerPhotoUrl,
     required this.isLoadingOlder,
     required this.peerReadAt,
     required this.peerTyping,
@@ -324,6 +316,8 @@ class _MessageList extends StatefulWidget {
   final double w;
   final ScrollController scrollController;
   final List<RiderChatMessageModel> messages;
+  final String peerName;
+  final String? peerPhotoUrl;
   final bool isLoadingOlder;
   final DateTime? peerReadAt;
   final bool peerTyping;
@@ -368,14 +362,19 @@ class _MessageListState extends State<_MessageList> {
   Widget build(BuildContext context) {
     final w = widget.w;
     if (widget.messages.isEmpty && !widget.peerTyping) {
-      return _EmptyThread(w: w);
+      return _EmptyThread(w: w, peerName: widget.peerName, peerPhotoUrl: widget.peerPhotoUrl);
     }
 
     // The list is reversed (newest at the bottom, index 0), so for message i
     // the newer neighbour is i - 1 and the older one is i + 1.
     final descending = widget.messages.reversed.toList();
     final items = <Widget>[
-      if (widget.peerTyping) const RiderTypingIndicator(key: ValueKey('typing')),
+      if (widget.peerTyping)
+        RiderTypingIndicator(
+          key: const ValueKey('typing'),
+          peerName: widget.peerName,
+          peerPhotoUrl: widget.peerPhotoUrl,
+        ),
     ];
     final now = DateTime.now();
 
@@ -388,6 +387,8 @@ class _MessageListState extends State<_MessageList> {
       items.add(RiderMessageBubble(
         key: ValueKey(message.clientUuid ?? 'id-${message.id}'),
         message: message,
+        peerName: widget.peerName,
+        peerPhotoUrl: widget.peerPhotoUrl,
         isRead: message.isMine &&
             peerReadAt != null &&
             !message.createdAt.isAfter(peerReadAt),
@@ -429,9 +430,11 @@ class _MessageListState extends State<_MessageList> {
 }
 
 class _EmptyThread extends StatelessWidget {
-  const _EmptyThread({required this.w});
+  const _EmptyThread({required this.w, required this.peerName, this.peerPhotoUrl});
 
   final double w;
+  final String peerName;
+  final String? peerPhotoUrl;
 
   @override
   Widget build(BuildContext context) {
@@ -441,22 +444,14 @@ class _EmptyThread extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: (w * 0.16).clamp(56.0, 72.0),
-              height: (w * 0.16).clamp(56.0, 72.0),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.08),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                HugeIcons.strokeRoundedBubbleChat,
-                size: (w * 0.07).clamp(24.0, 30.0),
-                color: AppColors.primary,
-              ),
+            RiderChatAvatar(
+              name: peerName,
+              photoUrl: peerPhotoUrl,
+              size: (w * 0.16).clamp(56.0, 72.0),
             ),
             SizedBox(height: w * 0.04),
             Text(
-              'No messages yet',
+              'Say hello to ${peerName.split(' ').first}',
               style: TextStyle(
                 fontFamily: 'Roboto',
                 fontSize: (w * 0.042).clamp(15.0, 18.0),
