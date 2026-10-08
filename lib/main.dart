@@ -10,7 +10,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 void main() {
-  // Guards against an unhandled-exception gap in pusher_client_socket: its
+  // Guards against a unhandled-exception gap in pusher_client_socket: its
   // private-channel auth call runs inside an un-await0ed async method with
   // no try/catch, so a network hiccup during a channel subscribe throws
   // into this zone instead of anywhere Realtime­Service can catch it.
