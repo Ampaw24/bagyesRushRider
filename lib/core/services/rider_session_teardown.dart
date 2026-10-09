@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:delivery_boy/core/di/service_locator.dart';
+import 'package:delivery_boy/core/services/rider_online_intent.dart';
 import 'package:delivery_boy/core/services/user_session_manager.dart';
 import 'package:delivery_boy/core/utils/network_utility.dart'
     show sessionRevision;
@@ -10,6 +13,7 @@ import 'package:delivery_boy/features/rider/notifications/providers/rider_notifi
 import 'package:delivery_boy/features/rider/orders/providers/rider_me_order_providers.dart';
 import 'package:delivery_boy/features/rider/profile/providers/rider_me_profile_providers.dart';
 import 'package:delivery_boy/features/rider/report/providers/rider_my_reports_providers.dart';
+import 'package:delivery_boy/features/rider/tracking/providers/rider_presence_providers.dart';
 import 'package:delivery_boy/features/rider/tracking/providers/rider_tracking_providers.dart';
 import 'package:delivery_boy/features/rider/wallet/providers/rider_me_wallet_providers.dart';
 import 'package:delivery_boy/features/rider/wallet/providers/rider_me_wallet_transactions_providers.dart';
@@ -40,8 +44,10 @@ class RiderSessionTeardown {
     // stops its GPS stream and drops buffered pings, and orders drops its
     // realtime order channels. Derived providers (online state, KYC status,
     // tracking mode) recompute from these on their own.
+    unawaited(RiderOnlineIntent.clear());
     for (final provider in <ProviderOrFamily>[
       riderTrackingProvider,
+      riderPresenceProvider,
       riderMeProfileProvider,
       riderMeOffersProvider,
       riderMeOrdersProvider,

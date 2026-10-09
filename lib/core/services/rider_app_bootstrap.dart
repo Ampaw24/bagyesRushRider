@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -10,6 +12,7 @@ import 'package:delivery_boy/core/services/user_session_manager.dart';
 import 'package:delivery_boy/core/utils/app_logger.dart';
 import 'package:delivery_boy/features/rider/auth/viewmodels/rider_auth_viewmodel.dart';
 import 'package:delivery_boy/features/rider/location/providers/rider_location_providers.dart';
+import 'package:delivery_boy/features/rider/orders/providers/rider_me_order_providers.dart';
 
 /// Non-critical startup work: OS permission prompts, the first GPS fix, and
 /// push-token registration.
@@ -55,6 +58,9 @@ class RiderAppBootstrap {
         onTokenRefresh: (_) => container
             .read(riderAuthProvider.notifier)
             .registerDeviceToken(),
+        onNewOrder: () => unawaited(
+          container.read(riderMeOffersProvider.notifier).load(silent: true),
+        ),
       );
     } catch (e, s) {
       appLogger.e('[Bootstrap] FCM init failed', error: e, stackTrace: s);
@@ -63,7 +69,9 @@ class RiderAppBootstrap {
 
   static Future<void> _initLocation(ProviderContainer container) async {
     try {
-      await container.read(riderLocationProvider.notifier).refresh();
+      await container
+          .read(riderLocationProvider.notifier)
+          .refresh(promptService: false, promptPermission: true);
     } catch (e, s) {
       appLogger.e('[Bootstrap] location init failed', error: e, stackTrace: s);
     }

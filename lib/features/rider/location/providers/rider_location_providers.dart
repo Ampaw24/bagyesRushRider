@@ -99,9 +99,15 @@ class RiderLocationNotifier extends Notifier<RiderLocationState> {
   /// Acquires a fresh fix and resolves it to a street address.
   ///
   /// Set [promptService] false for a silent refresh (app resume, pull to
-  /// refresh) — it then raises neither Android's "Turn on location" dialog
-  /// nor the permission prompt.
-  Future<void> refresh({bool promptService = true}) async {
+  /// refresh) — it then neither opens the system location settings when GPS
+  /// is off nor raises the permission prompt. [promptPermission] defaults to
+  /// follow [promptService]; the launch bootstrap sets it alone, so a rider
+  /// is asked for permission at startup without the Settings app being thrown
+  /// at them if GPS happens to be off.
+  Future<void> refresh({
+    bool promptService = true,
+    bool? promptPermission,
+  }) async {
     if (state.status == RiderLocationUiStatus.locating) return;
 
     state = state.copyWith(
@@ -111,7 +117,7 @@ class RiderLocationNotifier extends Notifier<RiderLocationState> {
 
     final fix = await RiderLocationService.getCurrentFix(
       promptService: promptService,
-      promptPermission: promptService,
+      promptPermission: promptPermission ?? promptService,
     );
 
     if (!fix.isSuccess) {

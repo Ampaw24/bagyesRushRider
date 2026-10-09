@@ -34,6 +34,10 @@ class RiderMeOfferModel extends Equatable {
   final String? expiresAt;
   final String? createdAt;
 
+  /// Whether this is a parcel delivery rather than a normal order. The offers
+  /// response isn't documented, so this is inferred — see [_looksLikeParcel].
+  final bool isParcel;
+
   const RiderMeOfferModel({
     required this.id,
     this.orderReference,
@@ -43,7 +47,31 @@ class RiderMeOfferModel extends Equatable {
     this.estimatedFare,
     this.expiresAt,
     this.createdAt,
+    this.isParcel = false,
   });
+
+  /// Best guess, since the offers payload is undocumented: a parcel if the
+  /// offer or its inline order names itself one (`type`, `order_type`,
+  /// `kind` or `service_type` containing "parcel"), carries a `parcel`
+  /// object / `parcel_id`, or lists `stops` (multi-stop is the parcel API's
+  /// model — see the "Parcel orders carry no `customer`" note in
+  /// [RiderMeOrderModel.fromJson]). Check against a real offer and tighten.
+  static bool _looksLikeParcel(
+    Map<String, dynamic> json,
+    Map<String, dynamic> order,
+  ) {
+    for (final source in [json, order]) {
+      for (final key in const ['type', 'order_type', 'kind', 'service_type']) {
+        if (jsonString(source[key])?.toLowerCase().contains('parcel') ?? false) {
+          return true;
+        }
+      }
+      if (source['parcel'] != null || source['parcel_id'] != null) return true;
+      final stops = source['stops'];
+      if (stops is List && stops.isNotEmpty) return true;
+    }
+    return false;
+  }
 
   factory RiderMeOfferModel.fromJson(Map<String, dynamic> json) {
     // An offer may carry its order inline (`order{…}`) rather than
@@ -79,11 +107,16 @@ class RiderMeOfferModel extends Equatable {
       ]),
       expiresAt: jsonString(json['expires_at']),
       createdAt: jsonString(json['created_at']),
+      isParcel: _looksLikeParcel(json, order),
     );
   }
 
+  /// [expiresAt] as a point in time, or null when absent or unparseable.
+  DateTime? get expiresAtTime =>
+      expiresAt == null ? null : DateTime.tryParse(expiresAt!);
+
   @override
-  List<Object?> get props => [id, orderReference, expiresAt];
+  List<Object?> get props => [id, orderReference, expiresAt, isParcel];
 }
 
 /// One stop of a multi-stop delivery order.
@@ -103,6 +136,9 @@ class RiderMeOrderStopModel extends Equatable {
   final String? deliveredAt;
   final String? failureReason;
 
+  /// `waiting` — set once the rider has arrived at this stop; null before.
+  final RiderMeOrderWait? wait;
+
   const RiderMeOrderStopModel({
     required this.id,
     this.sequence,
@@ -115,6 +151,7 @@ class RiderMeOrderStopModel extends Equatable {
     this.deliveredToName,
     this.deliveredAt,
     this.failureReason,
+    this.wait,
   });
 
   bool get isDelivered => status == 'delivered';
@@ -143,11 +180,75 @@ class RiderMeOrderStopModel extends Equatable {
       deliveredToName: jsonString(json['delivered_to_name']),
       deliveredAt: jsonString(json['delivered_at']),
       failureReason: jsonString(json['failure_reason']),
+      wait: RiderMeOrderWait.fromJson(jsonMap(json['waiting'])),
     );
   }
 
   @override
-  List<Object?> get props => [id, status];
+  List<Object?> get props => [id, status, wait];
+}
+
+/// The wait window that starts when the rider arrives — the order-level
+/// `wait` object (`POST …/arrived-at-dropoff`, `GET …/orders/:id`) or a
+/// stop's `waiting` object (`POST …/stops/:id/arrived`). Once it runs out the
+/// rider may give up (`POST …/unreachable`, or `…/stops/:id/fail`).
+class RiderMeOrderWait extends Equatable {
+  final DateTime? startedAt;
+  final DateTime? expiresAt;
+
+  /// Server-computed seconds left at the moment the response was built.
+  final int? secondsLeft;
+  final bool hasExpired;
+
+  /// When this payload reached the device. [secondsLeft] is counted down from
+  /// here, so the countdown follows the server's clock rather than a phone
+  /// clock that may be set wrong.
+  final DateTime receivedAt;
+
+  const RiderMeOrderWait({
+    this.startedAt,
+    this.expiresAt,
+    this.secondsLeft,
+    this.hasExpired = false,
+    required this.receivedAt,
+  });
+
+  /// Null when the payload has no `wait` object (not arrived yet).
+  static RiderMeOrderWait? fromJson(Map<String, dynamic>? json) {
+    if (json == null) return null;
+    return RiderMeOrderWait(
+      // A stop's `waiting` object calls the start `since`.
+      startedAt: DateTime.tryParse(
+          firstString([json['started_at'], json['since']]) ?? ''),
+      expiresAt: DateTime.tryParse(jsonString(json['expires_at']) ?? ''),
+      secondsLeft: jsonInt(json['seconds_left']),
+      hasExpired: RiderMeOrderModel._isTrue(json['has_expired']),
+      receivedAt: DateTime.now(),
+    );
+  }
+
+  /// Full length of the window, when the server sent both ends of it.
+  Duration? get total => (startedAt != null && expiresAt != null)
+      ? expiresAt!.difference(startedAt!)
+      : null;
+
+  /// Time left at [now]; [Duration.zero] once the window is over.
+  Duration remainingAt(DateTime now) {
+    if (hasExpired) return Duration.zero;
+    final Duration left;
+    if (secondsLeft != null) {
+      left = Duration(seconds: secondsLeft!) - now.difference(receivedAt);
+    } else if (expiresAt != null) {
+      left = expiresAt!.difference(now);
+    } else {
+      return Duration.zero;
+    }
+    return left.isNegative ? Duration.zero : left;
+  }
+
+  @override
+  List<Object?> get props =>
+      [startedAt, expiresAt, secondsLeft, hasExpired, receivedAt];
 }
 
 /// A rider's order — `GET /rider/me/orders`, `GET /rider/me/orders/:id`.
@@ -171,6 +272,23 @@ class RiderMeOrderModel extends Equatable {
   final String? createdAt;
   final String? updatedAt;
 
+  /// `parcel.requires_pickup_code` — true on a parcel the *customer is
+  /// receiving*. The sender was texted a 4-digit collection code, and the
+  /// rider typing it into `pick-up` (as `pickup_pin`) proves they are the
+  /// courier that message named. False for food and for parcels the customer
+  /// is sending, where the server ignores the field.
+  final bool requiresPickupCode;
+
+  /// `timeline.arrived_at_dropoff` — when the rider reached the drop-off.
+  final String? arrivedAtDropoffAt;
+
+  /// The customer wait window; null until the rider arrives at the drop-off.
+  final RiderMeOrderWait? wait;
+
+  /// `can_give_up` — the server says the rider may mark the customer
+  /// unreachable now. Null when the payload doesn't say.
+  final bool? canGiveUp;
+
   const RiderMeOrderModel({
     required this.id,
     this.reference,
@@ -187,10 +305,19 @@ class RiderMeOrderModel extends Equatable {
     this.stops = const [],
     this.createdAt,
     this.updatedAt,
+    this.requiresPickupCode = false,
+    this.arrivedAtDropoffAt,
+    this.wait,
+    this.canGiveUp,
   });
 
   bool get isActive => !_kRiderMeTerminalStatuses.contains(status);
   bool get isMultiStop => stops.length > 1;
+
+  /// The payload says the rider already reached a single drop-off. Multi-stop
+  /// orders arrive per stop, so this doesn't describe them.
+  bool get hasArrivedAtDropoff =>
+      !isMultiStop && (arrivedAtDropoffAt != null || wait != null);
   String get amountFormatted =>
       amount != null ? 'GHS ${amount!.toStringAsFixed(2)}' : '';
 
@@ -210,6 +337,10 @@ class RiderMeOrderModel extends Equatable {
     List<RiderMeOrderStopModel>? stops,
     String? createdAt,
     String? updatedAt,
+    bool? requiresPickupCode,
+    String? arrivedAtDropoffAt,
+    RiderMeOrderWait? wait,
+    bool? canGiveUp,
   }) =>
       RiderMeOrderModel(
         id: id ?? this.id,
@@ -227,6 +358,10 @@ class RiderMeOrderModel extends Equatable {
         stops: stops ?? this.stops,
         createdAt: createdAt ?? this.createdAt,
         updatedAt: updatedAt ?? this.updatedAt,
+        requiresPickupCode: requiresPickupCode ?? this.requiresPickupCode,
+        arrivedAtDropoffAt: arrivedAtDropoffAt ?? this.arrivedAtDropoffAt,
+        wait: wait ?? this.wait,
+        canGiveUp: canGiveUp ?? this.canGiveUp,
       );
 
   factory RiderMeOrderModel.fromJson(Map<String, dynamic> json) {
@@ -266,11 +401,23 @@ class RiderMeOrderModel extends Equatable {
       stops: stops,
       createdAt: jsonString(json['created_at']),
       updatedAt: jsonString(json['updated_at']),
+      requiresPickupCode:
+          _isTrue(jsonMap(json['parcel'])?['requires_pickup_code']),
+      arrivedAtDropoffAt:
+          jsonString(jsonMap(json['timeline'])?['arrived_at_dropoff']),
+      wait: RiderMeOrderWait.fromJson(jsonMap(json['wait'])),
+      canGiveUp:
+          json['can_give_up'] == null ? null : _isTrue(json['can_give_up']),
     );
   }
 
+  /// Laravel booleans arrive as `true`, `1` or `"1"` depending on the cast.
+  static bool _isTrue(Object? value) =>
+      value == true || value == 1 || value == '1' || value == 'true';
+
   @override
-  List<Object?> get props => [id, status, amount];
+  List<Object?> get props =>
+      [id, status, amount, requiresPickupCode, wait, canGiveUp];
 }
 
 /// Reads the order fields shared by orders and offers from either the flat

@@ -7,12 +7,17 @@ import 'package:delivery_boy/constant/app_theme.dart';
 class OtpInputField extends StatefulWidget {
   final int digitCount;
   final void Function(String otp)? onCompleted;
+
+  /// Called with whatever is currently typed on every edit, complete or not —
+  /// for callers that must notice a digit being deleted after completion.
+  final void Function(String otp)? onChanged;
   final bool enabled;
 
   const OtpInputField({
     super.key,
     this.digitCount = 6,
     this.onCompleted,
+    this.onChanged,
     this.enabled = true,
   });
 
@@ -57,6 +62,7 @@ class OtpInputFieldState extends State<OtpInputField> {
   }
 
   void _onDigitChanged(int index, String value) {
+    widget.onChanged?.call(_currentOtp);
     if (value.length == 1) {
       if (index < widget.digitCount - 1) {
         _focusNodes[index + 1].requestFocus();
@@ -81,6 +87,7 @@ class OtpInputFieldState extends State<OtpInputField> {
     if (_controllers[index].text.isEmpty && index > 0) {
       _focusNodes[index - 1].requestFocus();
       _controllers[index - 1].clear();
+      widget.onChanged?.call(_currentOtp);
       setState(() {});
     }
   }

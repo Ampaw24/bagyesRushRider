@@ -55,12 +55,12 @@ class RiderMeOrderRepositoryImpl implements RiderMeOrderRepository {
       _run(() => _api.arrivedAtPickup(orderId));
 
   @override
-  Future<Either<Failure, void>> pickUpOrder(int orderId) =>
-      _run(() => _api.pickUpOrder(orderId));
+  Future<Either<Failure, void>> pickUpOrder(int orderId, {String? pickupPin}) =>
+      _run(() => _api.pickUpOrder(orderId, pickupPin: pickupPin));
 
   @override
-  Future<Either<Failure, void>> arrivedAtDropoff(int orderId) =>
-      _run(() => _api.arrivedAtDropoff(orderId));
+  Future<Either<Failure, RiderMeOrderModel?>> arrivedAtDropoff(int orderId) =>
+      _run(() async => _orderFrom(await _api.arrivedAtDropoff(orderId)));
 
   @override
   Future<Either<Failure, void>> deliverOrder(
@@ -86,8 +86,9 @@ class RiderMeOrderRepositoryImpl implements RiderMeOrderRepository {
       _run(() => _api.markUnreachable(orderId, reason: reason));
 
   @override
-  Future<Either<Failure, void>> arriveAtStop(int orderId, int stopId) =>
-      _run(() => _api.arriveAtStop(orderId, stopId));
+  Future<Either<Failure, RiderMeOrderModel?>> arriveAtStop(
+          int orderId, int stopId) =>
+      _run(() async => _orderFrom(await _api.arriveAtStop(orderId, stopId)));
 
   @override
   Future<Either<Failure, void>> deliverStop(
@@ -112,6 +113,18 @@ class RiderMeOrderRepositoryImpl implements RiderMeOrderRepository {
     required String reason,
   }) =>
       _run(() => _api.failStop(orderId, stopId, reason: reason));
+
+  /// The order an arrival call answers with. The arrival is already recorded
+  /// server-side, so an unreadable body must not turn into a failure — null
+  /// tells the caller to re-fetch instead.
+  RiderMeOrderModel? _orderFrom(Response<dynamic> response) {
+    try {
+      final order = RiderMeOrderModel.fromJson(_asMap(response.data));
+      return order.id == 0 ? null : order;
+    } catch (_) {
+      return null;
+    }
+  }
 
   /// Unwraps a Laravel API Resource envelope (`{"data": {...}}`); falls
   /// back to the raw body if it isn't wrapped.

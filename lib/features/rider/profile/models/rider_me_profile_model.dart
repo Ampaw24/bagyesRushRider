@@ -431,6 +431,18 @@ class RiderMeLocationPing extends Equatable {
     required this.recordedAt,
   });
 
+  /// Reads back what [toJson] wrote — used to restore pings buffered to disk
+  /// before the process was killed.
+  factory RiderMeLocationPing.fromJson(Map<String, dynamic> json) =>
+      RiderMeLocationPing(
+        latitude: (json['latitude'] as num).toDouble(),
+        longitude: (json['longitude'] as num).toDouble(),
+        heading: (json['heading'] as num?)?.toDouble(),
+        speedKph: (json['speed_kph'] as num?)?.toDouble(),
+        accuracyM: (json['accuracy_m'] as num?)?.toDouble(),
+        recordedAt: DateTime.parse(json['recorded_at'] as String),
+      );
+
   Map<String, dynamic> toJson() => {
         'latitude': latitude,
         'longitude': longitude,

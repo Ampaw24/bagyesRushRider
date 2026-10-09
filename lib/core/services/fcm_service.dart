@@ -50,6 +50,25 @@ class FcmService {
     importance: Importance.high,
   );
 
+  /// Incoming delivery offers. Its own channel because an Android channel's
+  /// sound is fixed at creation: this one carries the custom `new_order` tone
+  /// (res/raw/new_order.mp3) at maximum importance. The backend selects it by
+  /// sending `android.notification.channel_id = bagyes_rush_new_orders` (and
+  /// `aps.sound = new_order.caf` for iOS) on offer/order pushes — without
+  /// that, the push lands on [_androidChannel] with the default sound.
+  static const _ordersChannel = AndroidNotificationChannel(
+    'bagyes_rush_new_orders',
+    'New Orders',
+    description: 'Incoming delivery requests',
+    importance: Importance.max,
+    playSound: true,
+    enableVibration: true,
+    sound: RawResourceAndroidNotificationSound('new_order'),
+  );
+
+  /// The `type` the backend puts in the data payload of an offer/order push.
+  static const newOrderType = 'new_order';
+
   /// The single initialized plugin instance — exposed so other local
   /// notifications (e.g. [NavigationReturnNotifier]) reuse the same
   /// platform channel, tap-routing and Android channel setup this class
@@ -69,6 +88,7 @@ class FcmService {
   static Future<void> initialize({
     void Function(String route)? onNotificationTap,
     void Function(String token)? onTokenRefresh,
+    VoidCallback? onNewOrder,
   }) async {
     // ── Permission ───────────────────────────────────────────────────────────
     await ensurePermission();
@@ -112,6 +132,10 @@ class FcmService {
         .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>()
         ?.createNotificationChannel(_androidChannel);
+    await _localNotifications
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(_ordersChannel);
 
     // Foreground messages. iOS presents them natively, with the options set
     // here. They must be set: firebase_messaging registers before
@@ -126,12 +150,25 @@ class FcmService {
         badge: true,
         sound: true,
       );
-    } else {
-      FirebaseMessaging.onMessage.listen(_showLocalNotification);
     }
+    FirebaseMessaging.onMessage.listen((message) {
+      // A new offer: reload so the incoming-offer dialog appears now rather
+      // than on the next poll. That dialog rings and shows the offer itself,
+      // so Android doesn't also post a notification for it (two alerts for
+      // one offer).
+      if (_isNewOrder(message)) {
+        onNewOrder?.call();
+        if (defaultTargetPlatform == TargetPlatform.android) return;
+      }
+      if (defaultTargetPlatform != TargetPlatform.iOS) {
+        _showLocalNotification(message);
+      }
+    });
 
-    // Notification tap while app was in background
+    // Notification tap while app was in background. An offer tapped from the
+    // tray also reloads, since the app was frozen while it arrived.
     FirebaseMessaging.onMessageOpenedApp.listen((message) {
+      if (_isNewOrder(message)) onNewOrder?.call();
       final route = _routeFromMessage(message);
       onNotificationTap?.call(route);
     });
@@ -269,6 +306,9 @@ class FcmService {
       payload: _routeFromMessage(message),
     );
   }
+
+  static bool _isNewOrder(RemoteMessage message) =>
+      message.data['type']?.toString() == newOrderType;
 
   static String _routeFromMessage(RemoteMessage message) {
     final type = message.data['type']?.toString();

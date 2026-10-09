@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:equatable/equatable.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:delivery_boy/core/di/service_locator.dart';
+import 'package:delivery_boy/core/services/rider_online_intent.dart';
 import 'package:delivery_boy/features/rider/shared/rider_me_action_status.dart';
 import 'package:delivery_boy/features/rider/profile/models/rider_me_profile_model.dart';
 import 'package:delivery_boy/features/rider/profile/repositories/rider_me_profile_repository.dart';
@@ -59,6 +62,18 @@ class RiderMeProfileNotifier extends Notifier<RiderMeProfileState> {
     result.fold(
       (f) => state = state.copyWith(
           status: RiderMeProfileStatus.error, errorMessage: f.message),
+      (profile) => state = state.copyWith(
+          status: RiderMeProfileStatus.loaded, profile: profile),
+    );
+  }
+
+  /// Re-reads the profile without the `loading` transition and ignoring a
+  /// failure — for the app-resume re-sync, which must not flash placeholders
+  /// or replace a good profile with an error because the network blipped.
+  Future<void> refreshSilently() async {
+    final result = await _repo.getMe();
+    result.fold(
+      (_) {},
       (profile) => state = state.copyWith(
           status: RiderMeProfileStatus.loaded, profile: profile),
     );
@@ -149,6 +164,7 @@ class RiderMeProfileNotifier extends Notifier<RiderMeProfileState> {
           actionStatus: RiderMeActionStatus.success,
           profile: state.profile?.copyWith(isOnline: isOnline),
         );
+        unawaited(RiderOnlineIntent.write(isOnline));
         return true;
       },
     );

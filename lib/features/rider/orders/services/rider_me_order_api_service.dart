@@ -37,8 +37,15 @@ class RiderMeOrderApiService {
   Future<Response<dynamic>> arrivedAtPickup(int id) =>
       _dio.post(ApiEndpoints.riderMeOrderArrivedAtPickup(id));
 
-  Future<Response<dynamic>> pickUpOrder(int id) =>
-      _dio.post(ApiEndpoints.riderMeOrderPickUp(id));
+  /// `pickup_pin` (`digits:4`, string) is required on a parcel the customer
+  /// is receiving and ignored on everything else, so it is only sent when
+  /// there is one. Pass the raw string from the code input, never an int —
+  /// a leading zero ("0412") would be lost and the request would 422.
+  Future<Response<dynamic>> pickUpOrder(int id, {String? pickupPin}) =>
+      _dio.post(
+        ApiEndpoints.riderMeOrderPickUp(id),
+        data: pickupPin == null ? null : {'pickup_pin': pickupPin},
+      );
 
   Future<Response<dynamic>> arrivedAtDropoff(int id) =>
       _dio.post(ApiEndpoints.riderMeOrderArrivedAtDropoff(id));

@@ -16,6 +16,8 @@ import 'package:delivery_boy/features/rider/orders/models/rider_delivery_stage.d
 import 'package:delivery_boy/features/rider/orders/models/rider_me_order_model.dart';
 import 'package:delivery_boy/features/rider/orders/providers/rider_me_order_providers.dart';
 import 'package:delivery_boy/features/rider/orders/views/widgets/delivery_confirmation_sheet.dart';
+import 'package:delivery_boy/features/rider/orders/views/widgets/dropoff_wait_countdown.dart';
+import 'package:delivery_boy/features/rider/orders/views/widgets/pickup_code_sheet.dart';
 import 'package:delivery_boy/features/rider/orders/views/widgets/reason_input_sheet.dart';
 import 'package:delivery_boy/features/rider/orders/views/widgets/rider_delivery_progress.dart';
 import 'package:delivery_boy/features/rider/orders/views/widgets/rider_me_order_status.dart';
@@ -77,6 +79,53 @@ class _RiderMeOrderDetailSheetState
     }
   }
 
+  /// A parcel the customer is receiving needs the sender's 4-digit collection
+  /// code (see [PickupCodeSheet]); everything else is a bare confirmation.
+  ///
+  /// The order's `requiresPickupCode` flag decides, but a payload that didn't
+  /// carry it must not let a rider through to a dead end: if the bare call is
+  /// refused for want of `pickup_pin`, the code sheet opens instead of an
+  /// error dialog.
+  Future<void> _confirmPickup(RiderMeOrderModel order) async {
+    if (_actionBusy) return;
+    if (order.requiresPickupCode) {
+      await _openPickupCodeSheet(order.id);
+      return;
+    }
+
+    setState(() => _actionBusy = true);
+    final notifier = ref.read(riderMeOrdersProvider.notifier);
+    final ok = await notifier.pickUpOrder(order.id);
+    if (!mounted) return;
+    setState(() => _actionBusy = false);
+
+    if (ok) {
+      HapticFeedback.mediumImpact();
+      return;
+    }
+    final state = ref.read(riderMeOrdersProvider);
+    if (state.actionFieldErrors?.containsKey('pickup_pin') ?? false) {
+      await _openPickupCodeSheet(order.id);
+      return;
+    }
+    CustomDialog.showError(
+      context: context,
+      title: "Couldn't Update Order",
+      subtitle: state.actionMessage ?? 'Action failed',
+    );
+  }
+
+  Future<void> _openPickupCodeSheet(int orderId) async {
+    final confirmed = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => PickupCodeSheet(orderId: orderId),
+    );
+    // The sheet's own success already moved the stage on.
+    if (confirmed == true) HapticFeedback.mediumImpact();
+  }
+
   Future<void> _openDeliverySheet(int orderId, {int? stopId}) async {
     await showModalBottomSheet<bool>(
       context: context,
@@ -98,6 +147,7 @@ class _RiderMeOrderDetailSheetState
       builder: (_) => ReasonInputSheet(
         title: 'Release this order?',
         submitLabel: 'Release',
+        failureMessage: () => ref.read(riderMeOrdersProvider).actionMessage,
         onSubmit: (reason) =>
             ref.read(riderMeOrdersProvider.notifier).releaseOrder(
                   orderId,
@@ -117,6 +167,7 @@ class _RiderMeOrderDetailSheetState
       builder: (_) => ReasonInputSheet(
         title: "Can't reach the customer?",
         submitLabel: 'Mark Unreachable',
+        failureMessage: () => ref.read(riderMeOrdersProvider).actionMessage,
         onSubmit: (reason) =>
             ref.read(riderMeOrdersProvider.notifier).markUnreachable(
                   orderId,
@@ -299,35 +350,7 @@ class _RiderMeOrderDetailSheetState
 
                     // ── Having trouble? ────────────────────────────────────
                     const OrderSectionLabel(title: 'Having trouble?'),
-                    OrderIssueList(
-                      actions: [
-                        if (isOpen) ...[
-                          OrderIssueAction(
-                            icon: HugeIcons.strokeRoundedCallBlocked,
-                            title: "Can't reach customer",
-                            subtitle: 'Mark as unreachable after waiting',
-                            destructive: true,
-                            onTap: _actionBusy
-                                ? null
-                                : () => _openUnreachableSheet(order.id),
-                          ),
-                          OrderIssueAction(
-                            icon: HugeIcons.strokeRoundedArrowTurnBackward,
-                            title: 'Release order',
-                            subtitle: 'Hand it back so another rider can take it',
-                            onTap: _actionBusy
-                                ? null
-                                : () => _openReleaseSheet(order.id),
-                          ),
-                        ],
-                        OrderIssueAction(
-                          icon: HugeIcons.strokeRoundedFlag02,
-                          title: 'Report a problem',
-                          subtitle: 'Tell us what went wrong with this delivery',
-                          onTap: () => _openReport(order),
-                        ),
-                      ],
-                    ),
+                    _buildIssueList(order, isOpen, stage),
                   ],
                 ),
               ),
@@ -353,6 +376,66 @@ class _RiderMeOrderDetailSheetState
         );
       },
     );
+  }
+
+  /// While the customer wait window is running, "Can't reach customer" is
+  /// locked behind its countdown; everywhere else the server decides.
+  Widget _buildIssueList(
+    RiderMeOrderModel order,
+    bool isOpen,
+    RiderDeliveryStage stage,
+  ) {
+    final wait = stage == RiderDeliveryStage.arrivedAtDropoff ? order.wait : null;
+    if (wait == null) {
+      return OrderIssueList(actions: _issueActions(order, isOpen));
+    }
+    return WaitCountdownBuilder(
+      wait: wait,
+      builder: (_, remaining) => OrderIssueList(
+        actions: _issueActions(
+          order,
+          isOpen,
+          waitRemaining: remaining,
+        ),
+      ),
+    );
+  }
+
+  List<OrderIssueAction> _issueActions(
+    RiderMeOrderModel order,
+    bool isOpen, {
+    Duration? waitRemaining,
+  }) {
+    final waiting = waitRemaining != null &&
+        waitRemaining > Duration.zero &&
+        order.canGiveUp != true;
+    return [
+      if (isOpen) ...[
+        OrderIssueAction(
+          icon: HugeIcons.strokeRoundedCallBlocked,
+          title: "Can't reach customer",
+          subtitle: waiting
+              ? 'Available in ${formatWaitClock(waitRemaining)}'
+              : 'Mark as unreachable after waiting',
+          destructive: true,
+          onTap: (_actionBusy || waiting)
+              ? null
+              : () => _openUnreachableSheet(order.id),
+        ),
+        OrderIssueAction(
+          icon: HugeIcons.strokeRoundedArrowTurnBackward,
+          title: 'Release order',
+          subtitle: 'Hand it back so another rider can take it',
+          onTap: _actionBusy ? null : () => _openReleaseSheet(order.id),
+        ),
+      ],
+      OrderIssueAction(
+        icon: HugeIcons.strokeRoundedFlag02,
+        title: 'Report a problem',
+        subtitle: 'Tell us what went wrong with this delivery',
+        onTap: () => _openReport(order),
+      ),
+    ];
   }
 
   Widget _closeButton() {
@@ -389,13 +472,11 @@ class _RiderMeOrderDetailSheetState
 
       case RiderDeliveryStage.arrivedAtPickup:
         return AppGradientButton(
-          label: 'Confirm Pickup',
+          label: order.requiresPickupCode
+              ? 'Enter Collection Code'
+              : 'Confirm Pickup',
           isLoading: _actionBusy,
-          onPressed: _actionBusy
-              ? null
-              : () => _runSimpleAction(() => ref
-                  .read(riderMeOrdersProvider.notifier)
-                  .pickUpOrder(order.id)),
+          onPressed: _actionBusy ? null : () => _confirmPickup(order),
         );
 
       case RiderDeliveryStage.pickedUp:
@@ -423,9 +504,26 @@ class _RiderMeOrderDetailSheetState
         );
 
       case RiderDeliveryStage.arrivedAtDropoff:
-        return AppGradientButton(
+        final wait = order.wait;
+        final completeButton = AppGradientButton(
           label: 'Complete Delivery',
           onPressed: () => _openDeliverySheet(order.id),
+        );
+        if (wait == null) return completeButton;
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            WaitCountdownBuilder(
+              wait: wait,
+              builder: (_, remaining) => DropoffWaitBanner(
+                remaining: remaining,
+                total: wait.total,
+                onGiveUp: _actionBusy ? null : () => _openUnreachableSheet(order.id),
+              ),
+            ),
+            SizedBox(height: MediaQuery.sizeOf(context).width * 0.03),
+            completeButton,
+          ],
         );
 
       case RiderDeliveryStage.delivered:
@@ -463,11 +561,16 @@ class _MultiStopPanel extends ConsumerWidget {
             child: _StopTile(
               orderId: order.id,
               stop: stop,
-              hasArrived: ordersState.hasArrived(order.id, stop.id),
+              // A stop's `waiting` window also proves arrival, so this holds
+              // after an app restart too.
+              hasArrived: ordersState.hasArrived(order.id, stop.id) ||
+                  stop.wait != null,
               busy: busy,
               onArrive: () => onArrive(stop.id),
               onDeliver: () => onDeliver(stop.id),
               onFail: (reason) => onFail(stop.id, reason),
+              failureMessage: () =>
+                  ref.read(riderMeOrdersProvider).actionMessage,
             ),
           ),
       ],
@@ -483,6 +586,7 @@ class _StopTile extends StatelessWidget {
   final VoidCallback onArrive;
   final VoidCallback onDeliver;
   final Future<bool> Function(String reason) onFail;
+  final String? Function() failureMessage;
 
   const _StopTile({
     required this.orderId,
@@ -492,6 +596,7 @@ class _StopTile extends StatelessWidget {
     required this.onArrive,
     required this.onDeliver,
     required this.onFail,
+    required this.failureMessage,
   });
 
   void _openFailSheet(BuildContext context) {
@@ -503,8 +608,69 @@ class _StopTile extends StatelessWidget {
         title: 'Why did this stop fail?',
         submitLabel: 'Report Failed Stop',
         requireNonEmpty: true,
+        failureMessage: failureMessage,
         onSubmit: onFail,
       ),
+    );
+  }
+
+  /// Waiting at the stop: the Fail button stays out of reach until the wait
+  /// window ends, then the banner offers it. Deliver is always available.
+  Widget _buildWaitingActions(BuildContext context, RiderMeOrderWait wait) {
+    final gap = MediaQuery.sizeOf(context).width * 0.03;
+    return Column(
+      children: [
+        WaitCountdownBuilder(
+          wait: wait,
+          builder: (_, remaining) => DropoffWaitBanner(
+            remaining: remaining,
+            total: wait.total,
+            onGiveUp: busy ? null : () => _openFailSheet(context),
+            giveUpLabel: 'Fail this stop',
+            waitingSubtitle: 'The recipient has been told you are here.',
+            expiredSubtitle:
+                'Still no answer? You can mark this stop as failed.',
+          ),
+        ),
+        SizedBox(height: gap),
+        AppGradientButton(
+          label: 'Deliver',
+          height: 38,
+          onPressed: busy ? null : onDeliver,
+        ),
+      ],
+    );
+  }
+
+  /// Arrived but no wait window in the payload — Fail and Deliver side by
+  /// side, the server deciding whether a fail is allowed yet.
+  Widget _buildArrivedActions(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: OutlinedButton(
+            onPressed: busy ? null : () => _openFailSheet(context),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              side: const BorderSide(color: AppColors.error),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+            ),
+            child: const Text('Fail',
+                style:
+                    TextStyle(fontFamily: 'Roboto', color: AppColors.error)),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          flex: 2,
+          child: AppGradientButton(
+            label: 'Deliver',
+            height: 38,
+            onPressed: busy ? null : onDeliver,
+          ),
+        ),
+      ],
     );
   }
 
@@ -526,33 +692,9 @@ class _StopTile extends StatelessWidget {
     } else if (hasArrived) {
       statusText = 'Arrived';
       statusColor = AppColors.primary;
-      action = Row(
-        children: [
-          Expanded(
-            child: OutlinedButton(
-              onPressed: busy ? null : () => _openFailSheet(context),
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                side: const BorderSide(color: AppColors.error),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
-              ),
-              child: const Text('Fail',
-                  style:
-                      TextStyle(fontFamily: 'Roboto', color: AppColors.error)),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            flex: 2,
-            child: AppGradientButton(
-              label: 'Deliver',
-              height: 38,
-              onPressed: busy ? null : onDeliver,
-            ),
-          ),
-        ],
-      );
+      action = stop.wait != null
+          ? _buildWaitingActions(context, stop.wait!)
+          : _buildArrivedActions(context);
     } else {
       statusText = 'Pending';
       statusColor = Colors.grey.shade400;

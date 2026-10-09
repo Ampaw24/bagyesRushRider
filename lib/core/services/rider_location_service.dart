@@ -1,8 +1,7 @@
 import 'dart:async';
 
-import 'package:flutter/services.dart';
 import 'package:geocoding/geocoding.dart' as geo;
-import 'package:location/location.dart' as loc;
+import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart' as ph;
 
 import 'package:delivery_boy/core/services/rider_places_service.dart';
@@ -16,6 +15,10 @@ enum RiderLocationStatus {
   timeout,
   error,
 }
+
+/// The app's own view of location permission, so callers don't depend on the
+/// location plugin's enums.
+enum RiderLocationPermission { granted, denied, deniedForever }
 
 /// A single point-in-time location reading.
 ///
@@ -37,84 +40,126 @@ class RiderLocationFix {
   bool get isSuccess => status == RiderLocationStatus.success;
 }
 
-/// One-shot location acquisition + reverse geocoding.
+/// One-shot location acquisition + reverse geocoding, and the permission
+/// checks around it.
 ///
 /// Deliberately plugin-only: no Riverpod, no BuildContext, no widgets. State
 /// lives in `riderLocationProvider`; this class just answers "where are we".
 ///
-/// Built on `package:location` rather than `geolocator` because
-/// [ensureServiceEnabled] can raise Android's in-app "Turn on location"
-/// dialog, letting the rider enable GPS without leaving the app — and because
-/// `RiderTrackingNotifier` already owns a `Location` instance, and two
-/// location plugins each holding their own CLLocationManager on iOS is a
-/// reliable way to get a permission callback that never fires.
+/// Built on `geolocator` because tracking needs two things the previous
+/// `location` plugin could not give: a real Android foreground service with a
+/// visible notification, and iOS background settings (no auto-pause). Both
+/// live in `RiderTrackingNotifier`'s stream settings. geolocator is the only
+/// location plugin in the app — two plugins each holding their own
+/// CLLocationManager on iOS is a reliable way to get a permission callback
+/// that never fires. (`permission_handler` is used only for the separate
+/// "Always" upgrade, which geolocator cannot request.)
 class RiderLocationService {
   RiderLocationService._();
 
   static const String unavailableAddress = 'Location unavailable';
 
-  static final loc.Location _location = loc.Location();
+  /// Status reads normally answer instantly; if the platform channel never
+  /// replies the caller must not hang with it (that pinned the home screen's
+  /// pull-to-refresh spinner). Prompts are NOT bounded — a rider may take as
+  /// long as they like to answer a dialog.
+  static const Duration _checkTimeout = Duration(seconds: 5);
 
   // Android and iOS each track exactly ONE in-flight permission request. A
   // second concurrent requestPermission() does not error — it simply never
   // resolves. The launch bootstrap, the home chip's retry tap and
   // RiderTrackingNotifier.startTracking can all fire at once, so they share
   // these futures instead of racing.
-  static Future<loc.PermissionStatus>? _pendingPermission;
-  static Future<bool>? _pendingService;
+  static Future<RiderLocationPermission>? _pendingPermission;
+  static Future<RiderLocationPermission>? _pendingAlways;
 
-  static Future<loc.PermissionStatus> ensurePermission() {
+  static Future<RiderLocationPermission> ensurePermission() {
     return _pendingPermission ??= _requestPermission()
         .whenComplete(() => _pendingPermission = null);
   }
 
-  // Mirrors _pendingPermission's de-dupe reasoning — startTracking() can be
-  // re-entered (idle -> active tier switch) while a prior request is still
-  // in flight.
-  static Future<bool>? _pendingBackgroundPermission;
-
-  /// Requests Android's separate "Allow all the time" grant
-  /// (`ACCESS_BACKGROUND_LOCATION`), without which `Location.enableBackgroundMode`
-  /// throws `PERMISSION_DENIED`. The `location` plugin's own
-  /// [ensurePermission] never asks for this — verified against its Android
-  /// source (`FlutterLocation.java`), which only ever requests
-  /// `ACCESS_FINE_LOCATION` — so `permission_handler` (already a dependency)
-  /// covers it instead.
-  ///
-  /// Foreground permission must already be granted before requesting this;
-  /// Android does not offer "all the time" as an option otherwise.
-  static Future<bool> ensureBackgroundPermission() {
-    return _pendingBackgroundPermission ??= _requestBackgroundPermission()
-        .whenComplete(() => _pendingBackgroundPermission = null);
+  /// Silent check — never raises a prompt.
+  static Future<RiderLocationPermission> currentPermission() async {
+    try {
+      final permission =
+          await Geolocator.checkPermission().timeout(_checkTimeout);
+      return _mapPermission(permission);
+    } catch (e, s) {
+      appLogger.e('[Location] permission check failed', error: e, stackTrace: s);
+      return RiderLocationPermission.denied;
+    }
   }
 
-  static Future<bool> _requestBackgroundPermission() async {
+  /// Whether the rider has granted "Allow all the time" (Android) / "Always"
+  /// (iOS). Silent. Background tracking needs it, so going online requires it.
+  static Future<bool> hasAlwaysPermission() async {
     try {
-      final current = await ph.Permission.locationAlways.status;
-      if (current.isGranted) return true;
-      final result = await ph.Permission.locationAlways.request();
-      return result.isGranted;
+      final permission =
+          await Geolocator.checkPermission().timeout(_checkTimeout);
+      return permission == LocationPermission.always;
     } catch (e, s) {
-      appLogger.e('[Location] background permission request failed',
-          error: e, stackTrace: s);
+      appLogger.e('[Location] always check failed', error: e, stackTrace: s);
       return false;
     }
   }
 
-  /// Checks whether location services (GPS) are on, and on Android offers the
-  /// in-app system dialog to switch them on when [prompt] is true.
-  static Future<bool> ensureServiceEnabled({bool prompt = true}) {
-    return _pendingService ??= _ensureService(prompt)
-        .whenComplete(() => _pendingService = null);
+  /// Walks the rider through foreground permission, then the separate
+  /// "Allow all the time" grant that Android 11+ and iOS both treat as a
+  /// second step. [RiderLocationPermission.granted] means *Always* here.
+  ///
+  /// Android offers the second step only as a Settings page, so the future
+  /// resolves when the rider comes back from it.
+  static Future<RiderLocationPermission> ensureAlwaysPermission() {
+    return _pendingAlways ??=
+        _requestAlways().whenComplete(() => _pendingAlways = null);
   }
 
-  /// `package:location` has no settings deep-link; permission_handler (already
-  /// a dependency — the selfie capture screen uses it) supplies one.
+  static Future<RiderLocationPermission> _requestAlways() async {
+    final foreground = await ensurePermission();
+    if (foreground != RiderLocationPermission.granted) return foreground;
+    if (await hasAlwaysPermission()) return RiderLocationPermission.granted;
+
+    try {
+      final result = await ph.Permission.locationAlways.request();
+      if (result.isPermanentlyDenied) {
+        return RiderLocationPermission.deniedForever;
+      }
+    } catch (e, s) {
+      appLogger.e('[Location] always request failed', error: e, stackTrace: s);
+    }
+
+    return await hasAlwaysPermission()
+        ? RiderLocationPermission.granted
+        : RiderLocationPermission.denied;
+  }
+
+  /// Whether location services (GPS) are switched on.
+  ///
+  /// geolocator has no in-app "turn on location" dialog (the old `location`
+  /// plugin did, on Android only). With [prompt] true the rider is sent to the
+  /// system location settings instead, and this still returns false — they
+  /// come back and the next resume refresh picks the change up. Only an
+  /// explicit rider tap should pass [prompt]; background callers must not
+  /// throw the Settings app at them.
+  static Future<bool> ensureServiceEnabled({bool prompt = false}) async {
+    try {
+      if (await Geolocator.isLocationServiceEnabled().timeout(_checkTimeout)) {
+        return true;
+      }
+      if (prompt) await Geolocator.openLocationSettings();
+      return false;
+    } catch (e, s) {
+      appLogger.e('[Location] service check failed', error: e, stackTrace: s);
+      return false;
+    }
+  }
+
   static Future<bool> openAppSettings() => ph.openAppSettings();
 
-  static bool isGranted(loc.PermissionStatus status) =>
-      status == loc.PermissionStatus.granted ||
-      status == loc.PermissionStatus.grantedLimited;
+  static Future<bool> openLocationSettings() => Geolocator.openLocationSettings();
+
+  static bool isGranted(RiderLocationPermission permission) =>
+      permission == RiderLocationPermission.granted;
 
   /// Acquires a fix and, unless [resolveAddress] is false, names it.
   ///
@@ -135,8 +180,8 @@ class RiderLocationService {
     // A silent refresh (e.g. on app resume) only checks: re-asking there
     // would pop the permission dialog every time the rider reopens the app.
     final permission =
-        promptPermission ? await ensurePermission() : await _currentPermission();
-    if (permission == loc.PermissionStatus.deniedForever) {
+        promptPermission ? await ensurePermission() : await currentPermission();
+    if (permission == RiderLocationPermission.deniedForever) {
       return const RiderLocationFix(
         status: RiderLocationStatus.permissionDeniedForever,
         address: unavailableAddress,
@@ -149,24 +194,31 @@ class RiderLocationService {
       );
     }
 
-    final loc.LocationData data;
+    final Position data;
     try {
-      // getLocation() takes no timeout of its own. Future.timeout does NOT
-      // cancel the underlying platform call — it only bounds how long we
-      // wait, which is the intent: a cold GPS start can outlast any UI
-      // budget, and a late result is simply discarded.
-      data = await _location.getLocation().timeout(timeLimit);
+      // `timeLimit` is enforced natively; the outer Future.timeout is a
+      // backstop for a platform call that never answers at all.
+      data = await Geolocator.getCurrentPosition(
+        locationSettings: LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: timeLimit,
+        ),
+      ).timeout(timeLimit + const Duration(seconds: 2));
     } on TimeoutException {
       appLogger.w('[Location] fix timed out after ${timeLimit.inSeconds}s');
       return const RiderLocationFix(
         status: RiderLocationStatus.timeout,
         address: unavailableAddress,
       );
-    } on PlatformException catch (e, s) {
-      // Thrown when permission is revoked from Settings mid-call.
-      appLogger.e('[Location] platform error', error: e, stackTrace: s);
+    } on PermissionDeniedException {
+      // Revoked from Settings mid-call.
       return const RiderLocationFix(
-        status: RiderLocationStatus.error,
+        status: RiderLocationStatus.permissionDenied,
+        address: unavailableAddress,
+      );
+    } on LocationServiceDisabledException {
+      return const RiderLocationFix(
+        status: RiderLocationStatus.serviceDisabled,
         address: unavailableAddress,
       );
     } catch (e, s) {
@@ -179,12 +231,6 @@ class RiderLocationService {
 
     final lat = data.latitude;
     final lng = data.longitude;
-    if (lat == null || lng == null) {
-      return const RiderLocationFix(
-        status: RiderLocationStatus.error,
-        address: unavailableAddress,
-      );
-    }
 
     // Null Island. Some devices report (0,0) as a "successful" no-fix;
     // surfacing it as a real position is worse than reporting an error.
@@ -225,39 +271,29 @@ class RiderLocationService {
 
   // ── Private ────────────────────────────────────────────────────────────────
 
-  static Future<loc.PermissionStatus> _currentPermission() async {
-    try {
-      return await _location.hasPermission();
-    } catch (e, s) {
-      appLogger.e('[Location] permission check failed', error: e, stackTrace: s);
-      return loc.PermissionStatus.denied;
-    }
-  }
+  static RiderLocationPermission _mapPermission(LocationPermission permission) =>
+      switch (permission) {
+        LocationPermission.whileInUse ||
+        LocationPermission.always =>
+          RiderLocationPermission.granted,
+        LocationPermission.deniedForever =>
+          RiderLocationPermission.deniedForever,
+        LocationPermission.denied ||
+        LocationPermission.unableToDetermine =>
+          RiderLocationPermission.denied,
+      };
 
-  static Future<loc.PermissionStatus> _requestPermission() async {
+  static Future<RiderLocationPermission> _requestPermission() async {
     try {
-      var permission = await _location.hasPermission();
-      if (permission == loc.PermissionStatus.denied) {
-        permission = await _location.requestPermission();
+      var permission =
+          await Geolocator.checkPermission().timeout(_checkTimeout);
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
       }
-      return permission;
+      return _mapPermission(permission);
     } catch (e, s) {
       appLogger.e('[Location] permission request failed', error: e, stackTrace: s);
-      return loc.PermissionStatus.denied;
-    }
-  }
-
-  static Future<bool> _ensureService(bool prompt) async {
-    try {
-      if (await _location.serviceEnabled()) return true;
-      if (!prompt) return false;
-      // Android: raises the Play Services "Turn on location" dialog in-app.
-      // iOS: has no such dialog, so this reports the current state and a
-      // false result routes the UI to a Settings link instead.
-      return await _location.requestService();
-    } catch (e, s) {
-      appLogger.e('[Location] service check failed', error: e, stackTrace: s);
-      return false;
+      return RiderLocationPermission.denied;
     }
   }
 

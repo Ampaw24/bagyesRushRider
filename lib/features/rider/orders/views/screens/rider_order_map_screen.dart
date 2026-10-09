@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:location/location.dart' as loc;
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:delivery_boy/constant/app_theme.dart';
@@ -144,9 +143,9 @@ class _RiderOrderMapScreenState extends ConsumerState<RiderOrderMapScreen>
 
   Future<void> _ensureLocation() async {
     final status = await RiderLocationService.ensurePermission();
-    final granted = status == loc.PermissionStatus.granted ||
-        status == loc.PermissionStatus.grantedLimited;
-    if (mounted && granted) setState(() => _locationGranted = true);
+    if (mounted && RiderLocationService.isGranted(status)) {
+      setState(() => _locationGranted = true);
+    }
   }
 
   Future<void> _resolveStopsAndRoute() async {

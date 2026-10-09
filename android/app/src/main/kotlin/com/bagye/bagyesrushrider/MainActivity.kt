@@ -6,9 +6,21 @@ import io.flutter.plugin.common.MethodChannel
 
 class MainActivity: FlutterActivity() {
     private val navigationBubbleChannel = "bagyesrush/navigation_bubble"
+    private val appChannel = "bagyesrush/app"
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+
+        // Sends the app to the background instead of finishing the Activity.
+        // Finishing it destroys the Flutter engine, which stops the location
+        // stream (and its foreground service) of a rider who is still online.
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, appChannel)
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "moveToBackground" -> result.success(moveTaskToBack(true))
+                    else -> result.notImplemented()
+                }
+            }
 
         // See NavigationBubbleHandler.kt — the Android Bubbles counterpart to
         // NavigationReturnNotifier's cross-platform notification.

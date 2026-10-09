@@ -44,6 +44,14 @@ class RealtimeService {
   RealtimeConfigModel? _config;
   Future<void>? _connecting;
 
+  /// The package's own reconnect gives up after ~12 s of cumulative backoff,
+  /// and nothing else retried until the next app resume — a rider who lost
+  /// signal in a tunnel stopped hearing about offers until they reopened the
+  /// app. This keeps trying, capped, for as long as the session lasts.
+  Timer? _reconnectTimer;
+  int _reconnectAttempts = 0;
+  static const _maxReconnectDelay = Duration(seconds: 60);
+
   final Set<int> _orderChannels = {};
   final Set<int> _conversationChannels = {};
   bool _riderChannelSubscribed = false;
@@ -161,7 +169,18 @@ class RealtimeService {
 
       client.onConnectionStateChange((state) {
         appLogger.d('[Realtime] connection state: ${state.name}');
-        _connectionStateController.add(_mapConnectionState(state));
+        final mapped = _mapConnectionState(state);
+        _connectionStateController.add(mapped);
+
+        // A callback from a client that was already replaced or torn down on
+        // purpose (logout, resume reconnect) must not trigger a retry.
+        if (!identical(client, _client)) return;
+        if (mapped == RealtimeConnectionState.connected) {
+          _reconnectAttempts = 0;
+          _reconnectTimer?.cancel();
+        } else if (mapped == RealtimeConnectionState.disconnected) {
+          _scheduleReconnect();
+        }
       });
       client.onError((error) => appLogger.w('[Realtime] error: $error'));
       client.onConnectionError(
@@ -185,7 +204,26 @@ class RealtimeService {
     } catch (e, s) {
       appLogger.e('[Realtime] connect failed', error: e, stackTrace: s);
       _connectionStateController.add(RealtimeConnectionState.disconnected);
+      _scheduleReconnect();
     }
+  }
+
+  /// Retries [connect] with capped exponential backoff (2 s, 4 s … 60 s).
+  /// A no-op once logged out, already connected, or a retry is pending.
+  void _scheduleReconnect() {
+    if (!_sessionManager.isLoggedIn) return;
+    if (_reconnectTimer?.isActive ?? false) return;
+
+    final seconds = 2 << _reconnectAttempts.clamp(0, 5);
+    final delay = Duration(seconds: seconds) > _maxReconnectDelay
+        ? _maxReconnectDelay
+        : Duration(seconds: seconds);
+    _reconnectAttempts++;
+    _reconnectTimer = Timer(delay, () {
+      _reconnectTimer = null;
+      if (!_sessionManager.isLoggedIn) return;
+      unawaited(ensureConnected());
+    });
   }
 
   RealtimeConnectionState _mapConnectionState(ConnectionState state) {
@@ -196,6 +234,9 @@ class RealtimeService {
   }
 
   Future<void> disconnect() async {
+    _reconnectTimer?.cancel();
+    _reconnectTimer = null;
+    _reconnectAttempts = 0;
     await _teardownClient();
     _orderChannels.clear();
     _conversationChannels.clear();

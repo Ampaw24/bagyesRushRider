@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/core/di/service_locator.dart';
 import 'package:delivery_boy/core/realtime/realtime_service.dart';
@@ -7,6 +9,7 @@ import 'package:delivery_boy/core/services/firebase_bootstrap.dart';
 import 'package:delivery_boy/core/services/user_session_manager.dart';
 import 'package:delivery_boy/core/utils/app_logger.dart';
 import 'package:delivery_boy/features/rider/auth/viewmodels/rider_auth_viewmodel.dart';
+import 'package:delivery_boy/features/rider/tracking/providers/rider_presence_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -31,15 +34,18 @@ class _BagyesRushAppState extends ConsumerState<BagyesRushApp>
     super.dispose();
   }
 
-  /// The spec calls for re-checking the realtime connection on app resume
-  /// (host/port/key could have changed, or the socket may have been torn
-  /// down while backgrounded) — `ensureConnected` is a cheap no-op when
-  /// already connected.
+  /// On resume: re-check the realtime connection (host/port/key could have
+  /// changed, or the socket may have been torn down while backgrounded —
+  /// `ensureConnected` is a cheap no-op when already connected), re-sync push
+  /// registration, and re-assert the rider's presence.
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed && sl<UserSessionManager>().isLoggedIn) {
       sl<RealtimeService>().ensureConnected();
       _syncPush();
+      // The app may have been dormant long enough for the server to mark the
+      // rider offline, or for the GPS loop to die — see RiderPresenceNotifier.
+      unawaited(ref.read(riderPresenceProvider.notifier).sync());
     }
   }
 

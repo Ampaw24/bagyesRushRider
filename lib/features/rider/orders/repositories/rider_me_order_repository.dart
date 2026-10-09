@@ -18,8 +18,10 @@ abstract class RiderMeOrderRepository {
   ResultFuture<RiderMeOrderModel> getOrder(int orderId);
 
   ResultFuture<void> arrivedAtPickup(int orderId);
-  ResultFuture<void> pickUpOrder(int orderId);
-  ResultFuture<void> arrivedAtDropoff(int orderId);
+  ResultFuture<void> pickUpOrder(int orderId, {String? pickupPin});
+  /// Returns the updated order (now carrying its `wait` window), or null if
+  /// the server accepted the arrival but sent nothing readable back.
+  ResultFuture<RiderMeOrderModel?> arrivedAtDropoff(int orderId);
 
   /// `deliveryPin` is required — 4 digits, sent as a string so a leading
   /// zero survives.
@@ -36,7 +38,9 @@ abstract class RiderMeOrderRepository {
   /// Rider waited and can't reach the customer — order-level, not per-stop.
   ResultFuture<void> markUnreachable(int orderId, {String? reason});
 
-  ResultFuture<void> arriveAtStop(int orderId, int stopId);
+  /// Returns the updated order (the stop now carries its `waiting` window),
+  /// or null if the server sent nothing readable back.
+  ResultFuture<RiderMeOrderModel?> arriveAtStop(int orderId, int stopId);
 
   /// See [deliverOrder] re: `deliveryPin`.
   ResultFuture<void> deliverStop(

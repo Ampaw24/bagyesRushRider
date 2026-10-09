@@ -4,6 +4,7 @@ import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:delivery_boy/core/realtime/realtime_service.dart';
 import 'package:delivery_boy/core/realtime/services/realtime_config_api_service.dart';
+import 'package:delivery_boy/core/services/order_alert_service.dart';
 import 'package:delivery_boy/core/services/user_session_manager.dart';
 import 'package:delivery_boy/core/utils/network_utility.dart';
 // Phase 2: Auth
@@ -80,6 +81,9 @@ Future<void> initServiceLocator() async {
     () => RealtimeService(
         sl<RealtimeConfigApiService>(), sl<UserSessionManager>()),
   );
+
+  // ── Incoming-offer ring ─────────────────────────────────────────────────
+  sl.registerLazySingleton(OrderAlertService.new);
 
   // ── Rider Auth ──────────────────────────────────────────────────────────
   sl.registerLazySingleton(() => RiderAuthApiService(sl<Dio>()));

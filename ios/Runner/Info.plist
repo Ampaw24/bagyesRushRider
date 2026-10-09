@@ -29,9 +29,9 @@
 	<key>NSCameraUsageDescription</key>
 	<string>BagyesRIDER uses your camera to capture documents, photograph your vehicle for verification, and verify your identity with a live selfie.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>This app requires location access to track your delivery route</string>
+	<string>BagyesRIDER uses your location, including when the app is closed or in the background, so customers can see you while you are online and can follow their delivery.</string>
 	<key>NSLocationAlwaysUsageDescription</key>
-	<string>This app requires background location access to track your delivery route</string>
+	<string>BagyesRIDER uses your location in the background to keep you visible to customers and to track your deliveries while you are online.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>BagyesRIDER uses your location to show your current area and to share your position with customers during a delivery.</string>
 	<key>NSPhotoLibraryUsageDescription</key>

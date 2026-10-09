@@ -20,11 +20,10 @@ class CachedRiderLocation {
 
 /// Disk cache for the rider's last resolved location.
 ///
-/// `package:location` has no `getLastKnownPosition()` equivalent, so rather
-/// than ask the OS for a stale fix and pay a Geocoding round-trip to name it,
-/// we persist the coordinates *and the resolved address* ourselves. The home
-/// header can then paint a real address on its very first frame after a cold
-/// start, with no network call at all.
+/// Rather than ask the OS for a stale fix (async, and un-named) and pay a
+/// Geocoding round-trip to name it, we persist the coordinates *and the
+/// resolved address* ourselves. The home header can then paint a real address
+/// on its very first frame after a cold start, with no network call at all.
 ///
 /// Backed by SharedPreferences (a GetIt singleton with synchronous reads) —
 /// [read] must stay sync so a Riverpod `build()` can call it directly.

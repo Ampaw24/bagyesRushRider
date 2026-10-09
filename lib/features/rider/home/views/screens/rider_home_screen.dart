@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -142,13 +144,21 @@ class _RiderHomeScreenState extends ConsumerState<RiderHomeScreen>
     context.go(AppRoutes.login);
   }
 
-  Future<void> _handleRefresh() => Future.wait([
-        ref.read(riderMeOrdersProvider.notifier).load(filter: 'active'),
-        ref.read(riderMeOrderHistoryProvider.notifier).load(),
-        ref.read(riderBannersProvider.notifier).load(),
-        ref.read(riderMeProfileProvider.notifier).load(),
-        ref.read(riderLocationProvider.notifier).refresh(promptService: false),
-      ]);
+  /// Only the API reloads gate the spinner. The location refresh is not
+  /// awaited: it depends on the GPS and OS permission plugins, which can take
+  /// a full cold-start fix or never answer, and the header already shows its
+  /// own "locating" state — so a slow fix must not pin the indicator on screen.
+  Future<void> _handleRefresh() {
+    unawaited(
+      ref.read(riderLocationProvider.notifier).refresh(promptService: false),
+    );
+    return Future.wait([
+      ref.read(riderMeOrdersProvider.notifier).load(filter: 'active'),
+      ref.read(riderMeOrderHistoryProvider.notifier).load(),
+      ref.read(riderBannersProvider.notifier).load(),
+      ref.read(riderMeProfileProvider.notifier).load(),
+    ]);
+  }
 
   void _handleDeleteAccount() {
     CustomDialog.showConfirmation(

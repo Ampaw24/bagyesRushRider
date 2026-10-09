@@ -20,6 +20,11 @@ class ReasonInputSheet extends StatefulWidget {
   /// false). Return true on success to close the sheet.
   final Future<bool> Function(String reason) onSubmit;
 
+  /// Read after [onSubmit] returns false, so a server-side rejection (e.g.
+  /// "wait N more minutes before marking unreachable") is shown instead of
+  /// the generic fallback. Return null/empty to use the fallback.
+  final String? Function()? failureMessage;
+
   const ReasonInputSheet({
     super.key,
     required this.title,
@@ -27,6 +32,7 @@ class ReasonInputSheet extends StatefulWidget {
     required this.submitLabel,
     this.requireNonEmpty = false,
     required this.onSubmit,
+    this.failureMessage,
   });
 
   @override
@@ -52,9 +58,12 @@ class _ReasonInputSheetState extends State<ReasonInputSheet> {
     if (ok) {
       Navigator.pop(context, true);
     } else {
+      final message = widget.failureMessage?.call();
       setState(() {
         _submitting = false;
-        _error = 'Could not submit — try again.';
+        _error = (message == null || message.isEmpty)
+            ? 'Could not submit — try again.'
+            : message;
       });
     }
   }

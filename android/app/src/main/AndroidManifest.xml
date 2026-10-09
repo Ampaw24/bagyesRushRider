@@ -5,6 +5,9 @@
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+    <!-- geolocator's location foreground service holds a wake lock so GPS
+         fixes keep arriving while the screen is off. -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.CAMERA" />
     <!-- Required on Android 13+ (API 33). Without it
          FirebaseMessaging.requestPermission() returns silently and no

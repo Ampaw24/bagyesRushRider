@@ -10,17 +10,23 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/core/di/service_locator.dart';
 import 'package:delivery_boy/core/router/app_routes.dart';
+import 'package:delivery_boy/core/services/app_background_channel.dart';
 import 'package:delivery_boy/core/services/navigation_return_notifier.dart';
 import 'package:delivery_boy/core/services/user_session_manager.dart';
 import 'package:delivery_boy/features/rider/auth/models/rider_user_model.dart';
 import 'package:delivery_boy/core/widgets/sos_floating_button.dart';
+import 'package:delivery_boy/core/widgets/app_toast.dart';
 import 'package:delivery_boy/core/widgets/custom_dialogs.dart';
 import 'package:delivery_boy/features/rider/notifications/providers/rider_notifications_providers.dart';
 import 'package:delivery_boy/features/rider/profile/providers/rider_avatar_providers.dart';
 import 'package:delivery_boy/features/rider/profile/providers/rider_me_profile_providers.dart';
 import 'package:delivery_boy/features/rider/shared_widgets/rider_avatar.dart';
 import 'package:delivery_boy/features/rider/orders/providers/rider_me_order_providers.dart';
+import 'package:delivery_boy/features/rider/orders/providers/rider_orders_tab_request_provider.dart';
+import 'package:delivery_boy/features/rider/orders/views/widgets/rider_incoming_offer_listener.dart';
+import 'package:delivery_boy/features/rider/tracking/providers/rider_presence_providers.dart';
 import 'package:delivery_boy/features/rider/tracking/providers/rider_tracking_providers.dart';
+import 'package:delivery_boy/features/rider/tracking/views/widgets/rider_online_location_gate.dart';
 import 'package:delivery_boy/features/rider/home/views/screens/rider_home_screen.dart';
 import 'package:delivery_boy/features/rider/orders/views/screens/rider_new_orders_screen.dart';
 import 'package:delivery_boy/features/rider/orders/views/screens/rider_active_orders_screen.dart';
@@ -106,9 +112,17 @@ class _RiderDashboardScreenState extends ConsumerState<RiderDashboardScreen>
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(riderNotificationsProvider.notifier).load();
-      // Populates is_online + verification_status for this screen.
-      ref.read(riderMeProfileProvider.notifier).load();
+      unawaited(_loadProfileAndSyncPresence());
     });
+  }
+
+  /// Populates is_online + verification_status for this screen, then lets the
+  /// presence coordinator correct any drift from a previous session (e.g. the
+  /// server marked the rider offline while the app was closed).
+  Future<void> _loadProfileAndSyncPresence() async {
+    await ref.read(riderMeProfileProvider.notifier).load();
+    if (!mounted) return;
+    await ref.read(riderPresenceProvider.notifier).sync(reload: false);
   }
 
   @override
@@ -139,6 +153,13 @@ class _RiderDashboardScreenState extends ConsumerState<RiderDashboardScreen>
     if (!currentQueue && !canGoOnline) {
       _explainOnlineBlock();
       return;
+    }
+
+    // Going online needs "Always" location and GPS on, so the rider stays
+    // visible with the app minimized — see RiderOnlineLocationGate.
+    if (!currentQueue) {
+      final locationReady = await RiderOnlineLocationGate.ensure(context);
+      if (!locationReady || !mounted) return;
     }
 
     HapticFeedback.lightImpact();
@@ -189,6 +210,29 @@ class _RiderDashboardScreenState extends ConsumerState<RiderDashboardScreen>
     );
   }
 
+  /// An online rider "closing" the app sends it to the background instead:
+  /// finishing the Activity would end their location sharing. Offline riders,
+  /// and platforms without that behaviour, exit normally.
+  Future<void> _exitApp(bool isOnline) async {
+    if (isOnline && await AppBackgroundChannel.moveToBackground()) return;
+    await SystemNavigator.pop();
+  }
+
+  /// After accepting from the incoming-offer dialog: confirm, refresh the
+  /// active list, and land the rider on it.
+  void _onOfferAccepted() {
+    AppToast.show(
+      context,
+      isSuccess: true,
+      title: 'Order Accepted',
+      subtitle: "Head to the pickup, then tap 'Arrived at Pickup'.",
+    );
+    ref.read(riderMeOrdersProvider.notifier).load(filter: 'active');
+    ref.read(riderOrdersTabRequestProvider.notifier).state =
+        kRiderActiveOrdersTabIndex;
+    _goToOrders();
+  }
+
   void _goToOrders() => setState(() => _currentIndex = 1);
   void _goToWallet() => setState(() => _currentIndex = 2);
   void _goToProfile() => setState(() => _currentIndex = 3);
@@ -212,6 +256,16 @@ class _RiderDashboardScreenState extends ConsumerState<RiderDashboardScreen>
       }
     });
 
+    // "Always" location withdrawn while online (or meant to be): explain it.
+    ref.listen<bool>(
+      riderPresenceProvider.select((s) => s.permissionLost),
+      (_, lost) async {
+        if (!lost) return;
+        await RiderOnlineLocationGate.showPermissionLost(context);
+        ref.read(riderPresenceProvider.notifier).acknowledgePermissionLost();
+      },
+    );
+
     final mq = MediaQuery.of(context);
     final w = mq.size.width;
     // Content bottom padding = inner bar height + its bottom margin
@@ -233,55 +287,59 @@ class _RiderDashboardScreenState extends ConsumerState<RiderDashboardScreen>
       const RiderProfileScreen(),
     ];
 
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, _) {
-        if (didPop) return;
-        final now = DateTime.now();
-        if (_lastBackPress == null ||
-            now.difference(_lastBackPress!) > const Duration(seconds: 2)) {
-          _lastBackPress = now;
-          Fluttertoast.showToast(
-            msg: 'Press Back Once Again to Exit.',
-            backgroundColor: Colors.black,
-            textColor: Colors.white,
-          );
-        } else {
-          SystemNavigator.pop();
-        }
-      },
-      child: Scaffold(
-        backgroundColor: AppColors.scaffold,
-        body: Stack(
-          children: [
-            // ── Tab content — pad bottom so nothing hides under the bar ──
-            // viewPadding too: a tab Scaffold positions its floating action
-            // button (e.g. the Orders tab's SOS button) from viewPadding,
-            // not padding, so without it the button sits behind the bar.
-            MediaQuery(
-              data: mq.copyWith(
-                padding: mq.padding.copyWith(bottom: contentPadBottom),
-                viewPadding: mq.viewPadding.copyWith(bottom: contentPadBottom),
+    return RiderIncomingOfferListener(
+      onAccepted: _onOfferAccepted,
+      child: PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, _) {
+          if (didPop) return;
+          final now = DateTime.now();
+          if (_lastBackPress == null ||
+              now.difference(_lastBackPress!) > const Duration(seconds: 2)) {
+            _lastBackPress = now;
+            Fluttertoast.showToast(
+              msg: 'Press Back Once Again to Exit.',
+              backgroundColor: Colors.black,
+              textColor: Colors.white,
+            );
+          } else {
+            _exitApp(isOnline);
+          }
+        },
+        child: Scaffold(
+          backgroundColor: AppColors.scaffold,
+          body: Stack(
+            children: [
+              // ── Tab content — pad bottom so nothing hides under the bar ──
+              // viewPadding too: a tab Scaffold positions its floating action
+              // button (e.g. the Orders tab's SOS button) from viewPadding,
+              // not padding, so without it the button sits behind the bar.
+              MediaQuery(
+                data: mq.copyWith(
+                  padding: mq.padding.copyWith(bottom: contentPadBottom),
+                  viewPadding:
+                      mq.viewPadding.copyWith(bottom: contentPadBottom),
+                ),
+                child: IndexedStack(
+                  index: _currentIndex,
+                  children: tabs,
+                ),
               ),
-              child: IndexedStack(
-                index: _currentIndex,
-                children: tabs,
-              ),
-            ),
 
-            // ── Floating nav bar ───────────────────────────────────────
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: _FloatingNavBar(
-                currentIndex: _currentIndex,
-                onTap: (i) => setState(() => _currentIndex = i),
-                items: _navItems,
-                avatarUrl: ref.watch(riderAvatarUrlProvider),
+              // ── Floating nav bar ───────────────────────────────────────
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: _FloatingNavBar(
+                  currentIndex: _currentIndex,
+                  onTap: (i) => setState(() => _currentIndex = i),
+                  items: _navItems,
+                  avatarUrl: ref.watch(riderAvatarUrlProvider),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -473,9 +531,9 @@ class _NavAvatar extends StatelessWidget {
   }
 }
 
-/// Push notifications are disabled app-wide (Firebase isn't initialized in
-/// main.dart), so polling is how a rider learns about new offers without
-/// pull-to-refreshing.
+/// Fallback cadence for refreshing offers. New offers normally arrive sooner —
+/// over the websocket (private-rider channel) or via a push that triggers a
+/// reload — but both can drop, so the poll keeps the list from going stale.
 const _kOfferPollInterval = Duration(seconds: 25);
 
 /// Orders tab — Active / New / History with the online toggle + bell in the
@@ -643,6 +701,7 @@ class _OrdersTabState extends ConsumerState<_OrdersTab> {
         ),
         body: Column(
           children: [
+            const _OrdersTabRequestListener(),
             const RiderOrdersTabBar(),
             const Divider(height: 1, color: AppColors.divider),
             _KycBanner(),
@@ -661,6 +720,23 @@ class _OrdersTabState extends ConsumerState<_OrdersTab> {
         ),
       ),
     );
+  }
+}
+
+/// Moves the Orders page's tabs when something outside it asks (see
+/// [riderOrdersTabRequestProvider]). Must sit below the page's
+/// `DefaultTabController`; renders nothing.
+class _OrdersTabRequestListener extends ConsumerWidget {
+  const _OrdersTabRequestListener();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    ref.listen<int?>(riderOrdersTabRequestProvider, (_, index) {
+      if (index == null) return;
+      DefaultTabController.maybeOf(context)?.animateTo(index);
+      ref.read(riderOrdersTabRequestProvider.notifier).state = null;
+    });
+    return const SizedBox.shrink();
   }
 }
 

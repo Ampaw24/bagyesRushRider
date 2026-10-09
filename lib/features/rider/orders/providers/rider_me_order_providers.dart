@@ -202,10 +202,19 @@ class RiderMeOrdersState extends Equatable {
   /// to the `pickedUp` that `out_for_delivery` seeds. See
   /// rider_delivery_stage.dart for why this can't come straight from the
   /// server.
+  ///
+  /// A single-drop order whose payload says the rider already arrived
+  /// (`timeline.arrived_at_dropoff` / `wait`) is lifted from `pickedUp` to
+  /// `arrivedAtDropoff`, so the wait countdown survives an app restart.
   RiderDeliveryStage stageFor(RiderMeOrderModel order) {
     final seeded = seedDeliveryStageFrom(order.status);
     final local = stageByOrderId[order.id];
-    return (local == null || seeded.index > local.index) ? seeded : local;
+    final furthest =
+        (local == null || seeded.index > local.index) ? seeded : local;
+    return (furthest == RiderDeliveryStage.pickedUp &&
+            order.hasArrivedAtDropoff)
+        ? RiderDeliveryStage.arrivedAtDropoff
+        : furthest;
   }
 
   bool hasArrived(int orderId, int stopId) =>
@@ -328,22 +337,25 @@ class RiderMeOrdersNotifier extends Notifier<RiderMeOrdersState> {
     final result = await _repo.getOrder(orderId);
     result.fold(
       (f) => state = state.copyWith(errorMessage: f.message),
-      (order) {
-        final index = state.orders.indexWhere((o) => o.id == orderId);
-        if (index == -1) {
-          state = state.copyWith(selectedOrder: order);
-          return;
-        }
-        final orders = [...state.orders];
-        if (order.isActive) {
-          orders[index] = order;
-        } else {
-          orders.removeAt(index);
-        }
-        state = state.copyWith(selectedOrder: order, orders: orders);
-        _syncOrderChannels();
-      },
+      _applyOrder,
     );
+  }
+
+  /// Stores a freshly fetched [order] — see [loadOrder].
+  void _applyOrder(RiderMeOrderModel order) {
+    final index = state.orders.indexWhere((o) => o.id == order.id);
+    if (index == -1) {
+      state = state.copyWith(selectedOrder: order);
+      return;
+    }
+    final orders = [...state.orders];
+    if (order.isActive) {
+      orders[index] = order;
+    } else {
+      orders.removeAt(index);
+    }
+    state = state.copyWith(selectedOrder: order, orders: orders);
+    _syncOrderChannels();
   }
 
   /// Once every stop of a multi-stop order is delivered or failed there is
@@ -396,16 +408,45 @@ class RiderMeOrdersNotifier extends Notifier<RiderMeOrdersState> {
     return ok;
   }
 
-  Future<bool> pickUpOrder(int orderId) async {
-    final ok = await _runAction(() => _repo.pickUpOrder(orderId));
+  /// [pickupPin] is the 4-digit collection code, required when the order's
+  /// `requiresPickupCode` is true. A wrong code fails with a `pickup_pin`
+  /// entry in [RiderMeOrdersState.actionFieldErrors].
+  Future<bool> pickUpOrder(int orderId, {String? pickupPin}) async {
+    final ok = await _runAction(
+        () => _repo.pickUpOrder(orderId, pickupPin: pickupPin));
     if (ok) _setStage(orderId, RiderDeliveryStage.pickedUp);
     return ok;
   }
 
+  /// The response carries the order with its wait window, so it is applied
+  /// directly (starting the countdown) instead of re-fetching; an unreadable
+  /// body falls back to a re-fetch.
   Future<bool> arrivedAtDropoff(int orderId) async {
-    final ok = await _runAction(() => _repo.arrivedAtDropoff(orderId));
+    final ok = await _runOrderAction(
+        orderId, () => _repo.arrivedAtDropoff(orderId));
     if (ok) _setStage(orderId, RiderDeliveryStage.arrivedAtDropoff);
     return ok;
+  }
+
+  /// Runs an action whose success body is the updated order and stores it —
+  /// see [arrivedAtDropoff].
+  Future<bool> _runOrderAction(
+    int orderId,
+    ResultFuture<RiderMeOrderModel?> Function() action,
+  ) async {
+    RiderMeOrderModel? updated;
+    final ok = await _runAction(() async {
+      final result = await action();
+      return result.map<void>((order) => updated = order);
+    });
+    if (!ok) return false;
+    final order = updated;
+    if (order != null) {
+      _applyOrder(order);
+    } else {
+      await loadOrder(orderId);
+    }
+    return true;
   }
 
   /// `deliveryPin` is required — 4 digits, sent as a string so a leading
@@ -447,8 +488,10 @@ class RiderMeOrdersNotifier extends Notifier<RiderMeOrdersState> {
     return ok;
   }
 
+  /// The stop comes back with its `waiting` window — see [arrivedAtDropoff].
   Future<bool> arriveAtStop(int orderId, int stopId) async {
-    final ok = await _runAction(() => _repo.arriveAtStop(orderId, stopId));
+    final ok = await _runOrderAction(
+        orderId, () => _repo.arriveAtStop(orderId, stopId));
     if (ok) {
       final current = state.arrivedStopIds[orderId] ?? const <int>{};
       state = state.copyWith(arrivedStopIds: {
