@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:delivery_boy/constant/app_theme.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 /// Single source of truth for rendering `RiderMeOrderModel.status` — shared
 /// by the order card, the home screen's mini card, and the detail sheet's
@@ -13,15 +14,15 @@ Color riderMeOrderStatusColor(String status) {
       return AppColors.primary;
     case 'preparing':
     case 'ready':
-      return Colors.orange;
+      return AppColors.warning;
     case 'accepted':
-      return Colors.blue;
+      return AppColors.info;
     case 'cancelled':
     case 'rejected':
     case 'refunded':
       return AppColors.error;
     default: // pending_payment | pending
-      return Colors.grey.shade400;
+      return AppColors.textSecondary;
   }
 }
 
@@ -49,5 +50,32 @@ String riderMeOrderStatusLabel(String status) {
       return 'Refunded';
     default:
       return status;
+  }
+}
+
+IconData riderMeOrderStatusIcon(String status) {
+  switch (status) {
+    case 'pending_payment':
+      return HugeIcons.strokeRoundedCreditCard;
+    case 'pending':
+      return HugeIcons.strokeRoundedHourglass;
+    case 'accepted':
+      return HugeIcons.strokeRoundedCheckmarkCircle01;
+    case 'preparing':
+      return HugeIcons.strokeRoundedChefHat;
+    case 'ready':
+      return HugeIcons.strokeRoundedPackage;
+    case 'out_for_delivery':
+      return HugeIcons.strokeRoundedMotorbike01;
+    case 'delivered':
+      return HugeIcons.strokeRoundedPackageDelivered;
+    case 'cancelled':
+      return HugeIcons.strokeRoundedCancelCircle;
+    case 'rejected':
+      return HugeIcons.strokeRoundedUnavailable;
+    case 'refunded':
+      return HugeIcons.strokeRoundedMoneyReceive01;
+    default:
+      return HugeIcons.strokeRoundedDeliveryBox01;
   }
 }

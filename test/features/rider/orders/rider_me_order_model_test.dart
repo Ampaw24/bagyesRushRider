@@ -112,4 +112,23 @@ void main() {
     expect(offer.distanceKm, 4.2);
     expect(offer.estimatedFare, 12);
   });
+
+  group('RiderMeOrderModel.createdAtFormatted', () {
+    test('formats the timestamp in local time', () {
+      const order = RiderMeOrderModel(
+        id: 1,
+        status: 'pending',
+        createdAt: '2026-10-12 14:45:00',
+      );
+      expect(order.createdAtFormatted, 'Oct 12, 2:45 PM');
+    });
+
+    test('is empty when the timestamp is missing or unparseable', () {
+      const missing = RiderMeOrderModel(id: 1, status: 'pending');
+      const garbage =
+          RiderMeOrderModel(id: 1, status: 'pending', createdAt: 'yesterday');
+      expect(missing.createdAtFormatted, isEmpty);
+      expect(garbage.createdAtFormatted, isEmpty);
+    });
+  });
 }

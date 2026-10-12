@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:delivery_boy/constant/app_theme.dart';
+import 'package:delivery_boy/core/utils/initials.dart';
+import 'package:delivery_boy/core/utils/phone_mask.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 /// Presentational building blocks for `RiderMeOrderDetailSheet`. They hold no
@@ -12,20 +14,18 @@ const double _kRadius = 12;
 double _font(double w, double factor, double min, double max) =>
     (w * factor).clamp(min, max);
 
-// ── Header ────────────────────────────────────────────────────────────────
+// ── Summary ───────────────────────────────────────────────────────────────
 
-class OrderSheetHeader extends StatelessWidget {
+/// Reference, stop count and total, under the sheet's status band (which
+/// carries the status itself).
+class OrderSheetSummary extends StatelessWidget {
   final String reference;
-  final String statusLabel;
-  final Color statusColor;
   final String amount;
   final int? stopCount;
 
-  const OrderSheetHeader({
+  const OrderSheetSummary({
     super.key,
     required this.reference,
-    required this.statusLabel,
-    required this.statusColor,
     required this.amount,
     this.stopCount,
   });
@@ -33,6 +33,12 @@ class OrderSheetHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final w = MediaQuery.sizeOf(context).width;
+    final caption = TextStyle(
+      fontFamily: 'Roboto',
+      fontSize: _font(w, 0.029, 11, 13),
+      color: AppColors.textSecondary,
+    );
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -40,6 +46,11 @@ class OrderSheetHeader extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Text(
+                stopCount != null ? 'Order · $stopCount stops' : 'Order',
+                style: caption,
+              ),
+              SizedBox(height: w * 0.008),
               Text(
                 reference,
                 maxLines: 1,
@@ -51,24 +62,6 @@ class OrderSheetHeader extends StatelessWidget {
                   color: AppColors.textPrimary,
                 ),
               ),
-              SizedBox(height: w * 0.015),
-              Wrap(
-                spacing: w * 0.02,
-                runSpacing: w * 0.01,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  OrderStatusPill(label: statusLabel, color: statusColor),
-                  if (stopCount != null)
-                    Text(
-                      '$stopCount stops',
-                      style: TextStyle(
-                        fontFamily: 'Roboto',
-                        fontSize: _font(w, 0.032, 12, 14),
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                ],
-              ),
             ],
           ),
         ),
@@ -77,14 +70,7 @@ class OrderSheetHeader extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text(
-                'Order total',
-                style: TextStyle(
-                  fontFamily: 'Roboto',
-                  fontSize: _font(w, 0.029, 11, 13),
-                  color: AppColors.textSecondary,
-                ),
-              ),
+              Text('Order total', style: caption),
               SizedBox(height: w * 0.008),
               Text(
                 amount,
@@ -103,6 +89,8 @@ class OrderSheetHeader extends StatelessWidget {
   }
 }
 
+/// Small tinted status label with a leading dot — a multi-stop order's
+/// per-stop status.
 class OrderStatusPill extends StatelessWidget {
   final String label;
   final Color color;
@@ -391,29 +379,31 @@ class OrderCustomerTile extends StatelessWidget {
   final VoidCallback? onCall;
   final VoidCallback onChat;
 
+  /// False once the order is over (delivered, cancelled, or otherwise no
+  /// longer in progress): the number shows masked and the chat and call
+  /// buttons go, as the rider has no reason left to reach the customer.
+  final bool canContact;
+
   const OrderCustomerTile({
     super.key,
     required this.name,
     required this.phone,
     required this.onCall,
     required this.onChat,
+    this.canContact = true,
   });
-
-  String get _initials {
-    final parts = (name ?? '')
-        .trim()
-        .split(RegExp(r'\s+'))
-        .where((p) => p.isNotEmpty)
-        .take(2);
-    final letters = parts.map((p) => p[0].toUpperCase()).join();
-    return letters.isEmpty ? '?' : letters;
-  }
 
   @override
   Widget build(BuildContext context) {
     final w = MediaQuery.sizeOf(context).width;
     final hasName = name?.trim().isNotEmpty ?? false;
     final hasPhone = phone?.trim().isNotEmpty ?? false;
+    final hidePhone = hasPhone && !canContact;
+    final phoneStyle = TextStyle(
+      fontFamily: 'Roboto',
+      fontSize: _font(w, 0.033, 12, 14),
+      color: AppColors.textSecondary,
+    );
 
     return OrderSurface(
       child: Row(
@@ -422,7 +412,7 @@ class OrderCustomerTile extends StatelessWidget {
             radius: w * 0.055,
             backgroundColor: AppColors.surfaceVariant,
             child: Text(
-              _initials,
+              initialsOf(name),
               style: TextStyle(
                 fontFamily: 'Roboto',
                 fontSize: _font(w, 0.036, 13, 16),
@@ -448,31 +438,50 @@ class OrderCustomerTile extends StatelessWidget {
                   ),
                 ),
                 SizedBox(height: w * 0.005),
-                Text(
-                  hasPhone ? phone!.trim() : 'No phone number',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontFamily: 'Roboto',
-                    fontSize: _font(w, 0.033, 12, 14),
-                    color: AppColors.textSecondary,
+                if (hidePhone)
+                  Row(
+                    children: [
+                      Icon(
+                        HugeIcons.strokeRoundedCallLocked,
+                        size: _font(w, 0.035, 13, 15),
+                        color: AppColors.textSecondary,
+                      ),
+                      SizedBox(width: w * 0.012),
+                      Flexible(
+                        child: Text(
+                          maskPhone(phone!.trim()),
+                          semanticsLabel: 'Phone number hidden',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: phoneStyle,
+                        ),
+                      ),
+                    ],
+                  )
+                else
+                  Text(
+                    hasPhone ? phone!.trim() : 'No phone number',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: phoneStyle,
                   ),
-                ),
               ],
             ),
           ),
-          SizedBox(width: w * 0.02),
-          _RoundIconButton(
-            icon: HugeIcons.strokeRoundedBubbleChat,
-            tooltip: 'Chat with customer',
-            onTap: onChat,
-          ),
-          SizedBox(width: w * 0.02),
-          _RoundIconButton(
-            icon: HugeIcons.strokeRoundedCall,
-            tooltip: 'Call customer',
-            onTap: hasPhone ? onCall : null,
-          ),
+          if (canContact) ...[
+            SizedBox(width: w * 0.02),
+            _RoundIconButton(
+              icon: HugeIcons.strokeRoundedBubbleChat,
+              tooltip: 'Chat with customer',
+              onTap: onChat,
+            ),
+            SizedBox(width: w * 0.02),
+            _RoundIconButton(
+              icon: HugeIcons.strokeRoundedCall,
+              tooltip: 'Call customer',
+              onTap: hasPhone ? onCall : null,
+            ),
+          ],
         ],
       ),
     );

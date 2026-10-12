@@ -217,6 +217,16 @@ class RiderMeOrdersState extends Equatable {
         : furthest;
   }
 
+  /// Whether [order] is still being delivered: not finished on the server
+  /// (delivered, cancelled, …) nor completed by this rider. Only then may
+  /// the rider reach the customer.
+  bool isInProgress(RiderMeOrderModel order) {
+    final stage = stageFor(order);
+    return order.isActive &&
+        stage != RiderDeliveryStage.delivered &&
+        stage != RiderDeliveryStage.closed;
+  }
+
   bool hasArrived(int orderId, int stopId) =>
       arrivedStopIds[orderId]?.contains(stopId) ?? false;
 

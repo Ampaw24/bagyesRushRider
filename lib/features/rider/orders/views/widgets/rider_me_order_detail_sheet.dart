@@ -6,10 +6,9 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/core/router/app_routes.dart';
 import 'package:delivery_boy/core/utils/external_navigation_launcher.dart';
-import 'package:delivery_boy/core/widgets/app_gradient_button.dart';
+import 'package:delivery_boy/core/widgets/animated_list_item.dart';
 import 'package:delivery_boy/core/widgets/custom_dialogs.dart';
 import 'package:delivery_boy/core/widgets/drag_handle.dart';
-import 'package:delivery_boy/core/widgets/status_badge.dart';
 import 'package:delivery_boy/features/rider/chat/providers/rider_chat_thread_args.dart';
 import 'package:delivery_boy/features/rider/chat/views/widgets/rider_chat_thread_sheet.dart';
 import 'package:delivery_boy/features/rider/orders/models/rider_delivery_stage.dart';
@@ -20,8 +19,10 @@ import 'package:delivery_boy/features/rider/orders/views/widgets/dropoff_wait_co
 import 'package:delivery_boy/features/rider/orders/views/widgets/pickup_code_sheet.dart';
 import 'package:delivery_boy/features/rider/orders/views/widgets/reason_input_sheet.dart';
 import 'package:delivery_boy/features/rider/orders/views/widgets/rider_delivery_progress.dart';
-import 'package:delivery_boy/features/rider/orders/views/widgets/rider_me_order_status.dart';
+import 'package:delivery_boy/features/rider/orders/views/widgets/rider_order_card_shell.dart';
 import 'package:delivery_boy/features/rider/orders/views/widgets/rider_order_detail_sections.dart';
+import 'package:delivery_boy/features/rider/orders/views/widgets/rider_order_status_header.dart';
+import 'package:delivery_boy/features/rider/orders/views/widgets/rider_order_stop_list.dart';
 import 'package:delivery_boy/features/rider/report/models/rider_report_flow_args.dart';
 import 'package:delivery_boy/features/rider/report/models/rider_report_model.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -259,6 +260,9 @@ class _RiderMeOrderDetailSheetState
     final ordersState = ref.watch(riderMeOrdersProvider);
     final order = _currentOrder(ordersState);
     final stage = ordersState.stageFor(order);
+    // Still being delivered: drives the Live cue, and whether the rider may
+    // still call or message the customer.
+    final inProgress = ordersState.isInProgress(order);
 
     final isOpen = stage != RiderDeliveryStage.delivered &&
         stage != RiderDeliveryStage.closed;
@@ -277,8 +281,10 @@ class _RiderMeOrderDetailSheetState
       expand: false,
       builder: (_, scrollCtrl) {
         return Container(
+          // The status band scrolls up under the rounded top edge.
+          clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.card,
             borderRadius: BorderRadius.vertical(top: Radius.circular(w * 0.05)),
           ),
           child: Column(
@@ -286,95 +292,199 @@ class _RiderMeOrderDetailSheetState
               Expanded(
                 child: ListView(
                   controller: scrollCtrl,
-                  padding: EdgeInsets.fromLTRB(gutter, 0, gutter, sectionGap),
+                  padding: EdgeInsets.only(bottom: sectionGap),
                   children: [
                     const DragHandle(),
-                    OrderSheetHeader(
-                      reference: order.reference ?? '#${order.id}',
-                      statusLabel: riderMeOrderStatusLabel(order.status),
-                      statusColor: riderMeOrderStatusColor(order.status),
-                      amount: order.amountFormatted,
-                      stopCount: order.isMultiStop ? order.stops.length : null,
-                    ),
-                    if (isOpen) ...[
-                      SizedBox(height: w * 0.05),
-                      RiderDeliveryProgress(stage: stage),
-                    ],
-                    SizedBox(height: sectionGap),
-
-                    if (stopsInBody) ...[
-                      const OrderSectionLabel(title: 'Stops'),
-                      _buildActionPanel(order, stage),
-                      SizedBox(height: sectionGap),
-                    ],
-
-                    // ── Route ──────────────────────────────────────────────
-                    OrderSectionLabel(
-                      title: 'Route',
-                      trailing: OrderSectionAction(
-                        label: 'View map',
-                        icon: HugeIcons.strokeRoundedMapsLocation01,
-                        onTap: () => _openMap(order),
+                    // The order card's own band, so the sheet reads as that
+                    // card opened up. It cross-fades when the status moves.
+                    RiderOrderStatusHeader(
+                      status: order.status,
+                      isLive: inProgress,
+                      subtitle: order.createdAtFormatted,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: gutter,
+                        vertical: w * 0.035,
                       ),
                     ),
-                    OrderRouteTimeline(
-                      pickupAddress: order.pickupAddress,
-                      dropoffAddress: order.dropoffAddress,
-                      dropoffLabel:
-                          order.isMultiStop ? 'Final stop' : 'Drop-off',
-                      onNavigatePickup: () => _navigateTo(
-                        'pickup',
-                        order.pickupAddress,
-                        latitude: order.pickupLatitude,
-                        longitude: order.pickupLongitude,
-                      ),
-                      onNavigateDropoff: () => _navigateTo(
-                        'drop-off',
-                        order.dropoffAddress,
-                        latitude: order.dropoffLatitude,
-                        longitude: order.dropoffLongitude,
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: gutter),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          _reveal(
+                            'summary',
+                            0,
+                            w * 0.045,
+                            OrderSheetSummary(
+                              reference: order.reference ?? '#${order.id}',
+                              amount: order.amountFormatted,
+                              stopCount:
+                                  order.isMultiStop ? order.stops.length : null,
+                            ),
+                          ),
+                          if (isOpen)
+                            _reveal(
+                              'progress',
+                              1,
+                              w * 0.05,
+                              RiderDeliveryProgress(stage: stage),
+                            ),
+                          if (stopsInBody)
+                            _reveal(
+                              'stops',
+                              2,
+                              sectionGap,
+                              _section(
+                                const OrderSectionLabel(title: 'Stops'),
+                                _buildActionPanel(order, stage),
+                              ),
+                            ),
+                          _reveal(
+                            'route',
+                            3,
+                            sectionGap,
+                            _section(
+                              OrderSectionLabel(
+                                title: 'Route',
+                                trailing: OrderSectionAction(
+                                  label: 'View map',
+                                  icon: HugeIcons.strokeRoundedMapsLocation01,
+                                  onTap: () => _openMap(order),
+                                ),
+                              ),
+                              OrderRouteTimeline(
+                                pickupAddress: order.pickupAddress,
+                                dropoffAddress: order.dropoffAddress,
+                                dropoffLabel: order.isMultiStop
+                                    ? 'Final stop'
+                                    : 'Drop-off',
+                                onNavigatePickup: () => _navigateTo(
+                                  'pickup',
+                                  order.pickupAddress,
+                                  latitude: order.pickupLatitude,
+                                  longitude: order.pickupLongitude,
+                                ),
+                                onNavigateDropoff: () => _navigateTo(
+                                  'drop-off',
+                                  order.dropoffAddress,
+                                  latitude: order.dropoffLatitude,
+                                  longitude: order.dropoffLongitude,
+                                ),
+                              ),
+                            ),
+                          ),
+                          _reveal(
+                            'customer',
+                            4,
+                            sectionGap,
+                            _section(
+                              const OrderSectionLabel(title: 'Customer'),
+                              OrderCustomerTile(
+                                name: order.customerName,
+                                phone: order.customerPhone,
+                                onCall: () =>
+                                    _callCustomer(order.customerPhone),
+                                onChat: () => _openChat(order),
+                                canContact: inProgress,
+                              ),
+                            ),
+                          ),
+                          _reveal(
+                            'trouble',
+                            5,
+                            sectionGap,
+                            _section(
+                              const OrderSectionLabel(
+                                  title: 'Having trouble?'),
+                              _buildIssueList(order, isOpen, stage),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    SizedBox(height: sectionGap),
-
-                    // ── Customer ───────────────────────────────────────────
-                    const OrderSectionLabel(title: 'Customer'),
-                    OrderCustomerTile(
-                      name: order.customerName,
-                      phone: order.customerPhone,
-                      onCall: () => _callCustomer(order.customerPhone),
-                      onChat: () => _openChat(order),
-                    ),
-                    SizedBox(height: sectionGap),
-
-                    // ── Having trouble? ────────────────────────────────────
-                    const OrderSectionLabel(title: 'Having trouble?'),
-                    _buildIssueList(order, isOpen, stage),
                   ],
                 ),
               ),
-
-              // ── Pinned next step ───────────────────────────────────────
-              // Always on screen, so the rider never has to scroll past the
-              // order details to find how to move the delivery forward.
-              Container(
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  border: Border(top: BorderSide(color: AppColors.divider)),
-                ),
-                padding:
-                    EdgeInsets.fromLTRB(gutter, w * 0.03, gutter, w * 0.03),
-                child: SafeArea(
-                  top: false,
-                  child: isOpen && !stopsInBody
-                      ? _buildActionPanel(order, stage)
-                      : _closeButton(),
-                ),
+              _buildFooter(
+                order,
+                stage,
+                showAction: isOpen && !stopsInBody,
+                gutter: gutter,
               ),
             ],
           ),
         );
       },
+    );
+  }
+
+  /// A body section that fades and slides up into place, staggered by
+  /// [index] as the sheet opens. Keyed by [id], so a section that only
+  /// appears later (Stops, once a parcel is picked up) animates in itself
+  /// rather than inheriting a neighbour's finished animation.
+  Widget _reveal(String id, int index, double topGap, Widget child) =>
+      AnimatedListItem(
+        key: ValueKey(id),
+        index: index,
+        child: Padding(padding: EdgeInsets.only(top: topGap), child: child),
+      );
+
+  Widget _section(Widget label, Widget content) => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [label, content],
+      );
+
+  /// The pinned next step. Always on screen, so the rider never has to
+  /// scroll past the order details to find how to move the delivery
+  /// forward. When a step completes, the next one slides in and the bar
+  /// resizes to fit it (e.g. once the customer wait banner appears).
+  Widget _buildFooter(
+    RiderMeOrderModel order,
+    RiderDeliveryStage stage, {
+    required bool showAction,
+    required double gutter,
+  }) {
+    final w = MediaQuery.sizeOf(context).width;
+    final motion = MediaQuery.disableAnimationsOf(context)
+        ? Duration.zero
+        : const Duration(milliseconds: 300);
+    final step = showAction ? '${stage.name}-${order.wait != null}' : 'close';
+
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppColors.card,
+        border: Border(top: BorderSide(color: AppColors.divider)),
+      ),
+      padding: EdgeInsets.fromLTRB(gutter, w * 0.03, gutter, w * 0.03),
+      child: SafeArea(
+        top: false,
+        child: AnimatedSize(
+          duration: motion,
+          curve: Curves.easeOutCubic,
+          alignment: Alignment.bottomCenter,
+          child: AnimatedSwitcher(
+            duration: motion,
+            switchInCurve: Curves.easeOutCubic,
+            switchOutCurve: Curves.easeInCubic,
+            transitionBuilder: (child, animation) => FadeTransition(
+              opacity: animation,
+              child: SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(0, 0.25),
+                  end: Offset.zero,
+                ).animate(animation),
+                child: child,
+              ),
+            ),
+            child: KeyedSubtree(
+              key: ValueKey(step),
+              child: showAction
+                  ? _buildActionPanel(order, stage)
+                  : _closeButton(),
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -442,50 +552,54 @@ class _RiderMeOrderDetailSheetState
     ];
   }
 
-  Widget _closeButton() {
-    final w = MediaQuery.sizeOf(context).width;
-    return OutlinedButton(
-      onPressed: () => Navigator.of(context).pop(),
-      style: OutlinedButton.styleFrom(
-        minimumSize: Size.fromHeight((w * 0.12).clamp(46.0, 56.0)),
-        side: const BorderSide(color: AppColors.border),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-      child: const Text(
-        'Close',
-        style: TextStyle(
-            fontFamily: 'Roboto',
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary),
-      ),
-    );
-  }
+  double get _footerButtonHeight =>
+      (MediaQuery.sizeOf(context).width * 0.13).clamp(48.0, 56.0);
+
+  Widget _closeButton() => RiderOrderCardButton(
+        label: 'Close',
+        outlined: true,
+        minHeight: _footerButtonHeight,
+        onPressed: () => Navigator.of(context).pop(),
+      );
+
+  /// The step that moves the delivery forward: solid, full width, taller
+  /// than a card's button.
+  Widget _primaryAction(
+    String label,
+    VoidCallback? onPressed, {
+    bool isLoading = false,
+  }) =>
+      RiderOrderCardButton(
+        label: label,
+        isLoading: isLoading,
+        minHeight: _footerButtonHeight,
+        trailingIcon: HugeIcons.strokeRoundedArrowRight01,
+        onPressed: onPressed,
+      );
 
   Widget _buildActionPanel(RiderMeOrderModel order, RiderDeliveryStage stage) {
     switch (stage) {
       case RiderDeliveryStage.notStarted:
-        return AppGradientButton(
-          label: 'Arrived at Pickup',
-          isLoading: _actionBusy,
-          onPressed: _actionBusy
+        return _primaryAction(
+          'Arrived at Pickup',
+          _actionBusy
               ? null
               : () => _runSimpleAction(() => ref
                   .read(riderMeOrdersProvider.notifier)
                   .arrivedAtPickup(order.id)),
+          isLoading: _actionBusy,
         );
 
       case RiderDeliveryStage.arrivedAtPickup:
-        return AppGradientButton(
-          label: order.requiresPickupCode
-              ? 'Enter Collection Code'
-              : 'Confirm Pickup',
+        return _primaryAction(
+          order.requiresPickupCode ? 'Enter Collection Code' : 'Confirm Pickup',
+          _actionBusy ? null : () => _confirmPickup(order),
           isLoading: _actionBusy,
-          onPressed: _actionBusy ? null : () => _confirmPickup(order),
         );
 
       case RiderDeliveryStage.pickedUp:
         if (order.usesStopFlow) {
-          return _MultiStopPanel(
+          return RiderOrderStopList(
             order: order,
             busy: _actionBusy,
             onArrive: (stopId) => _runSimpleAction(() => ref
@@ -497,21 +611,21 @@ class _RiderMeOrderDetailSheetState
                 .failStop(order.id, stopId, reason: reason),
           );
         }
-        return AppGradientButton(
-          label: 'Arrived at Drop-off',
-          isLoading: _actionBusy,
-          onPressed: _actionBusy
+        return _primaryAction(
+          'Arrived at Drop-off',
+          _actionBusy
               ? null
               : () => _runSimpleAction(() => ref
                   .read(riderMeOrdersProvider.notifier)
                   .arrivedAtDropoff(order.id)),
+          isLoading: _actionBusy,
         );
 
       case RiderDeliveryStage.arrivedAtDropoff:
         final wait = order.wait;
-        final completeButton = AppGradientButton(
-          label: 'Complete Delivery',
-          onPressed: () => _openDeliverySheet(order.id),
+        final completeButton = _primaryAction(
+          'Complete Delivery',
+          () => _openDeliverySheet(order.id),
         );
         if (wait == null) return completeButton;
         return Column(
@@ -538,208 +652,3 @@ class _RiderMeOrderDetailSheetState
   }
 }
 
-// ── Multi-stop panel ─────────────────────────────────────────────────────
-
-class _MultiStopPanel extends ConsumerWidget {
-  final RiderMeOrderModel order;
-  final bool busy;
-  final void Function(int stopId) onArrive;
-  final void Function(int stopId) onDeliver;
-  final Future<bool> Function(int stopId, String reason) onFail;
-
-  const _MultiStopPanel({
-    required this.order,
-    required this.busy,
-    required this.onArrive,
-    required this.onDeliver,
-    required this.onFail,
-  });
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final ordersState = ref.watch(riderMeOrdersProvider);
-    return Column(
-      children: [
-        for (final stop in order.stops)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: _StopTile(
-              orderId: order.id,
-              stop: stop,
-              // A stop's `waiting` window also proves arrival, so this holds
-              // after an app restart too.
-              hasArrived: ordersState.hasArrived(order.id, stop.id) ||
-                  stop.wait != null,
-              busy: busy,
-              onArrive: () => onArrive(stop.id),
-              onDeliver: () => onDeliver(stop.id),
-              onFail: (reason) => onFail(stop.id, reason),
-              failureMessage: () =>
-                  ref.read(riderMeOrdersProvider).actionMessage,
-            ),
-          ),
-      ],
-    );
-  }
-}
-
-class _StopTile extends StatelessWidget {
-  final int orderId;
-  final RiderMeOrderStopModel stop;
-  final bool hasArrived;
-  final bool busy;
-  final VoidCallback onArrive;
-  final VoidCallback onDeliver;
-  final Future<bool> Function(String reason) onFail;
-  final String? Function() failureMessage;
-
-  const _StopTile({
-    required this.orderId,
-    required this.stop,
-    required this.hasArrived,
-    required this.busy,
-    required this.onArrive,
-    required this.onDeliver,
-    required this.onFail,
-    required this.failureMessage,
-  });
-
-  void _openFailSheet(BuildContext context) {
-    showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => ReasonInputSheet(
-        title: 'Why did this stop fail?',
-        submitLabel: 'Report Failed Stop',
-        requireNonEmpty: true,
-        failureMessage: failureMessage,
-        onSubmit: onFail,
-      ),
-    );
-  }
-
-  /// Waiting at the stop: the Fail button stays out of reach until the wait
-  /// window ends, then the banner offers it. Deliver is always available.
-  Widget _buildWaitingActions(BuildContext context, RiderMeOrderWait wait) {
-    final gap = MediaQuery.sizeOf(context).width * 0.03;
-    return Column(
-      children: [
-        WaitCountdownBuilder(
-          wait: wait,
-          builder: (_, remaining) => DropoffWaitBanner(
-            remaining: remaining,
-            total: wait.total,
-            onGiveUp: busy ? null : () => _openFailSheet(context),
-            giveUpLabel: 'Fail this stop',
-            waitingSubtitle: 'The recipient has been told you are here.',
-            expiredSubtitle:
-                'Still no answer? You can mark this stop as failed.',
-          ),
-        ),
-        SizedBox(height: gap),
-        AppGradientButton(
-          label: 'Deliver',
-          height: 38,
-          onPressed: busy ? null : onDeliver,
-        ),
-      ],
-    );
-  }
-
-  /// Arrived but no wait window in the payload — Fail and Deliver side by
-  /// side, the server deciding whether a fail is allowed yet.
-  Widget _buildArrivedActions(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: OutlinedButton(
-            onPressed: busy ? null : () => _openFailSheet(context),
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 10),
-              side: const BorderSide(color: AppColors.error),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
-            ),
-            child: const Text('Fail',
-                style: TextStyle(fontFamily: 'Roboto', color: AppColors.error)),
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          flex: 2,
-          child: AppGradientButton(
-            label: 'Deliver',
-            height: 38,
-            onPressed: busy ? null : onDeliver,
-          ),
-        ),
-      ],
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final label = stop.address ?? 'Stop ${stop.sequence ?? ''}';
-
-    String statusText;
-    Color statusColor;
-    Widget? action;
-
-    if (stop.isDelivered) {
-      statusText = 'Delivered';
-      statusColor = AppColors.success;
-    } else if (stop.isFailed) {
-      statusText =
-          'Failed${stop.failureReason != null ? ': ${stop.failureReason}' : ''}';
-      statusColor = AppColors.error;
-    } else if (hasArrived) {
-      statusText = 'Arrived';
-      statusColor = AppColors.primary;
-      action = stop.wait != null
-          ? _buildWaitingActions(context, stop.wait!)
-          : _buildArrivedActions(context);
-    } else {
-      statusText = 'Pending';
-      statusColor = Colors.grey.shade400;
-      action = AppGradientButton(
-        label: 'Arrived at this Stop',
-        height: 38,
-        onPressed: busy ? null : onArrive,
-      );
-    }
-
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade100),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  label,
-                  style: const TextStyle(
-                      fontFamily: 'Roboto',
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary),
-                ),
-              ),
-              StatusBadge(label: statusText, color: statusColor),
-            ],
-          ),
-          if (action != null) ...[
-            const SizedBox(height: 10),
-            action,
-          ],
-        ],
-      ),
-    );
-  }
-}

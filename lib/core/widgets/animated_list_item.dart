@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
 /// Wraps a list item with a staggered fade+slide-up entrance animation.
-/// Each item animates after [index] * 80ms.
+/// Each item animates after [index] * 80ms. Shown straight away when the
+/// platform asks for reduced motion.
 class AnimatedListItem extends StatefulWidget {
   final int index;
   final Widget child;
@@ -21,6 +22,7 @@ class _AnimatedListItemState extends State<AnimatedListItem>
   late AnimationController _controller;
   late Animation<double> _opacity;
   late Animation<Offset> _slide;
+  bool _started = false;
 
   @override
   void initState() {
@@ -35,7 +37,19 @@ class _AnimatedListItemState extends State<AnimatedListItem>
       begin: const Offset(0, 0.12),
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+  }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Started here rather than in initState: reading the reduced-motion
+    // setting needs the inherited MediaQuery.
+    if (_started) return;
+    _started = true;
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _controller.value = 1;
+      return;
+    }
     // Stagger delay based on index
     Future.delayed(Duration(milliseconds: widget.index * 80), () {
       if (mounted) _controller.forward();

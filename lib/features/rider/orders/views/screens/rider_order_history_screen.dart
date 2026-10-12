@@ -44,8 +44,11 @@ class _RiderOrderHistoryScreenState
   Widget build(BuildContext context) {
     final state = ref.watch(riderMeOrderHistoryProvider);
 
-    if (state.status == RiderMeOrdersStatus.loading ||
-        state.status == RiderMeOrdersStatus.initial) {
+    // Placeholder only until the first list arrives — a pull-to-refresh
+    // keeps the cards on screen under the refresh spinner.
+    if ((state.status == RiderMeOrdersStatus.loading ||
+            state.status == RiderMeOrdersStatus.initial) &&
+        state.orders.isEmpty) {
       return const ShimmerListPlaceholder(itemCount: 4, itemHeight: 110);
     }
 
@@ -73,6 +76,7 @@ class _RiderOrderHistoryScreenState
         itemBuilder: (_, i) {
           final order = state.orders[i];
           return AnimatedListItem(
+            key: ValueKey(order.id),
             index: i,
             child: RiderMeOrderCard(
               order: order,

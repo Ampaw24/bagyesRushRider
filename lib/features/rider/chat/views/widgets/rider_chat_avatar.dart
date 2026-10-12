@@ -1,16 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:delivery_boy/constant/app_theme.dart';
-
-/// "Kofi Asante" → "KA", "Ama" → "A", "" → "?".
-String riderChatInitials(String name) {
-  final parts =
-      name.trim().split(RegExp(r'\s+')).where((p) => p.isNotEmpty).toList();
-  if (parts.isEmpty) return '?';
-  final first = parts.first[0];
-  final second = parts.length > 1 ? parts.last[0] : '';
-  return (first + second).toUpperCase();
-}
+import 'package:delivery_boy/core/utils/initials.dart';
 
 /// Circular participant avatar: the photo when [photoUrl] is known and loads,
 /// the name's initials otherwise (no URL, still loading, or a failed fetch) —
@@ -34,7 +25,7 @@ class RiderChatAvatar extends StatelessWidget {
       color: AppColors.primary.withValues(alpha: 0.1),
       child: Center(
         child: Text(
-          riderChatInitials(name),
+          initialsOf(name),
           style: TextStyle(
             fontFamily: 'Roboto',
             fontSize: size * 0.36,

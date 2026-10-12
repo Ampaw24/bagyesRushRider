@@ -52,6 +52,9 @@ class OrderMapSheet extends StatelessWidget {
   final VoidCallback onCall;
   final VoidCallback onChat;
 
+  /// See [OrderCustomerTile.canContact].
+  final bool canContactCustomer;
+
   const OrderMapSheet({
     super.key,
     required this.scrollController,
@@ -68,6 +71,7 @@ class OrderMapSheet extends StatelessWidget {
     required this.onNavigate,
     required this.onCall,
     required this.onChat,
+    required this.canContactCustomer,
   });
 
   @override
@@ -120,6 +124,7 @@ class OrderMapSheet extends StatelessWidget {
                   phone: customerPhone,
                   onCall: onCall,
                   onChat: onChat,
+                  canContact: canContactCustomer,
                 ),
                 SizedBox(height: w * 0.05),
                 const OrderSectionLabel(title: 'Stops'),

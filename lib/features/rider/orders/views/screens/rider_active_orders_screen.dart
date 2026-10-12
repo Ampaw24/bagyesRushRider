@@ -62,8 +62,12 @@ class _RiderActiveOrdersScreenState
       }
     });
 
-    if (state.status == RiderMeOrdersStatus.loading ||
-        state.status == RiderMeOrdersStatus.initial) {
+    // Placeholder only until the first list arrives: a reload (pull-to-
+    // refresh, closing the order sheet) keeps the cards on screen, so status
+    // and progress changes animate in place instead of flashing the shimmer.
+    if ((state.status == RiderMeOrdersStatus.loading ||
+            state.status == RiderMeOrdersStatus.initial) &&
+        state.orders.isEmpty) {
       return const ShimmerListPlaceholder(itemCount: 4, itemHeight: 110);
     }
 
@@ -90,17 +94,20 @@ class _RiderActiveOrdersScreenState
         separatorBuilder: (_, __) => SizedBox(height: w * 0.03),
         itemBuilder: (_, i) {
           final order = state.orders[i];
+          final stage = state.stageFor(order);
           return AnimatedListItem(
+            // Keeps each card's animation state with its order, not its slot.
+            key: ValueKey(order.id),
             index: i,
             child: RiderMeOrderCard(
               order: order,
+              stage: stage,
               onTap: () => _openOrderSheet(order),
               // Names the rider's next step on the card itself so the
               // delivery flow is discoverable without opening the order.
-              actionLabel: state
-                      .stageFor(order)
-                      .nextActionLabel(usesStops: order.usesStopFlow) ??
-                  'View order',
+              actionLabel:
+                  stage.nextActionLabel(usesStops: order.usesStopFlow) ??
+                      'View order',
             ),
           );
         },

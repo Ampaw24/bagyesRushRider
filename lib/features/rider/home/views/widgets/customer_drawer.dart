@@ -6,6 +6,7 @@ import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/core/di/service_locator.dart';
 import 'package:delivery_boy/core/router/app_routes.dart';
 import 'package:delivery_boy/core/services/user_session_manager.dart';
+import 'package:delivery_boy/core/utils/initials.dart';
 import 'package:delivery_boy/core/utils/legal_links.dart';
 import 'package:delivery_boy/features/rider/shared_widgets/rider_avatar.dart';
 
@@ -173,13 +174,7 @@ class _CustomerDrawerState extends State<CustomerDrawer>
     final displayName = name.isNotEmpty ? name : 'Rider';
     final email = session.email ?? '';
     final isVerified = widget.isVerified;
-    final initials = displayName
-        .split(' ')
-        .where((s) => s.isNotEmpty)
-        .map((s) => s[0])
-        .take(2)
-        .join()
-        .toUpperCase();
+    final initials = initialsOf(displayName);
 
     final regularItems = <_TileData>[
       const _TileData(icon: HugeIcons.strokeRoundedUser, label: 'My Profile'),

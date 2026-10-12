@@ -205,7 +205,11 @@ class _RiderHomeScreenState extends ConsumerState<RiderHomeScreen>
         (bannersState.status == RiderBannersStatus.loaded &&
             bannersState.banners.isNotEmpty);
     final photoUrl = ref.watch(riderAvatarUrlProvider);
-    final initials = _riderName.isNotEmpty ? _riderName[0].toUpperCase() : 'R';
+    // A whole character, not `_riderName[0]` — that splits an emoji in half
+    // and the text engine throws (see initialsOf).
+    final initials = _riderName.isNotEmpty
+        ? _riderName.characters.first.toUpperCase()
+        : 'R';
 
     // Same technique as the vendor dashboard's "Finish Setup" card: show the
     // server's outstanding verification steps in place of the online toggle,

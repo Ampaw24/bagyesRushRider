@@ -6,6 +6,7 @@ import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/core/di/service_locator.dart';
 import 'package:delivery_boy/core/router/app_routes.dart';
 import 'package:delivery_boy/core/services/user_session_manager.dart';
+import 'package:delivery_boy/core/utils/initials.dart';
 import 'package:delivery_boy/core/widgets/app_loading_overlay.dart';
 import 'package:delivery_boy/features/rider/auth/models/rider_user_model.dart';
 import 'package:delivery_boy/features/rider/auth/viewmodels/rider_auth_viewmodel.dart';
@@ -35,13 +36,7 @@ class RiderProfileScreen extends ConsumerWidget {
 
     final displayName = (session.displayName ?? '').trim();
     final name = displayName.isNotEmpty ? displayName : 'Rider';
-    final initials = name
-        .split(' ')
-        .where((s) => s.isNotEmpty)
-        .map((s) => s[0])
-        .take(2)
-        .join()
-        .toUpperCase();
+    final initials = initialsOf(name);
 
     void showLogoutDialog() {
       CustomDialog.showConfirmation(

@@ -17,6 +17,7 @@ import 'package:delivery_boy/features/rider/auth/models/rider_user_model.dart';
 import 'package:delivery_boy/core/widgets/sos_floating_button.dart';
 import 'package:delivery_boy/core/widgets/app_toast.dart';
 import 'package:delivery_boy/core/widgets/custom_dialogs.dart';
+import 'package:delivery_boy/core/widgets/pulse_scale.dart';
 import 'package:delivery_boy/features/rider/notifications/providers/rider_notifications_providers.dart';
 import 'package:delivery_boy/features/rider/profile/providers/rider_avatar_providers.dart';
 import 'package:delivery_boy/features/rider/profile/providers/rider_me_profile_providers.dart';
@@ -666,7 +667,7 @@ class _OrdersTabState extends ConsumerState<_OrdersTab> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    _PulseAnimation(
+                    PulseScale(
                       active: isOnline,
                       child: Container(
                         width: 8,
@@ -737,60 +738,6 @@ class _OrdersTabRequestListener extends ConsumerWidget {
       ref.read(riderOrdersTabRequestProvider.notifier).state = null;
     });
     return const SizedBox.shrink();
-  }
-}
-
-/// Pulse animation widget — looping ScaleTransition 0.9 ↔ 1.1 when active
-class _PulseAnimation extends StatefulWidget {
-  final bool active;
-  final Widget child;
-
-  const _PulseAnimation({required this.active, required this.child});
-
-  @override
-  State<_PulseAnimation> createState() => _PulseAnimationState();
-}
-
-class _PulseAnimationState extends State<_PulseAnimation>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _ctrl;
-  late final Animation<double> _scale;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 800),
-    );
-    _scale = Tween<double>(begin: 0.9, end: 1.1).animate(
-      CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut),
-    );
-    if (widget.active) _ctrl.repeat(reverse: true);
-  }
-
-  @override
-  void didUpdateWidget(_PulseAnimation old) {
-    super.didUpdateWidget(old);
-    if (widget.active != old.active) {
-      if (widget.active) {
-        _ctrl.repeat(reverse: true);
-      } else {
-        _ctrl.stop();
-        _ctrl.value = 0;
-      }
-    }
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return ScaleTransition(scale: _scale, child: widget.child);
   }
 }
 

@@ -372,7 +372,8 @@ class _RiderOrderMapScreenState extends ConsumerState<RiderOrderMapScreen>
   @override
   Widget build(BuildContext context) {
     final order = widget.order;
-    final stage = ref.watch(riderMeOrdersProvider).stageFor(order);
+    final ordersState = ref.watch(riderMeOrdersProvider);
+    final stage = ordersState.stageFor(order);
     final size = MediaQuery.sizeOf(context);
     final w = size.width;
     final topInset = MediaQuery.paddingOf(context).top;
@@ -463,6 +464,7 @@ class _RiderOrderMapScreenState extends ConsumerState<RiderOrderMapScreen>
               onNavigate: _navigate,
               onCall: _callCustomer,
               onChat: _openChat,
+              canContactCustomer: ordersState.isInProgress(order),
             ),
           ),
         ],

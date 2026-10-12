@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:intl/intl.dart';
 import 'package:delivery_boy/features/rider/orders/models/rider_me_order_json.dart';
 
 /// Statuses documented for `GET /rider/me/orders` — see
@@ -325,6 +326,15 @@ class RiderMeOrderModel extends Equatable {
       !usesStopFlow && (arrivedAtDropoffAt != null || wait != null);
   String get amountFormatted =>
       amount != null ? 'GHS ${amount!.toStringAsFixed(2)}' : '';
+
+  /// [createdAt] in the device's time zone, e.g. "Oct 12, 2:45 PM"; empty
+  /// when absent or unparseable.
+  String get createdAtFormatted {
+    final date = DateTime.tryParse(createdAt ?? '');
+    return date == null
+        ? ''
+        : DateFormat('MMM d, h:mm a').format(date.toLocal());
+  }
 
   RiderMeOrderModel copyWith({
     int? id,
