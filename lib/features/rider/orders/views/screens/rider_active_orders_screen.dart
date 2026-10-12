@@ -99,7 +99,7 @@ class _RiderActiveOrdersScreenState
               // delivery flow is discoverable without opening the order.
               actionLabel: state
                       .stageFor(order)
-                      .nextActionLabel(isMultiStop: order.isMultiStop) ??
+                      .nextActionLabel(usesStops: order.usesStopFlow) ??
                   'View order',
             ),
           );

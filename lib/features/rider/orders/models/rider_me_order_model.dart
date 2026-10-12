@@ -314,10 +314,15 @@ class RiderMeOrderModel extends Equatable {
   bool get isActive => !_kRiderMeTerminalStatuses.contains(status);
   bool get isMultiStop => stops.length > 1;
 
-  /// The payload says the rider already reached a single drop-off. Multi-stop
-  /// orders arrive per stop, so this doesn't describe them.
+  /// The parcel flow: the rider arrives at, delivers or fails each stop
+  /// (`…/stops/:stopId/…`) — even when there is only one. Food orders carry
+  /// no stops and use the order-level drop-off calls instead.
+  bool get usesStopFlow => stops.isNotEmpty;
+
+  /// The payload says the rider already reached a single drop-off. Orders
+  /// worked per stop arrive per stop, so this doesn't describe them.
   bool get hasArrivedAtDropoff =>
-      !isMultiStop && (arrivedAtDropoffAt != null || wait != null);
+      !usesStopFlow && (arrivedAtDropoffAt != null || wait != null);
   String get amountFormatted =>
       amount != null ? 'GHS ${amount!.toStringAsFixed(2)}' : '';
 

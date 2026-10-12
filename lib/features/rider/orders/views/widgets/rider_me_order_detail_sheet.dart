@@ -194,8 +194,8 @@ class _RiderMeOrderDetailSheetState
     double? latitude,
     double? longitude,
   }) async {
-    final hasTarget =
-        (latitude != null && longitude != null) || (address?.isNotEmpty ?? false);
+    final hasTarget = (latitude != null && longitude != null) ||
+        (address?.isNotEmpty ?? false);
     if (!hasTarget) {
       CustomDialog.showInfo(
         context: context,
@@ -265,7 +265,7 @@ class _RiderMeOrderDetailSheetState
     // Past pickup, a multi-stop order is advanced stop by stop — a list too
     // tall for the pinned footer, so its stop tiles sit in the body instead.
     final stopsInBody =
-        order.isMultiStop && stage == RiderDeliveryStage.pickedUp;
+        order.usesStopFlow && stage == RiderDeliveryStage.pickedUp;
     final w = MediaQuery.sizeOf(context).width;
     final gutter = w * 0.05;
     final sectionGap = w * 0.06;
@@ -279,8 +279,7 @@ class _RiderMeOrderDetailSheetState
         return Container(
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius:
-                BorderRadius.vertical(top: Radius.circular(w * 0.05)),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(w * 0.05)),
           ),
           child: Column(
             children: [
@@ -363,7 +362,8 @@ class _RiderMeOrderDetailSheetState
                   color: Colors.white,
                   border: Border(top: BorderSide(color: AppColors.divider)),
                 ),
-                padding: EdgeInsets.fromLTRB(gutter, w * 0.03, gutter, w * 0.03),
+                padding:
+                    EdgeInsets.fromLTRB(gutter, w * 0.03, gutter, w * 0.03),
                 child: SafeArea(
                   top: false,
                   child: isOpen && !stopsInBody
@@ -385,7 +385,8 @@ class _RiderMeOrderDetailSheetState
     bool isOpen,
     RiderDeliveryStage stage,
   ) {
-    final wait = stage == RiderDeliveryStage.arrivedAtDropoff ? order.wait : null;
+    final wait =
+        stage == RiderDeliveryStage.arrivedAtDropoff ? order.wait : null;
     if (wait == null) {
       return OrderIssueList(actions: _issueActions(order, isOpen));
     }
@@ -411,17 +412,20 @@ class _RiderMeOrderDetailSheetState
         order.canGiveUp != true;
     return [
       if (isOpen) ...[
-        OrderIssueAction(
-          icon: HugeIcons.strokeRoundedCallBlocked,
-          title: "Can't reach customer",
-          subtitle: waiting
-              ? 'Available in ${formatWaitClock(waitRemaining)}'
-              : 'Mark as unreachable after waiting',
-          destructive: true,
-          onTap: (_actionBusy || waiting)
-              ? null
-              : () => _openUnreachableSheet(order.id),
-        ),
+        // A parcel is worked per stop, so its way out is that stop's own Fail
+        // once its wait is over — not the order-level unreachable call.
+        if (!order.usesStopFlow)
+          OrderIssueAction(
+            icon: HugeIcons.strokeRoundedCallBlocked,
+            title: "Can't reach customer",
+            subtitle: waiting
+                ? 'Available in ${formatWaitClock(waitRemaining)}'
+                : 'Mark as unreachable after waiting',
+            destructive: true,
+            onTap: (_actionBusy || waiting)
+                ? null
+                : () => _openUnreachableSheet(order.id),
+          ),
         OrderIssueAction(
           icon: HugeIcons.strokeRoundedArrowTurnBackward,
           title: 'Release order',
@@ -480,7 +484,7 @@ class _RiderMeOrderDetailSheetState
         );
 
       case RiderDeliveryStage.pickedUp:
-        if (order.isMultiStop) {
+        if (order.usesStopFlow) {
           return _MultiStopPanel(
             order: order,
             busy: _actionBusy,
@@ -518,7 +522,8 @@ class _RiderMeOrderDetailSheetState
               builder: (_, remaining) => DropoffWaitBanner(
                 remaining: remaining,
                 total: wait.total,
-                onGiveUp: _actionBusy ? null : () => _openUnreachableSheet(order.id),
+                onGiveUp:
+                    _actionBusy ? null : () => _openUnreachableSheet(order.id),
               ),
             ),
             SizedBox(height: MediaQuery.sizeOf(context).width * 0.03),
@@ -657,8 +662,7 @@ class _StopTile extends StatelessWidget {
                   borderRadius: BorderRadius.circular(10)),
             ),
             child: const Text('Fail',
-                style:
-                    TextStyle(fontFamily: 'Roboto', color: AppColors.error)),
+                style: TextStyle(fontFamily: 'Roboto', color: AppColors.error)),
           ),
         ),
         const SizedBox(width: 8),

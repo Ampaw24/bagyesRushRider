@@ -93,4 +93,20 @@ void main() {
     // Per-stop waits don't make a multi-stop order "arrived at drop-off".
     expect(order.hasArrivedAtDropoff, isFalse);
   });
+
+  test('a one-stop parcel still uses the per-stop flow; food does not', () {
+    final parcel = RiderMeOrderModel.fromJson({
+      'id': 5,
+      'status': 'out_for_delivery',
+      'stops': [
+        {'id': 1, 'status': 'pending'},
+      ],
+    });
+    expect(parcel.isMultiStop, isFalse);
+    expect(parcel.usesStopFlow, isTrue);
+    expect(parcel.hasArrivedAtDropoff, isFalse);
+
+    final food = RiderMeOrderModel.fromJson(_arrivedJson());
+    expect(food.usesStopFlow, isFalse);
+  });
 }
