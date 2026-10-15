@@ -95,6 +95,7 @@ class _RiderActiveOrdersScreenState
         itemBuilder: (_, i) {
           final order = state.orders[i];
           final stage = state.stageFor(order);
+          final onHold = state.isOnHold(order);
           return AnimatedListItem(
             // Keeps each card's animation state with its order, not its slot.
             key: ValueKey(order.id),
@@ -102,12 +103,15 @@ class _RiderActiveOrdersScreenState
             child: RiderMeOrderCard(
               order: order,
               stage: stage,
+              onHold: onHold,
               onTap: () => _openOrderSheet(order),
               // Names the rider's next step on the card itself so the
-              // delivery flow is discoverable without opening the order.
-              actionLabel:
-                  stage.nextActionLabel(usesStops: order.usesStopFlow) ??
-                      'View order',
+              // delivery flow is discoverable without opening the order —
+              // none while it waits on support.
+              actionLabel: (onHold
+                      ? null
+                      : stage.nextActionLabel(usesStops: order.usesStopFlow)) ??
+                  'View order',
             ),
           );
         },

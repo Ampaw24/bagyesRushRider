@@ -25,6 +25,7 @@ import 'package:delivery_boy/features/rider/shared_widgets/rider_avatar.dart';
 import 'package:delivery_boy/features/rider/orders/providers/rider_me_order_providers.dart';
 import 'package:delivery_boy/features/rider/orders/providers/rider_orders_tab_request_provider.dart';
 import 'package:delivery_boy/features/rider/orders/views/widgets/rider_incoming_offer_listener.dart';
+import 'package:delivery_boy/features/rider/orders/views/widgets/rider_order_reopened_listener.dart';
 import 'package:delivery_boy/features/rider/tracking/providers/rider_presence_providers.dart';
 import 'package:delivery_boy/features/rider/tracking/providers/rider_tracking_providers.dart';
 import 'package:delivery_boy/features/rider/tracking/views/widgets/rider_online_location_gate.dart';
@@ -288,7 +289,7 @@ class _RiderDashboardScreenState extends ConsumerState<RiderDashboardScreen>
       const RiderProfileScreen(),
     ];
 
-    return RiderIncomingOfferListener(
+    final shell = RiderIncomingOfferListener(
       onAccepted: _onOfferAccepted,
       child: PopScope(
         canPop: false,
@@ -344,6 +345,7 @@ class _RiderDashboardScreenState extends ConsumerState<RiderDashboardScreen>
         ),
       ),
     );
+    return RiderOrderReopenedListener(child: shell);
   }
 }
 

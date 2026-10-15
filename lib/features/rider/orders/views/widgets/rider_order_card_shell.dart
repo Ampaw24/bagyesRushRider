@@ -158,9 +158,9 @@ class RiderOrderCardButton extends StatelessWidget {
     final child = isLoading
         ? SizedBox.square(
             dimension: w * 0.045,
-            child: const CircularProgressIndicator(
+            child: CircularProgressIndicator(
               strokeWidth: 2,
-              color: Colors.white,
+              color: outlined ? AppColors.textPrimary : AppColors.onPrimary,
             ),
           )
         : Row(
@@ -180,7 +180,7 @@ class RiderOrderCardButton extends StatelessWidget {
 
     if (outlined) {
       return OutlinedButton(
-        onPressed: onPressed,
+        onPressed: isLoading ? null : onPressed,
         style: OutlinedButton.styleFrom(
           minimumSize: minimumSize,
           padding: padding,

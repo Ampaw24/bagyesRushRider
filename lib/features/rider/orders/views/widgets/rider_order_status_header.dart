@@ -2,16 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/core/widgets/pulse_scale.dart';
 import 'package:delivery_boy/features/rider/orders/views/widgets/rider_me_order_status.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 /// Full-width band leading an order card with the order's status: its icon,
 /// label and [subtitle] on a light tint of the status colour, plus a
-/// pulsing "Live" cue while the order is in progress ([isLive]).
+/// pulsing "Live" cue while the order is in progress ([isLive]) — or a
+/// still "On hold" cue while it waits on support ([onHold]).
 ///
 /// Stateless on purpose — a new [status] (e.g. from a realtime
 /// `order.status` event) cross-fades through the implicit animations below.
 class RiderOrderStatusHeader extends StatelessWidget {
   final String status;
   final bool isLive;
+
+  /// The rider gave up and support hasn't reopened the order yet — see
+  /// `RiderMeOrdersState.isOnHold`. Takes the place of the Live cue.
+  final bool onHold;
 
   /// Second line under the label, e.g. when the order was placed. Hidden
   /// when empty.
@@ -25,6 +31,7 @@ class RiderOrderStatusHeader extends StatelessWidget {
     super.key,
     required this.status,
     required this.isLive,
+    this.onHold = false,
     this.subtitle = '',
     this.padding,
   });
@@ -127,12 +134,47 @@ class RiderOrderStatusHeader extends StatelessWidget {
               ],
             ),
           ),
-          if (isLive) ...[
+          if (onHold) ...[
+            SizedBox(width: w * 0.02),
+            const _OnHoldIndicator(),
+          ] else if (isLive) ...[
             SizedBox(width: w * 0.02),
             _LiveIndicator(color: color, duration: duration),
           ],
         ],
       ),
+    );
+  }
+}
+
+/// Still, unlike the Live cue: nothing is moving until support acts.
+class _OnHoldIndicator extends StatelessWidget {
+  const _OnHoldIndicator();
+
+  @override
+  Widget build(BuildContext context) {
+    final w = MediaQuery.sizeOf(context).width;
+    final size = (w * 0.03).clamp(11.0, 13.0);
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          HugeIcons.strokeRoundedPauseCircle,
+          size: size * 1.2,
+          color: AppColors.warning,
+        ),
+        SizedBox(width: w * 0.012),
+        Text(
+          'On hold',
+          style: TextStyle(
+            fontFamily: 'Roboto',
+            fontSize: size,
+            fontWeight: FontWeight.w600,
+            color: AppColors.warning,
+          ),
+        ),
+      ],
     );
   }
 }

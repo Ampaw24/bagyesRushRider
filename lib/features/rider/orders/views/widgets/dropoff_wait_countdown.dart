@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:delivery_boy/constant/app_theme.dart';
+import 'package:delivery_boy/core/widgets/adaptive_animated_size.dart';
 import 'package:delivery_boy/features/rider/orders/models/rider_me_order_model.dart';
 
 /// `mm:ss`, rounded up so the clock never shows 00:00 while time remains.
@@ -113,8 +114,8 @@ class DropoffWaitBanner extends StatelessWidget {
         borderRadius: BorderRadius.circular(w * 0.03),
         border: Border.all(color: tint.withValues(alpha: 0.3)),
       ),
-      child: AnimatedSize(
-        duration: motion,
+      child: AdaptiveAnimatedSize(
+        duration: const Duration(milliseconds: 250),
         alignment: Alignment.topCenter,
         child: Column(
           mainAxisSize: MainAxisSize.min,

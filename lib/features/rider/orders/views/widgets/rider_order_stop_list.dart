@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:delivery_boy/constant/app_theme.dart';
+import 'package:delivery_boy/core/widgets/adaptive_animated_size.dart';
 import 'package:delivery_boy/features/rider/orders/models/rider_me_order_model.dart';
 import 'package:delivery_boy/features/rider/orders/providers/rider_me_order_providers.dart';
 import 'package:delivery_boy/features/rider/orders/views/widgets/dropoff_wait_countdown.dart';
@@ -57,7 +58,9 @@ class RiderOrderStopList extends ConsumerWidget {
   }
 }
 
-enum _StopState { pending, arrived, waiting, delivered, failed }
+/// [failed] is on hold — support may yet reopen it; [reopened] is a failed
+/// stop support has made deliverable again (`can_deliver`).
+enum _StopState { pending, arrived, waiting, delivered, failed, reopened }
 
 class _StopTile extends StatelessWidget {
   /// Position in the route, shown in the badge.
@@ -83,7 +86,9 @@ class _StopTile extends StatelessWidget {
 
   _StopState get _state {
     if (stop.isDelivered) return _StopState.delivered;
-    if (stop.isFailed) return _StopState.failed;
+    if (stop.isFailed) {
+      return stop.isReopened ? _StopState.reopened : _StopState.failed;
+    }
     if (!hasArrived) return _StopState.pending;
     return stop.wait != null ? _StopState.waiting : _StopState.arrived;
   }
@@ -166,6 +171,7 @@ class _StopTile extends StatelessWidget {
     final (String statusLabel, Color statusColor) = switch (state) {
       _StopState.delivered => ('Delivered', AppColors.success),
       _StopState.failed => ('Failed', AppColors.error),
+      _StopState.reopened => ('Reopened', AppColors.info),
       _StopState.arrived || _StopState.waiting => ('Arrived', AppColors.primary),
       _StopState.pending => ('Pending', AppColors.textSecondary),
     };
@@ -176,6 +182,8 @@ class _StopTile extends StatelessWidget {
         ),
       _StopState.arrived => _buildArrivedActions(context),
       _StopState.waiting => _buildWaitingActions(context, stop.wait!),
+      // The rider was already there, so straight back to Deliver / Fail.
+      _StopState.reopened => _buildArrivedActions(context),
       _StopState.delivered || _StopState.failed => null,
     };
     final recipient = stop.recipientName?.trim() ?? '';
@@ -226,6 +234,16 @@ class _StopTile extends StatelessWidget {
                       SizedBox(height: w * 0.008),
                       Text(reason, style: detailStyle),
                     ],
+                    if (state == _StopState.failed) ...[
+                      SizedBox(height: w * 0.008),
+                      Text(
+                        'Waiting for support',
+                        style: detailStyle.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.warning,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -242,8 +260,8 @@ class _StopTile extends StatelessWidget {
           ),
           // The stop's actions change as the rider works it — arrived,
           // waiting, done. Ease between them rather than jumping.
-          AnimatedSize(
-            duration: motion,
+          AdaptiveAnimatedSize(
+            duration: const Duration(milliseconds: 300),
             curve: Curves.easeOutCubic,
             alignment: Alignment.topCenter,
             child: AnimatedSwitcher(

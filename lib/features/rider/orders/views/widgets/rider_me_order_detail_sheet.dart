@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/core/router/app_routes.dart';
 import 'package:delivery_boy/core/utils/external_navigation_launcher.dart';
+import 'package:delivery_boy/core/widgets/adaptive_animated_size.dart';
 import 'package:delivery_boy/core/widgets/animated_list_item.dart';
 import 'package:delivery_boy/core/widgets/custom_dialogs.dart';
 import 'package:delivery_boy/core/widgets/drag_handle.dart';
@@ -47,6 +48,9 @@ class _RiderMeOrderDetailSheetState
     extends ConsumerState<RiderMeOrderDetailSheet> {
   bool _actionBusy = false;
 
+  /// A "Check again" refresh of an order on hold is in flight.
+  bool _checking = false;
+
   @override
   void initState() {
     super.initState();
@@ -57,10 +61,22 @@ class _RiderMeOrderDetailSheetState
     });
   }
 
-  RiderMeOrderModel _currentOrder(RiderMeOrdersState state) =>
-      (state.selectedOrder?.id == widget.initialOrder.id)
-          ? state.selectedOrder!
-          : widget.initialOrder;
+  /// The freshest copy of this sheet's order: the one fetched for it, else
+  /// the list's (which background refreshes keep current), else the one the
+  /// sheet was opened with.
+  RiderMeOrderModel _currentOrder(RiderMeOrdersState state) {
+    final id = widget.initialOrder.id;
+    if (state.selectedOrder?.id == id) return state.selectedOrder!;
+    return state.orders.where((o) => o.id == id).firstOrNull ??
+        widget.initialOrder;
+  }
+
+  Future<void> _checkAgain(int orderId) async {
+    if (_checking) return;
+    setState(() => _checking = true);
+    await ref.read(riderMeOrdersProvider.notifier).refreshOrder(orderId);
+    if (mounted) setState(() => _checking = false);
+  }
 
   Future<void> _runSimpleAction(Future<bool> Function() action) async {
     if (_actionBusy) return;
@@ -160,6 +176,8 @@ class _RiderMeOrderDetailSheetState
     });
   }
 
+  /// The order stays open afterwards — on hold until support resolves it —
+  /// so the sheet stays too, and slides into its "Waiting for support" step.
   void _openUnreachableSheet(int orderId) {
     showModalBottomSheet<bool>(
       context: context,
@@ -176,7 +194,7 @@ class _RiderMeOrderDetailSheetState
                 ),
       ),
     ).then((marked) {
-      if (marked == true && mounted) Navigator.of(context).pop();
+      if (marked == true) HapticFeedback.mediumImpact();
     });
   }
 
@@ -261,8 +279,10 @@ class _RiderMeOrderDetailSheetState
     final order = _currentOrder(ordersState);
     final stage = ordersState.stageFor(order);
     // Still being delivered: drives the Live cue, and whether the rider may
-    // still call or message the customer.
+    // still call or message the customer (on hold included).
     final inProgress = ordersState.isInProgress(order);
+    // Gave up, waiting on support to reopen it (`can_deliver`).
+    final onHold = ordersState.isOnHold(order);
 
     final isOpen = stage != RiderDeliveryStage.delivered &&
         stage != RiderDeliveryStage.closed;
@@ -300,6 +320,7 @@ class _RiderMeOrderDetailSheetState
                     RiderOrderStatusHeader(
                       status: order.status,
                       isLive: inProgress,
+                      onHold: onHold,
                       subtitle: order.createdAtFormatted,
                       padding: EdgeInsets.symmetric(
                         horizontal: gutter,
@@ -396,7 +417,12 @@ class _RiderMeOrderDetailSheetState
                             _section(
                               const OrderSectionLabel(
                                   title: 'Having trouble?'),
-                              _buildIssueList(order, isOpen, stage),
+                              _buildIssueList(
+                                order,
+                                isOpen,
+                                stage,
+                                onHold: onHold,
+                              ),
                             ),
                           ),
                         ],
@@ -409,6 +435,7 @@ class _RiderMeOrderDetailSheetState
                 order,
                 stage,
                 showAction: isOpen && !stopsInBody,
+                onHold: onHold,
                 gutter: gutter,
               ),
             ],
@@ -437,18 +464,25 @@ class _RiderMeOrderDetailSheetState
   /// The pinned next step. Always on screen, so the rider never has to
   /// scroll past the order details to find how to move the delivery
   /// forward. When a step completes, the next one slides in and the bar
-  /// resizes to fit it (e.g. once the customer wait banner appears).
+  /// resizes to fit it (e.g. once the customer wait banner appears). While
+  /// the order is [onHold] that step is "Waiting for support" — until
+  /// support reopens it and the delivery step slides back in.
   Widget _buildFooter(
     RiderMeOrderModel order,
     RiderDeliveryStage stage, {
     required bool showAction,
+    required bool onHold,
     required double gutter,
   }) {
     final w = MediaQuery.sizeOf(context).width;
     final motion = MediaQuery.disableAnimationsOf(context)
         ? Duration.zero
         : const Duration(milliseconds: 300);
-    final step = showAction ? '${stage.name}-${order.wait != null}' : 'close';
+    final step = onHold
+        ? 'on-hold'
+        : showAction
+            ? '${stage.name}-${order.wait != null}'
+            : 'close';
 
     return Container(
       decoration: const BoxDecoration(
@@ -458,8 +492,8 @@ class _RiderMeOrderDetailSheetState
       padding: EdgeInsets.fromLTRB(gutter, w * 0.03, gutter, w * 0.03),
       child: SafeArea(
         top: false,
-        child: AnimatedSize(
-          duration: motion,
+        child: AdaptiveAnimatedSize(
+          duration: const Duration(milliseconds: 300),
           curve: Curves.easeOutCubic,
           alignment: Alignment.bottomCenter,
           child: AnimatedSwitcher(
@@ -478,9 +512,11 @@ class _RiderMeOrderDetailSheetState
             ),
             child: KeyedSubtree(
               key: ValueKey(step),
-              child: showAction
-                  ? _buildActionPanel(order, stage)
-                  : _closeButton(),
+              child: onHold
+                  ? _onHoldNotice(order)
+                  : showAction
+                      ? _buildActionPanel(order, stage)
+                      : _closeButton(),
             ),
           ),
         ),
@@ -488,17 +524,32 @@ class _RiderMeOrderDetailSheetState
     );
   }
 
+  Widget _onHoldNotice(RiderMeOrderModel order) => OrderOnHoldNotice(
+        message: order.usesStopFlow
+            ? "You couldn't deliver the stops still open. If support "
+                'reopens one, you can deliver it here.'
+            : 'You marked the customer unreachable. If support reopens '
+                'this delivery, you can complete it here.',
+        checking: _checking,
+        buttonHeight: _footerButtonHeight,
+        onCheckAgain: () => _checkAgain(order.id),
+      );
+
   /// While the customer wait window is running, "Can't reach customer" is
-  /// locked behind its countdown; everywhere else the server decides.
+  /// locked behind its countdown; once the rider has used it the order is
+  /// [onHold] and it goes; everywhere else the server decides.
   Widget _buildIssueList(
     RiderMeOrderModel order,
     bool isOpen,
-    RiderDeliveryStage stage,
-  ) {
+    RiderDeliveryStage stage, {
+    required bool onHold,
+  }) {
     final wait =
         stage == RiderDeliveryStage.arrivedAtDropoff ? order.wait : null;
-    if (wait == null) {
-      return OrderIssueList(actions: _issueActions(order, isOpen));
+    if (wait == null || onHold) {
+      return OrderIssueList(
+        actions: _issueActions(order, isOpen, onHold: onHold),
+      );
     }
     return WaitCountdownBuilder(
       wait: wait,
@@ -516,6 +567,7 @@ class _RiderMeOrderDetailSheetState
     RiderMeOrderModel order,
     bool isOpen, {
     Duration? waitRemaining,
+    bool onHold = false,
   }) {
     final waiting = waitRemaining != null &&
         waitRemaining > Duration.zero &&
@@ -524,7 +576,7 @@ class _RiderMeOrderDetailSheetState
       if (isOpen) ...[
         // A parcel is worked per stop, so its way out is that stop's own Fail
         // once its wait is over — not the order-level unreachable call.
-        if (!order.usesStopFlow)
+        if (!order.usesStopFlow && !onHold)
           OrderIssueAction(
             icon: HugeIcons.strokeRoundedCallBlocked,
             title: "Can't reach customer",

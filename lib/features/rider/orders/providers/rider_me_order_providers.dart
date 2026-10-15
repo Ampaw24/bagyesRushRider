@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:equatable/equatable.dart';
+import 'package:flutter/widgets.dart'
+    show AppLifecycleListener, AppLifecycleState, WidgetsBinding;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:delivery_boy/constant/typedef.dart';
 import 'package:delivery_boy/core/di/service_locator.dart';
@@ -227,6 +229,27 @@ class RiderMeOrdersState extends Equatable {
         stage != RiderDeliveryStage.closed;
   }
 
+  /// The rider gave up on [order] — marked the customer unreachable, or
+  /// failed every stop still open — and support hasn't reopened it yet.
+  /// The server keeps such an order `out_for_delivery` with `can_deliver`
+  /// false; an admin resolving it turns `can_deliver` back to true, which
+  /// clears this on the next refresh. Derived, never stored, so there is
+  /// nothing to reset by hand.
+  bool isOnHold(RiderMeOrderModel order) {
+    if (!order.isActive) return false;
+    final stage = stageFor(order);
+    if (order.usesStopFlow) {
+      if (stage != RiderDeliveryStage.pickedUp) return false;
+      final open = order.stops.where((s) => !s.isDelivered);
+      return open.isNotEmpty && open.every((s) => s.isOnHold);
+    }
+    // Past pickup only: the flag means "gave up at the drop-off" there, and
+    // an early false must never block the pickup steps.
+    return order.canDeliver == false &&
+        (stage == RiderDeliveryStage.pickedUp ||
+            stage == RiderDeliveryStage.arrivedAtDropoff);
+  }
+
   bool hasArrived(int orderId, int stopId) =>
       arrivedStopIds[orderId]?.contains(stopId) ?? false;
 
@@ -244,6 +267,11 @@ class RiderMeOrdersState extends Equatable {
       ];
 }
 
+/// How often orders on hold are re-checked while the app is open (the offers
+/// list polls every 25 s for the same reason: pushes and sockets can drop).
+/// Support reopening an order surfaces within this.
+const _kOnHoldPollInterval = Duration(seconds: 20);
+
 class RiderMeOrdersNotifier extends Notifier<RiderMeOrdersState> {
   /// Order ids this notifier currently holds a `private-order.{id}` channel
   /// open for — kept in sync with the active orders in [state] by
@@ -254,21 +282,114 @@ class RiderMeOrdersNotifier extends Notifier<RiderMeOrdersState> {
   /// now".
   final Set<int> _liveOrderChannels = {};
   StreamSubscription<RealtimeOrderStatusEvent>? _orderStatusSub;
+  StreamSubscription<Map<String, dynamic>>? _riderChannelSub;
+
+  /// Re-checks orders on hold until support reopens them. Reopening leaves
+  /// the order's status as it was, so no `order.status` event announces it
+  /// — this poll, the rider-channel listener and the refresh on app show
+  /// are what notice `can_deliver` turning true. Runs only while something
+  /// is on hold and the app is in the foreground.
+  Timer? _onHoldPoll;
+  bool _inForeground = true;
+  bool _refreshingOnHold = false;
 
   @override
   RiderMeOrdersState build() {
     ref.onDispose(_teardownRealtime);
-    _orderStatusSub =
-        sl<RealtimeService>().orderStatus$.listen(_onOrderStatusEvent);
+    final realtime = sl<RealtimeService>();
+    _orderStatusSub = realtime.orderStatus$.listen(_onOrderStatusEvent);
+    // The rider channel's payloads aren't documented, and support resolving
+    // an order may be among them — cheap to follow, since only orders on
+    // hold are re-fetched.
+    _riderChannelSub = realtime.riderChannelEvents$
+        .listen((_) => unawaited(_refreshOnHold()));
+
+    // `onShow`/`onHide` rather than resume/pause, so pulling down the
+    // notification shade (an `inactive` blip) doesn't trigger a refresh.
+    final lifecycle = AppLifecycleListener(
+      onShow: _onAppShown,
+      onHide: _onAppHidden,
+    );
+    final appState = WidgetsBinding.instance.lifecycleState;
+    _inForeground = appState == null ||
+        appState == AppLifecycleState.resumed ||
+        appState == AppLifecycleState.inactive;
+    ref.onDispose(() {
+      lifecycle.dispose();
+      _stopOnHoldPoll();
+    });
+    listenSelf((_, next) => _syncOnHoldPoll(next));
     return const RiderMeOrdersState();
   }
 
   RiderMeOrderRepository get _repo => sl<RiderMeOrderRepository>();
 
+  // ── Keeping orders on hold fresh ──────────────────────────────────────
+
+  /// Back from the background: support may have reopened an order (or
+  /// anything else may have moved) while the app was away.
+  void _onAppShown() {
+    _inForeground = true;
+    if (state.status != RiderMeOrdersStatus.initial) {
+      unawaited(() async {
+        await load(filter: 'active', silent: true);
+        await _refreshOnHold();
+      }());
+    }
+    _syncOnHoldPoll(state);
+  }
+
+  void _onAppHidden() {
+    _inForeground = false;
+    _stopOnHoldPoll();
+  }
+
+  void _syncOnHoldPoll(RiderMeOrdersState current) {
+    if (_inForeground && current.orders.any(current.isOnHold)) {
+      _onHoldPoll ??= Timer.periodic(
+        _kOnHoldPollInterval,
+        (_) => unawaited(_refreshOnHold()),
+      );
+    } else {
+      _stopOnHoldPoll();
+    }
+  }
+
+  void _stopOnHoldPoll() {
+    _onHoldPoll?.cancel();
+    _onHoldPoll = null;
+  }
+
+  /// Re-fetches every order on hold, so one support has reopened is picked
+  /// up. Overlapping triggers (poll, socket, app shown) share one pass.
+  Future<void> _refreshOnHold() async {
+    if (_refreshingOnHold) return;
+    _refreshingOnHold = true;
+    try {
+      final ids = state.orders.where(state.isOnHold).map((o) => o.id).toList();
+      for (final id in ids) {
+        await refreshOrder(id);
+      }
+    } finally {
+      _refreshingOnHold = false;
+    }
+  }
+
+  /// Re-fetches one order in the background and patches it in — into the
+  /// list, and into the open sheet if it shows this order. Unlike
+  /// [loadOrder] it never takes over [RiderMeOrdersState.selectedOrder],
+  /// and a failure is left quiet for the next refresh to retry.
+  Future<void> refreshOrder(int orderId) async {
+    final result = await _repo.getOrder(orderId);
+    result.fold((_) {}, (order) => _applyOrder(order, select: false));
+  }
+
   /// An admin (or any other actor) changed an order's status out of band —
   /// patch it in place rather than assuming which prior status it came
   /// from. An order that leaves the active set this way also drops its
-  /// channel subscription, same as a rider-driven completion would.
+  /// channel subscription, same as a rider-driven completion would. One that
+  /// stays is re-fetched: the event carries only the status, not
+  /// `can_deliver` or the stops.
   void _onOrderStatusEvent(RealtimeOrderStatusEvent event) {
     final orders = state.orders;
     final index = orders.indexWhere((o) => o.id == event.orderId);
@@ -288,7 +409,9 @@ class RiderMeOrdersNotifier extends Notifier<RiderMeOrdersState> {
           state.selectedOrder?.id == event.orderId ? updated : state.selectedOrder,
     );
 
-    if (!updated.isActive) {
+    if (updated.isActive) {
+      unawaited(refreshOrder(event.orderId));
+    } else {
       sl<RealtimeService>().unsubscribeFromOrder(event.orderId);
       _liveOrderChannels.remove(event.orderId);
     }
@@ -312,6 +435,7 @@ class RiderMeOrdersNotifier extends Notifier<RiderMeOrdersState> {
 
   void _teardownRealtime() {
     _orderStatusSub?.cancel();
+    _riderChannelSub?.cancel();
     final realtime = sl<RealtimeService>();
     for (final id in _liveOrderChannels) {
       realtime.unsubscribeFromOrder(id);
@@ -323,19 +447,49 @@ class RiderMeOrdersNotifier extends Notifier<RiderMeOrdersState> {
   }
 
   /// [filter] is `all` | `active` | `history` per the API contract.
-  Future<void> load({String? filter, String? status, int? perPage}) async {
-    state = state.copyWith(
-        status: RiderMeOrdersStatus.loading, clearError: true);
+  /// [silent] is for background refreshes: no `loading` state, and a
+  /// failure leaves the list as it was — nothing for the Active tab to
+  /// raise an error dialog over.
+  Future<void> load({
+    String? filter,
+    String? status,
+    int? perPage,
+    bool silent = false,
+  }) async {
+    if (!silent) {
+      state = state.copyWith(
+          status: RiderMeOrdersStatus.loading, clearError: true);
+    }
     final result =
         await _repo.getOrders(filter: filter, status: status, perPage: perPage);
     result.fold(
-      (f) => state = state.copyWith(
-          status: RiderMeOrdersStatus.error, errorMessage: f.message),
+      (f) {
+        if (silent) return;
+        state = state.copyWith(
+            status: RiderMeOrdersStatus.error, errorMessage: f.message);
+      },
       (orders) {
-        state = state.copyWith(status: RiderMeOrdersStatus.loaded, orders: orders);
+        state = state.copyWith(
+          status: RiderMeOrdersStatus.loaded,
+          orders: _keepKnownCanDeliver(orders),
+        );
         _syncOrderChannels();
       },
     );
+  }
+
+  /// A list payload that leaves `can_deliver` out says nothing about it —
+  /// keep the value the order's own payload gave, rather than letting the
+  /// list make an order on hold look deliverable (or stop its re-checks).
+  List<RiderMeOrderModel> _keepKnownCanDeliver(
+      List<RiderMeOrderModel> fresh) {
+    final known = {for (final o in state.orders) o.id: o.canDeliver};
+    return [
+      for (final order in fresh)
+        order.canDeliver == null && known[order.id] != null
+            ? order.copyWith(canDeliver: known[order.id])
+            : order,
+    ];
   }
 
   /// Fetches one order into [RiderMeOrdersState.selectedOrder] and patches
@@ -351,11 +505,16 @@ class RiderMeOrdersNotifier extends Notifier<RiderMeOrdersState> {
     );
   }
 
-  /// Stores a freshly fetched [order] — see [loadOrder].
-  void _applyOrder(RiderMeOrderModel order) {
+  /// Stores a freshly fetched [order] — see [loadOrder]. [select] makes it
+  /// the [RiderMeOrdersState.selectedOrder]; otherwise that is only updated
+  /// when it already is this order (see [refreshOrder]).
+  void _applyOrder(RiderMeOrderModel order, {bool select = true}) {
+    final selected = select || state.selectedOrder?.id == order.id
+        ? order
+        : state.selectedOrder;
     final index = state.orders.indexWhere((o) => o.id == order.id);
     if (index == -1) {
-      state = state.copyWith(selectedOrder: order);
+      state = state.copyWith(selectedOrder: selected);
       return;
     }
     final orders = [...state.orders];
@@ -364,24 +523,29 @@ class RiderMeOrdersNotifier extends Notifier<RiderMeOrdersState> {
     } else {
       orders.removeAt(index);
     }
-    state = state.copyWith(selectedOrder: order, orders: orders);
+    state = state.copyWith(selectedOrder: selected, orders: orders);
     _syncOrderChannels();
   }
 
-  /// Once every stop of a multi-stop order is delivered or failed there is
-  /// no rider action left, so the order is treated as done locally even if
-  /// the server hasn't moved its coarse `status` to `delivered` yet —
-  /// otherwise the order would sit in the active list with no action panel
-  /// and keep location tracking on its high-accuracy tier. The active list
-  /// is then re-fetched so the server has the final word.
+  /// Once every stop of a multi-stop order is delivered there is no rider
+  /// action left, so the order is treated as done locally even if the
+  /// server hasn't moved its coarse `status` to `delivered` yet — otherwise
+  /// it would sit in the active list with no action panel and keep location
+  /// tracking on its high-accuracy tier. A failed stop isn't final, though:
+  /// support can reopen it (`can_deliver`), so an order left with one stays
+  /// open — on hold until then (see [RiderMeOrdersState.isOnHold]). Once no
+  /// stop is left to work, the active list is re-fetched so the server has
+  /// the final word.
   Future<void> _afterStopResolved(int orderId) async {
     await loadOrder(orderId);
     final order = state.selectedOrder;
     if (order == null || order.id != orderId || order.stops.isEmpty) return;
     final allResolved = order.stops.every((s) => s.isDelivered || s.isFailed);
     if (!allResolved) return;
-    _setStage(orderId, RiderDeliveryStage.delivered);
-    await load(filter: 'active');
+    if (order.stops.every((s) => s.isDelivered)) {
+      _setStage(orderId, RiderDeliveryStage.delivered);
+    }
+    await load(filter: 'active', silent: true);
   }
 
   Future<bool> _runAction(ResultFuture<void> Function() action) async {
@@ -487,14 +651,17 @@ class RiderMeOrdersNotifier extends Notifier<RiderMeOrdersState> {
     return ok;
   }
 
-  /// Rider waited and can't reach the customer. ASSUMPTION (unconfirmed —
-  /// backend unreachable while this was written): treated like [releaseOrder]
-  /// — reload rather than a client-side list removal — as the safer
-  /// optimistic default. Verify against a live account.
+  /// Rider waited and can't reach the customer. The server keeps the order
+  /// `out_for_delivery` with `can_deliver` false — on hold until support
+  /// resolves it (see [RiderMeOrdersState.isOnHold]) — so it is re-fetched
+  /// for the open sheet, then the list, rather than assumed gone.
   Future<bool> markUnreachable(int orderId, {String? reason}) async {
     final ok =
         await _runAction(() => _repo.markUnreachable(orderId, reason: reason));
-    if (ok) await load(filter: 'active');
+    if (ok) {
+      await loadOrder(orderId);
+      await load(filter: 'active', silent: true);
+    }
     return ok;
   }
 

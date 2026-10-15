@@ -113,6 +113,43 @@ void main() {
     expect(offer.estimatedFare, 12);
   });
 
+  group('can_deliver', () {
+    test('reads the order flag, and hands it to stops without their own', () {
+      final order = RiderMeOrderModel.fromJson({
+        'id': 1,
+        'status': 'out_for_delivery',
+        'can_deliver': false,
+        'stops': [
+          {'id': 11, 'status': 'failed'},
+          {'id': 12, 'status': 'failed', 'can_deliver': '1'},
+        ],
+      });
+
+      expect(order.canDeliver, isFalse);
+      expect(order.stops[0].canDeliver, isFalse);
+      expect(order.stops[0].isOnHold, isTrue);
+      // The stop's own flag wins over the order's.
+      expect(order.stops[1].canDeliver, isTrue);
+      expect(order.stops[1].isReopened, isTrue);
+      expect(order.stops[1].isOnHold, isFalse);
+    });
+
+    test('is null when the payload leaves it out', () {
+      final order = RiderMeOrderModel.fromJson({
+        'id': 1,
+        'status': 'out_for_delivery',
+        'stops': [
+          {'id': 11, 'status': 'failed'},
+        ],
+      });
+
+      expect(order.canDeliver, isNull);
+      expect(order.stops.single.canDeliver, isNull);
+      // A failed stop is on hold until support says otherwise.
+      expect(order.stops.single.isOnHold, isTrue);
+    });
+  });
+
   group('RiderMeOrderModel.createdAtFormatted', () {
     test('formats the timestamp in local time', () {
       const order = RiderMeOrderModel(

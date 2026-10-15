@@ -140,6 +140,10 @@ class RiderMeOrderStopModel extends Equatable {
   /// `waiting` — set once the rider has arrived at this stop; null before.
   final RiderMeOrderWait? wait;
 
+  /// `can_deliver` — the stop's own flag, else the order's (see
+  /// [RiderMeOrderModel.canDeliver]); null when neither says.
+  final bool? canDeliver;
+
   const RiderMeOrderStopModel({
     required this.id,
     this.sequence,
@@ -153,12 +157,26 @@ class RiderMeOrderStopModel extends Equatable {
     this.deliveredAt,
     this.failureReason,
     this.wait,
+    this.canDeliver,
   });
 
   bool get isDelivered => status == 'delivered';
   bool get isFailed => status == 'failed';
 
-  factory RiderMeOrderStopModel.fromJson(Map<String, dynamic> json) {
+  /// Failed and waiting on support. A failed stop isn't final: an admin can
+  /// reopen it by setting `can_deliver` back to true — until then it counts
+  /// as on hold, flag or no flag.
+  bool get isOnHold => isFailed && canDeliver != true;
+
+  /// A failed stop support has reopened — deliverable again.
+  bool get isReopened => isFailed && canDeliver == true;
+
+  /// [orderCanDeliver] is the order's `can_deliver`, used when the stop
+  /// carries none of its own.
+  factory RiderMeOrderStopModel.fromJson(
+    Map<String, dynamic> json, {
+    bool? orderCanDeliver,
+  }) {
     final recipient = jsonMap(json['recipient']);
     final coords = jsonLatLng(json) ??
         jsonLatLng(jsonMap(json['location'])) ??
@@ -182,11 +200,13 @@ class RiderMeOrderStopModel extends Equatable {
       deliveredAt: jsonString(json['delivered_at']),
       failureReason: jsonString(json['failure_reason']),
       wait: RiderMeOrderWait.fromJson(jsonMap(json['waiting'])),
+      canDeliver: RiderMeOrderModel._optionalFlag(json['can_deliver']) ??
+          orderCanDeliver,
     );
   }
 
   @override
-  List<Object?> get props => [id, status, wait];
+  List<Object?> get props => [id, status, wait, canDeliver];
 }
 
 /// The wait window that starts when the rider arrives — the order-level
@@ -286,6 +306,12 @@ class RiderMeOrderModel extends Equatable {
   /// The customer wait window; null until the rider arrives at the drop-off.
   final RiderMeOrderWait? wait;
 
+  /// `can_deliver` — true through a normal delivery, false once the rider
+  /// gives up (marks the customer unreachable, or fails a stop). The order
+  /// stays `out_for_delivery` meanwhile, and support can make it deliverable
+  /// again by turning this back to true. Null when the payload doesn't say.
+  final bool? canDeliver;
+
   /// `can_give_up` — the server says the rider may mark the customer
   /// unreachable now. Null when the payload doesn't say.
   final bool? canGiveUp;
@@ -309,6 +335,7 @@ class RiderMeOrderModel extends Equatable {
     this.requiresPickupCode = false,
     this.arrivedAtDropoffAt,
     this.wait,
+    this.canDeliver,
     this.canGiveUp,
   });
 
@@ -355,6 +382,7 @@ class RiderMeOrderModel extends Equatable {
     bool? requiresPickupCode,
     String? arrivedAtDropoffAt,
     RiderMeOrderWait? wait,
+    bool? canDeliver,
     bool? canGiveUp,
   }) =>
       RiderMeOrderModel(
@@ -376,14 +404,19 @@ class RiderMeOrderModel extends Equatable {
         requiresPickupCode: requiresPickupCode ?? this.requiresPickupCode,
         arrivedAtDropoffAt: arrivedAtDropoffAt ?? this.arrivedAtDropoffAt,
         wait: wait ?? this.wait,
+        canDeliver: canDeliver ?? this.canDeliver,
         canGiveUp: canGiveUp ?? this.canGiveUp,
       );
 
   factory RiderMeOrderModel.fromJson(Map<String, dynamic> json) {
+    final canDeliver = _optionalFlag(json['can_deliver']);
     final stopsList = json['stops'] as List? ?? const [];
     final stops = stopsList
         .whereType<Map>()
-        .map((e) => RiderMeOrderStopModel.fromJson(e.cast<String, dynamic>()))
+        .map((e) => RiderMeOrderStopModel.fromJson(
+              e.cast<String, dynamic>(),
+              orderCanDeliver: canDeliver,
+            ))
         .toList();
     final fields = RiderMeOrderFields(json);
     // Parcel orders carry no `customer`: the contact is the recipient of
@@ -421,8 +454,8 @@ class RiderMeOrderModel extends Equatable {
       arrivedAtDropoffAt:
           jsonString(jsonMap(json['timeline'])?['arrived_at_dropoff']),
       wait: RiderMeOrderWait.fromJson(jsonMap(json['wait'])),
-      canGiveUp:
-          json['can_give_up'] == null ? null : _isTrue(json['can_give_up']),
+      canDeliver: canDeliver,
+      canGiveUp: _optionalFlag(json['can_give_up']),
     );
   }
 
@@ -430,9 +463,13 @@ class RiderMeOrderModel extends Equatable {
   static bool _isTrue(Object? value) =>
       value == true || value == 1 || value == '1' || value == 'true';
 
+  /// [_isTrue] for a flag the payload may leave out: null when absent.
+  static bool? _optionalFlag(Object? value) =>
+      value == null ? null : _isTrue(value);
+
   @override
   List<Object?> get props =>
-      [id, status, amount, requiresPickupCode, wait, canGiveUp];
+      [id, status, amount, requiresPickupCode, wait, canDeliver, canGiveUp];
 }
 
 /// Reads the order fields shared by orders and offers from either the flat

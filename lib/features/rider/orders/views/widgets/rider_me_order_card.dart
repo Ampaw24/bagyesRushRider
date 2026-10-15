@@ -23,12 +23,17 @@ class RiderMeOrderCard extends StatelessWidget {
   /// delivery is still open.
   final RiderDeliveryStage? stage;
 
+  /// Waiting on support after the rider gave up — see
+  /// `RiderMeOrdersState.isOnHold`.
+  final bool onHold;
+
   const RiderMeOrderCard({
     super.key,
     required this.order,
     required this.onTap,
     this.actionLabel,
     this.stage,
+    this.onHold = false,
   });
 
   @override
@@ -54,6 +59,7 @@ class RiderMeOrderCard extends StatelessWidget {
       header: RiderOrderStatusHeader(
         status: order.status,
         isLive: order.isActive,
+        onHold: onHold,
         subtitle: order.createdAtFormatted,
       ),
       children: [

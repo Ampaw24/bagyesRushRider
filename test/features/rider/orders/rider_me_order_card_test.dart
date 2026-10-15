@@ -148,4 +148,17 @@ void main() {
 
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('an order on hold shows the On hold cue instead of Live',
+      (tester) async {
+    await tester.pumpWidget(_host(RiderMeOrderCard(
+      order: _order('out_for_delivery'),
+      onHold: true,
+      actionLabel: 'View order',
+      onTap: () {},
+    )));
+
+    expect(find.text('On hold'), findsOneWidget);
+    expect(find.text('Live'), findsNothing);
+  });
 }

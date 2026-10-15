@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:delivery_boy/constant/app_theme.dart';
 import 'package:delivery_boy/core/utils/initials.dart';
 import 'package:delivery_boy/core/utils/phone_mask.dart';
+import 'package:delivery_boy/features/rider/orders/views/widgets/rider_order_card_shell.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 /// Presentational building blocks for `RiderMeOrderDetailSheet`. They hold no
@@ -484,6 +485,94 @@ class OrderCustomerTile extends StatelessWidget {
           ],
         ],
       ),
+    );
+  }
+}
+
+// ── On hold ───────────────────────────────────────────────────────────────
+
+/// Takes the place of the next step while an order waits on support after
+/// the rider gave up on it. Support reopening it brings the step back by
+/// itself (the app keeps re-checking); [onCheckAgain] lets the rider look
+/// now.
+class OrderOnHoldNotice extends StatelessWidget {
+  final String message;
+  final VoidCallback? onCheckAgain;
+  final bool checking;
+
+  /// Matches the button to the other footer actions of the sheet.
+  final double? buttonHeight;
+
+  const OrderOnHoldNotice({
+    super.key,
+    required this.message,
+    required this.onCheckAgain,
+    this.checking = false,
+    this.buttonHeight,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final w = MediaQuery.sizeOf(context).width;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Container(
+          padding: EdgeInsets.all(w * 0.035),
+          decoration: BoxDecoration(
+            color: AppColors.warning.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(_kRadius),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(
+                HugeIcons.strokeRoundedCustomerSupport,
+                size: _font(w, 0.055, 20, 24),
+                color: AppColors.warning,
+              ),
+              SizedBox(width: w * 0.03),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Waiting for support',
+                      style: TextStyle(
+                        fontFamily: 'Roboto',
+                        fontSize: _font(w, 0.037, 14, 16),
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    SizedBox(height: w * 0.008),
+                    Text(
+                      message,
+                      style: TextStyle(
+                        fontFamily: 'Roboto',
+                        fontSize: _font(w, 0.032, 12, 14),
+                        height: 1.35,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(height: w * 0.03),
+        RiderOrderCardButton(
+          label: 'Check again',
+          outlined: true,
+          isLoading: checking,
+          minHeight: buttonHeight,
+          trailingIcon: HugeIcons.strokeRoundedRefresh,
+          onPressed: onCheckAgain,
+        ),
+      ],
     );
   }
 }
