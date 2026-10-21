@@ -1,15 +1,16 @@
+import 'package:gopady_rider/constant/app_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:delivery_boy/core/utils/legal_links.dart';
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/core/di/service_locator.dart';
-import 'package:delivery_boy/core/router/app_routes.dart';
-import 'package:delivery_boy/core/services/user_session_manager.dart';
-import 'package:delivery_boy/core/widgets/custom_dialogs.dart';
-import 'package:delivery_boy/features/rider/auth/views/widgets/change_password_sheet.dart';
-import 'package:delivery_boy/features/rider/auth/views/widgets/phone_change_flow_sheet.dart';
+import 'package:gopady_rider/core/utils/legal_links.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/core/di/service_locator.dart';
+import 'package:gopady_rider/core/router/app_routes.dart';
+import 'package:gopady_rider/core/services/user_session_manager.dart';
+import 'package:gopady_rider/core/widgets/custom_dialogs.dart';
+import 'package:gopady_rider/features/rider/auth/views/widgets/change_password_sheet.dart';
+import 'package:gopady_rider/features/rider/auth/views/widgets/phone_change_flow_sheet.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 class RiderSettingsScreen extends ConsumerStatefulWidget {
@@ -53,7 +54,7 @@ class _RiderSettingsScreenState extends ConsumerState<RiderSettingsScreen> {
         title: const Text(
           'Settings',
           style: TextStyle(
-            fontFamily: 'Roboto',
+            fontFamily: AppFonts.body,
             fontWeight: FontWeight.w600,
             fontSize: 18,
           ),
@@ -75,7 +76,7 @@ class _RiderSettingsScreenState extends ConsumerState<RiderSettingsScreen> {
             trailing: Text(
               sl<UserSessionManager>().phone ?? '',
               style: TextStyle(
-                fontFamily: 'Roboto',
+                fontFamily: AppFonts.body,
                 fontSize: 12,
                 color: Colors.grey.shade500,
               ),
@@ -117,7 +118,7 @@ class _RiderSettingsScreenState extends ConsumerState<RiderSettingsScreen> {
               style: TextStyle(
                 color: Colors.grey.shade500,
                 fontSize: 14,
-                fontFamily: 'Roboto',
+                fontFamily: AppFonts.body,
               ),
             ),
           ),
@@ -161,7 +162,7 @@ class _RiderSettingsScreenState extends ConsumerState<RiderSettingsScreen> {
       child: Text(
         title.toUpperCase(),
         style: TextStyle(
-          fontFamily: 'Roboto',
+          fontFamily: AppFonts.body,
           fontSize: 11,
           fontWeight: FontWeight.w700,
           color: Colors.grey.shade500,
@@ -205,7 +206,7 @@ class _RiderSettingsScreenState extends ConsumerState<RiderSettingsScreen> {
         title: Text(
           title,
           style: TextStyle(
-            fontFamily: 'Roboto',
+            fontFamily: AppFonts.body,
             fontSize: 14,
             fontWeight: FontWeight.w500,
             color: titleColor ?? AppColors.textPrimary,
@@ -261,7 +262,7 @@ class _RiderSettingsScreenState extends ConsumerState<RiderSettingsScreen> {
         title: Text(
           title,
           style: const TextStyle(
-            fontFamily: 'Roboto',
+            fontFamily: AppFonts.body,
             fontSize: 14,
             fontWeight: FontWeight.w500,
             color: AppColors.textPrimary,
@@ -270,7 +271,7 @@ class _RiderSettingsScreenState extends ConsumerState<RiderSettingsScreen> {
         subtitle: Text(
           subtitle,
           style: TextStyle(
-            fontFamily: 'Roboto',
+            fontFamily: AppFonts.body,
             fontSize: 12,
             color: Colors.grey.shade500,
           ),

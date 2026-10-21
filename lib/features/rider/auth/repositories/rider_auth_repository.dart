@@ -1,6 +1,6 @@
-import 'package:delivery_boy/constant/typedef.dart';
-import 'package:delivery_boy/features/rider/auth/models/auth_user_model.dart';
-import 'package:delivery_boy/features/rider/auth/models/rider_agreement_model.dart';
+import 'package:gopady_rider/constant/typedef.dart';
+import 'package:gopady_rider/features/rider/auth/models/auth_user_model.dart';
+import 'package:gopady_rider/features/rider/auth/models/rider_agreement_model.dart';
 
 /// [token] is nullable because `/register` does not always issue one —
 /// callers must handle the "registered but not yet authenticated" case.

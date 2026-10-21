@@ -1,6 +1,7 @@
+import 'package:gopady_rider/constant/app_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:delivery_boy/constant/app_theme.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
 
 class AppPasswordField extends StatefulWidget {
   final String label;
@@ -41,7 +42,7 @@ class _AppPasswordFieldState extends State<AppPasswordField> {
         Text(
           widget.label,
           style: TextStyle(
-            fontFamily: 'Mukta',
+            fontFamily: AppFonts.body,
             fontSize: (w * 0.033).clamp(11.0, 14.0),
             fontWeight: FontWeight.w600,
             color: AppColors.textSecondary,
@@ -61,7 +62,7 @@ class _AppPasswordFieldState extends State<AppPasswordField> {
           onChanged: widget.onChanged,
           validator: widget.validator,
           style: TextStyle(
-            fontFamily: 'Mukta',
+            fontFamily: AppFonts.body,
             fontSize: (w * 0.038).clamp(13.0, 16.0),
             fontWeight: FontWeight.w500,
             color: AppColors.textPrimary,
@@ -87,7 +88,7 @@ class _AppPasswordFieldState extends State<AppPasswordField> {
               ),
             ),
             hintStyle: TextStyle(
-              fontFamily: 'Mukta',
+              fontFamily: AppFonts.body,
               fontSize: (w * 0.036).clamp(12.0, 15.0),
               color: AppColors.textHint,
             ),

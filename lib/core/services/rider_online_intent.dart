@@ -1,6 +1,6 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:delivery_boy/core/utils/app_logger.dart';
+import 'package:gopady_rider/core/utils/app_logger.dart';
 
 /// Whether the rider last *chose* to be online.
 ///

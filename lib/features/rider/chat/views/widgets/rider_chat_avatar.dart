@@ -1,7 +1,8 @@
+import 'package:gopady_rider/constant/app_tokens.dart';
 import 'package:flutter/material.dart';
 
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/core/utils/initials.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/core/utils/initials.dart';
 
 /// Circular participant avatar: the photo when [photoUrl] is known and loads,
 /// the name's initials otherwise (no URL, still loading, or a failed fetch) —
@@ -27,7 +28,7 @@ class RiderChatAvatar extends StatelessWidget {
         child: Text(
           initialsOf(name),
           style: TextStyle(
-            fontFamily: 'Roboto',
+            fontFamily: AppFonts.body,
             fontSize: size * 0.36,
             fontWeight: FontWeight.w700,
             color: AppColors.primary,

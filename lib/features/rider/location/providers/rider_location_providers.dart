@@ -5,9 +5,9 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/widgets.dart' show AppLifecycleListener;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:delivery_boy/core/services/rider_location_service.dart';
-import 'package:delivery_boy/core/utils/app_logger.dart';
-import 'package:delivery_boy/core/utils/rider_location_cache.dart';
+import 'package:gopady_rider/core/services/rider_location_service.dart';
+import 'package:gopady_rider/core/utils/app_logger.dart';
+import 'package:gopady_rider/core/utils/rider_location_cache.dart';
 
 enum RiderLocationUiStatus {
   initial,

@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:delivery_boy/features/rider/orders/models/rider_me_order_model.dart';
-import 'package:delivery_boy/features/rider/orders/providers/rider_me_order_providers.dart';
-import 'package:delivery_boy/features/rider/orders/views/widgets/rider_order_reopened_listener.dart';
+import 'package:gopady_rider/features/rider/orders/models/rider_me_order_model.dart';
+import 'package:gopady_rider/features/rider/orders/providers/rider_me_order_providers.dart';
+import 'package:gopady_rider/features/rider/orders/views/widgets/rider_order_reopened_listener.dart';
 
 /// Starts with one order on hold; [reopen] is support resolving it.
 class _FakeOrders extends RiderMeOrdersNotifier {

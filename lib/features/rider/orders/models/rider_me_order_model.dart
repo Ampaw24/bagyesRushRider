@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:intl/intl.dart';
-import 'package:delivery_boy/features/rider/orders/models/rider_me_order_json.dart';
+import 'package:gopady_rider/features/rider/orders/models/rider_me_order_json.dart';
 
 /// Statuses documented for `GET /rider/me/orders` — see
 /// the "v1 / rider" Postman collection (order #4).

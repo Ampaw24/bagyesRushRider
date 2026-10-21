@@ -2,11 +2,11 @@ import 'dart:async';
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:delivery_boy/core/di/service_locator.dart';
-import 'package:delivery_boy/core/services/rider_online_intent.dart';
-import 'package:delivery_boy/features/rider/shared/rider_me_action_status.dart';
-import 'package:delivery_boy/features/rider/profile/models/rider_me_profile_model.dart';
-import 'package:delivery_boy/features/rider/profile/repositories/rider_me_profile_repository.dart';
+import 'package:gopady_rider/core/di/service_locator.dart';
+import 'package:gopady_rider/core/services/rider_online_intent.dart';
+import 'package:gopady_rider/features/rider/shared/rider_me_action_status.dart';
+import 'package:gopady_rider/features/rider/profile/models/rider_me_profile_model.dart';
+import 'package:gopady_rider/features/rider/profile/repositories/rider_me_profile_repository.dart';
 
 enum RiderMeProfileStatus { initial, loading, loaded, error }
 

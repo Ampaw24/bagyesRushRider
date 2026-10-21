@@ -1,4 +1,4 @@
-import 'package:delivery_boy/features/rider/chat/models/rider_chat_message_model.dart';
+import 'package:gopady_rider/features/rider/chat/models/rider_chat_message_model.dart';
 
 /// One cursor-paginated page of `GET /conversations/:id/messages`.
 ///

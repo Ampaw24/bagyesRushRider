@@ -2,11 +2,11 @@ import 'dart:io';
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:delivery_boy/core/di/service_locator.dart';
-import 'package:delivery_boy/features/rider/report/models/rider_report_flow_args.dart';
-import 'package:delivery_boy/features/rider/report/models/rider_report_model.dart';
-import 'package:delivery_boy/features/rider/report/repositories/rider_report_repository.dart';
-import 'package:delivery_boy/features/rider/shared/rider_me_action_status.dart';
+import 'package:gopady_rider/core/di/service_locator.dart';
+import 'package:gopady_rider/features/rider/report/models/rider_report_flow_args.dart';
+import 'package:gopady_rider/features/rider/report/models/rider_report_model.dart';
+import 'package:gopady_rider/features/rider/report/repositories/rider_report_repository.dart';
+import 'package:gopady_rider/features/rider/shared/rider_me_action_status.dart';
 
 /// The steps of the report wizard, in order. A given run only shows a
 /// subset — see [RiderReportFormState.steps].

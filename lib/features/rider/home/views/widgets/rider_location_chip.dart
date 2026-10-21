@@ -1,10 +1,11 @@
+import 'package:gopady_rider/constant/app_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hugeicons/hugeicons.dart';
 
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/core/widgets/app_shimmer.dart';
-import 'package:delivery_boy/features/rider/location/providers/rider_location_providers.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/core/widgets/app_shimmer.dart';
+import 'package:gopady_rider/features/rider/location/providers/rider_location_providers.dart';
 
 /// The rider's current address, shown under their name on the home header.
 ///
@@ -123,7 +124,7 @@ class _AddressRow extends StatelessWidget {
           child: Text(
             address,
             style: TextStyle(
-              fontFamily: 'Mukta',
+              fontFamily: AppFonts.body,
               fontSize: (width * 0.032).clamp(11.0, 14.0),
               color: color,
               fontWeight: FontWeight.w400,
@@ -165,7 +166,7 @@ class _ActionRow extends StatelessWidget {
             child: Text(
               label,
               style: TextStyle(
-                fontFamily: 'Mukta',
+                fontFamily: AppFonts.body,
                 fontSize: (width * 0.032).clamp(11.0, 14.0),
                 color: AppColors.primary,
                 fontWeight: FontWeight.w500,

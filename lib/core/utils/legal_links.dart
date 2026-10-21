@@ -1,22 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import 'package:delivery_boy/core/utils/app_logger.dart';
-import 'package:delivery_boy/core/widgets/custom_dialogs.dart';
+import 'package:gopady_rider/core/utils/app_logger.dart';
+import 'package:gopady_rider/core/widgets/custom_dialogs.dart';
 
-/// The rider-facing legal pages hosted on the BagyesRUSH website.
+/// The rider-facing legal pages hosted on the GoPady website.
 enum LegalDocument {
   privacyPolicy(
     'Privacy Policy',
-    'https://bagyesrushdelivery.com/privacy-policy',
+    'https://gopady.com/privacy-policy',
   ),
   riderAgreement(
     'Rider Agreement',
-    'https://bagyesrushdelivery.com/rider-agreement',
+    'https://gopady.com/rider-agreement',
   ),
   termsConditions(
     'Terms & Conditions',
-    'https://bagyesrushdelivery.com/terms-conditions',
+    'https://gopady.com/terms-conditions',
   );
 
   const LegalDocument(this.title, this.url);

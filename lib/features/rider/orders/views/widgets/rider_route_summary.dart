@@ -1,5 +1,6 @@
+import 'package:gopady_rider/constant/app_tokens.dart';
 import 'package:flutter/material.dart';
-import 'package:delivery_boy/constant/app_theme.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
 
 /// Pickup → drop-off shown as a two-point vertical timeline, giving each
 /// address its own line instead of squeezing both into one truncated row.
@@ -108,7 +109,7 @@ class _Stop extends StatelessWidget {
         Text(
           label,
           style: TextStyle(
-            fontFamily: 'Roboto',
+            fontFamily: AppFonts.body,
             fontSize: w * 0.028,
             fontWeight: FontWeight.w500,
             color: AppColors.textSecondary,
@@ -120,7 +121,7 @@ class _Stop extends StatelessWidget {
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
           style: TextStyle(
-            fontFamily: 'Roboto',
+            fontFamily: AppFonts.body,
             fontSize: w * 0.034,
             fontWeight: FontWeight.w500,
             height: 1.3,

@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hugeicons/hugeicons.dart';
 
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/features/rider/chat/providers/rider_chat_list_providers.dart';
-import 'package:delivery_boy/features/rider/chat/providers/rider_chat_thread_args.dart';
-import 'package:delivery_boy/features/rider/chat/views/widgets/rider_chat_thread_sheet.dart';
-import 'package:delivery_boy/features/rider/chat/views/widgets/rider_conversation_tile.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/features/rider/chat/providers/rider_chat_list_providers.dart';
+import 'package:gopady_rider/features/rider/chat/providers/rider_chat_thread_args.dart';
+import 'package:gopady_rider/features/rider/chat/views/widgets/rider_chat_thread_sheet.dart';
+import 'package:gopady_rider/features/rider/chat/views/widgets/rider_conversation_tile.dart';
 
 /// The chat inbox — `GET /conversations`, filtered to threads whose order is
 /// still in progress. Not a permanent archive: once an order is

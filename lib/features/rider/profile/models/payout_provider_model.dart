@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-import 'package:delivery_boy/core/utils/json_utils.dart';
+import 'package:gopady_rider/core/utils/json_utils.dart';
 
 /// A bank or mobile-money provider from the public `GET /payout-providers`.
 class PayoutProviderModel extends Equatable {

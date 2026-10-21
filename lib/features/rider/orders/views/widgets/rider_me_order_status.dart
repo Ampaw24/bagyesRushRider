@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:delivery_boy/constant/app_theme.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 /// Single source of truth for rendering `RiderMeOrderModel.status` — shared

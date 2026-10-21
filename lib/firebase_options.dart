@@ -58,11 +58,12 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyCXhHMAtaozDFCU7XXE__Me4nOfvERAE3k',
-    appId: '1:782816451697:ios:c6161192f9336c17350fd0',
-    messagingSenderId: '782816451697',
-    projectId: 'bagyesrushapp-e0e4f',
-    storageBucket: 'bagyesrushapp-e0e4f.firebasestorage.app',
+    apiKey: 'REDACTED',
+    appId: '1:REDACTED:ios:REDACTED',
+    messagingSenderId: 'REDACTED',
+    projectId: 'REDACTED',
+    storageBucket: 'REDACTED.firebasestorage.app',
     iosBundleId: 'com.bagye.bagyesrushrider',
   );
+
 }

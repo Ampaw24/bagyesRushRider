@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/features/rider/chat/models/rider_conversation_model.dart';
-import 'package:delivery_boy/features/rider/chat/views/widgets/rider_chat_avatar.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/features/rider/chat/models/rider_conversation_model.dart';
+import 'package:gopady_rider/features/rider/chat/views/widgets/rider_chat_avatar.dart';
 
 String riderConversationRelativeTime(DateTime? dt) {
   if (dt == null) return '';

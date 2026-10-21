@@ -1,8 +1,8 @@
 import 'dart:io';
 
 import 'package:dio/dio.dart';
-import 'package:delivery_boy/core/network/api_endpoints.dart';
-import 'package:delivery_boy/features/rider/report/models/rider_report_model.dart';
+import 'package:gopady_rider/core/network/api_endpoints.dart';
+import 'package:gopady_rider/features/rider/report/models/rider_report_model.dart';
 
 /// Raw Dio calls for the "Report a Problem" feature — see
 /// [ApiEndpoints.riderMeReports] for why this path is unverified.

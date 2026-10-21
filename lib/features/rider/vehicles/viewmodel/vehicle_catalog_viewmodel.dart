@@ -1,10 +1,10 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:delivery_boy/core/di/service_locator.dart';
-import 'package:delivery_boy/features/rider/vehicles/model/vehicle_make_model.dart';
-import 'package:delivery_boy/features/rider/vehicles/model/vehicle_model_model.dart';
-import 'package:delivery_boy/features/rider/vehicles/model/vehicle_type_model.dart';
-import 'package:delivery_boy/features/rider/vehicles/repository/vehicle_catalog_repository.dart';
+import 'package:gopady_rider/core/di/service_locator.dart';
+import 'package:gopady_rider/features/rider/vehicles/model/vehicle_make_model.dart';
+import 'package:gopady_rider/features/rider/vehicles/model/vehicle_model_model.dart';
+import 'package:gopady_rider/features/rider/vehicles/model/vehicle_type_model.dart';
+import 'package:gopady_rider/features/rider/vehicles/repository/vehicle_catalog_repository.dart';
 
 // ── Status ────────────────────────────────────────────────────────────────────
 

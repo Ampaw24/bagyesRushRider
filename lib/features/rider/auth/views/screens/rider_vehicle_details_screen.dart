@@ -1,16 +1,17 @@
+import 'package:gopady_rider/constant/app_tokens.dart';
 import 'dart:math' show sin, pi;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/core/router/app_routes.dart';
-import 'package:delivery_boy/core/widgets/app_gradient_button.dart';
-import 'package:delivery_boy/features/rider/auth/viewmodels/rider_auth_viewmodel.dart';
-import 'package:delivery_boy/features/rider/auth/views/screens/rider_vehicle_info_screen.dart';
-import 'package:delivery_boy/features/rider/auth/views/widgets/registration_stepper.dart';
-import 'package:delivery_boy/features/rider/shared_widgets/app_text_field.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/core/router/app_routes.dart';
+import 'package:gopady_rider/core/widgets/app_gradient_button.dart';
+import 'package:gopady_rider/features/rider/auth/viewmodels/rider_auth_viewmodel.dart';
+import 'package:gopady_rider/features/rider/auth/views/screens/rider_vehicle_info_screen.dart';
+import 'package:gopady_rider/features/rider/auth/views/widgets/registration_stepper.dart';
+import 'package:gopady_rider/features/rider/shared_widgets/app_text_field.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 /// Final data-collection step, and where the account is actually created.
@@ -314,7 +315,7 @@ class _RiderVehicleDetailsScreenState
                         Text(
                           'Vehicle Details',
                           style: TextStyle(
-                            fontFamily: 'Mukta',
+                            fontFamily: AppFonts.body,
                             fontSize: (w * 0.072).clamp(24.0, 34.0),
                             fontWeight: FontWeight.w800,
                             color: AppColors.textPrimary,
@@ -326,7 +327,7 @@ class _RiderVehicleDetailsScreenState
                         Text(
                           'Tell us more about your ${_vehicleType.label.toLowerCase()}',
                           style: TextStyle(
-                            fontFamily: 'Mukta',
+                            fontFamily: AppFonts.body,
                             fontSize: (w * 0.036).clamp(12.0, 16.0),
                             color: AppColors.textSecondary,
                           ),
@@ -659,7 +660,7 @@ class _ColorQuickPickState extends State<_ColorQuickPick> {
             child: Text(
               name,
               style: TextStyle(
-                fontFamily: 'Mukta',
+                fontFamily: AppFonts.body,
                 fontSize: (w * 0.032).clamp(10.0, 13.0),
                 fontWeight: FontWeight.w600,
                 color: isSelected
@@ -703,7 +704,7 @@ class _ElectricNote extends StatelessWidget {
             child: Text(
               'Electric vehicle — ensure your battery is adequately charged before each delivery.',
               style: TextStyle(
-                fontFamily: 'Mukta',
+                fontFamily: AppFonts.body,
                 color: Color(0xFF0369A1),
                 fontWeight: FontWeight.w500,
               ),

@@ -1,5 +1,5 @@
 import 'package:dio/dio.dart';
-import 'package:delivery_boy/core/network/api_endpoints.dart';
+import 'package:gopady_rider/core/network/api_endpoints.dart';
 
 /// Raw Dio calls for the shared `/conversations` chat API — see
 /// `chat-apis.md` on the customer/vendor app; every endpoint here is

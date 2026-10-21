@@ -2,7 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-import 'package:delivery_boy/constant/app_theme.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
 
 /// Full-screen, non-dismissible busy indicator for actions that must block
 /// interaction until they settle — e.g. logout. Same visual language as

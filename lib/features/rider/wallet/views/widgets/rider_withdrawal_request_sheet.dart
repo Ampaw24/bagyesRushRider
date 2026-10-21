@@ -1,13 +1,14 @@
+import 'package:gopady_rider/constant/app_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/core/widgets/app_gradient_button.dart';
-import 'package:delivery_boy/core/widgets/app_toast.dart';
-import 'package:delivery_boy/core/widgets/drag_handle.dart';
-import 'package:delivery_boy/features/rider/shared/rider_me_action_status.dart';
-import 'package:delivery_boy/features/rider/wallet/providers/rider_me_wallet_providers.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/core/widgets/app_gradient_button.dart';
+import 'package:gopady_rider/core/widgets/app_toast.dart';
+import 'package:gopady_rider/core/widgets/drag_handle.dart';
+import 'package:gopady_rider/features/rider/shared/rider_me_action_status.dart';
+import 'package:gopady_rider/features/rider/wallet/providers/rider_me_wallet_providers.dart';
 
 /// Amount-entry bottom sheet for `POST /rider/me/withdrawals`. All client
 /// validation (rider-wallet-apis.md #4: `numeric, min:1, max:1000000`, plus
@@ -148,7 +149,7 @@ class _RequestSheetBodyState extends ConsumerState<_RequestSheetBody> {
             Text(
               'Withdraw funds',
               style: TextStyle(
-                fontFamily: 'Mukta',
+                fontFamily: AppFonts.body,
                 fontSize: w * 0.05,
                 fontWeight: FontWeight.w700,
                 color: AppColors.textPrimary,
@@ -158,7 +159,7 @@ class _RequestSheetBodyState extends ConsumerState<_RequestSheetBody> {
             Text(
               'Available balance: ${widget.currency} ${widget.availableBalance.toStringAsFixed(2)}',
               style: TextStyle(
-                fontFamily: 'Mukta',
+                fontFamily: AppFonts.body,
                 fontSize: w * 0.034,
                 color: AppColors.textSecondary,
               ),
@@ -175,7 +176,7 @@ class _RequestSheetBodyState extends ConsumerState<_RequestSheetBody> {
                 FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
               ],
               style: TextStyle(
-                fontFamily: 'Mukta',
+                fontFamily: AppFonts.body,
                 fontSize: w * 0.042,
                 fontWeight: FontWeight.w600,
                 color: AppColors.textPrimary,

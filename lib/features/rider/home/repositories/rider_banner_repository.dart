@@ -1,6 +1,6 @@
 import 'package:dartz/dartz.dart';
-import 'package:delivery_boy/core/errors/failures.dart';
-import 'package:delivery_boy/features/rider/home/models/rider_banner_model.dart';
+import 'package:gopady_rider/core/errors/failures.dart';
+import 'package:gopady_rider/features/rider/home/models/rider_banner_model.dart';
 
 abstract class RiderBannerRepository {
   /// Banners for `placement == 'home'`, sorted by `display_order`.

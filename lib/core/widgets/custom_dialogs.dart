@@ -3,7 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 
-import 'package:delivery_boy/constant/app_theme.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
 
 /// What a [CustomDialog] communicates — drives its accent colour and icon.
 enum DialogType { success, error, confirmation, info, warning }

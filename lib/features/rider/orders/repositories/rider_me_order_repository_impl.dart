@@ -1,11 +1,11 @@
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
-import 'package:delivery_boy/core/errors/failures.dart';
-import 'package:delivery_boy/core/network/api_error_parser.dart';
-import 'package:delivery_boy/core/network/request_error_message.dart';
-import 'package:delivery_boy/features/rider/orders/models/rider_me_order_model.dart';
-import 'package:delivery_boy/features/rider/orders/repositories/rider_me_order_repository.dart';
-import 'package:delivery_boy/features/rider/orders/services/rider_me_order_api_service.dart';
+import 'package:gopady_rider/core/errors/failures.dart';
+import 'package:gopady_rider/core/network/api_error_parser.dart';
+import 'package:gopady_rider/core/network/request_error_message.dart';
+import 'package:gopady_rider/features/rider/orders/models/rider_me_order_model.dart';
+import 'package:gopady_rider/features/rider/orders/repositories/rider_me_order_repository.dart';
+import 'package:gopady_rider/features/rider/orders/services/rider_me_order_api_service.dart';
 
 class RiderMeOrderRepositoryImpl implements RiderMeOrderRepository {
   final RiderMeOrderApiService _api;

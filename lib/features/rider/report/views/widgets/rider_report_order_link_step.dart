@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/features/rider/orders/models/rider_me_order_model.dart';
-import 'package:delivery_boy/features/rider/report/models/rider_report_model.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/features/rider/orders/models/rider_me_order_model.dart';
+import 'package:gopady_rider/features/rider/report/models/rider_report_model.dart';
 
 /// The fields this step derives once an order is picked — a rider has no
 /// vendor/customer id anywhere except on an order, so this doubles as the

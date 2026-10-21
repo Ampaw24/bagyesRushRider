@@ -3,12 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
 
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/core/router/app_routes.dart';
-import 'package:delivery_boy/features/rider/kyc/views/widgets/kyc_metrics.dart';
-import 'package:delivery_boy/features/rider/vehicles/model/vehicle_capture.dart';
-import 'package:delivery_boy/features/rider/vehicles/viewmodel/vehicle_kyc_viewmodel.dart';
-import 'package:delivery_boy/features/rider/vehicles/views/widgets/vehicle_verification_widgets.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/core/router/app_routes.dart';
+import 'package:gopady_rider/features/rider/kyc/views/widgets/kyc_metrics.dart';
+import 'package:gopady_rider/features/rider/vehicles/model/vehicle_capture.dart';
+import 'package:gopady_rider/features/rider/vehicles/viewmodel/vehicle_kyc_viewmodel.dart';
+import 'package:gopady_rider/features/rider/vehicles/views/widgets/vehicle_verification_widgets.dart';
 
 /// Opens vehicle verification from the checklist's vehicle step, with the
 /// photos' status at a glance.

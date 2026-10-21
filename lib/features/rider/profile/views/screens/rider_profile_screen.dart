@@ -1,20 +1,21 @@
+import 'package:gopady_rider/constant/app_tokens.dart';
 import 'package:flutter/material.dart';
-import 'package:delivery_boy/core/widgets/custom_dialogs.dart';
+import 'package:gopady_rider/core/widgets/custom_dialogs.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/core/di/service_locator.dart';
-import 'package:delivery_boy/core/router/app_routes.dart';
-import 'package:delivery_boy/core/services/user_session_manager.dart';
-import 'package:delivery_boy/core/utils/initials.dart';
-import 'package:delivery_boy/core/widgets/app_loading_overlay.dart';
-import 'package:delivery_boy/features/rider/auth/models/rider_user_model.dart';
-import 'package:delivery_boy/features/rider/auth/viewmodels/rider_auth_viewmodel.dart';
-import 'package:delivery_boy/features/rider/dashboard/views/screens/rider_dashboard_screen.dart';
-import 'package:delivery_boy/features/rider/profile/providers/rider_avatar_providers.dart';
-import 'package:delivery_boy/features/rider/kyc/providers/kyc_providers.dart';
-import 'package:delivery_boy/features/rider/shared_widgets/rider_avatar.dart';
-import 'package:delivery_boy/features/rider/vehicles/views/widgets/vehicle_profile_card.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/core/di/service_locator.dart';
+import 'package:gopady_rider/core/router/app_routes.dart';
+import 'package:gopady_rider/core/services/user_session_manager.dart';
+import 'package:gopady_rider/core/utils/initials.dart';
+import 'package:gopady_rider/core/widgets/app_loading_overlay.dart';
+import 'package:gopady_rider/features/rider/auth/models/rider_user_model.dart';
+import 'package:gopady_rider/features/rider/auth/viewmodels/rider_auth_viewmodel.dart';
+import 'package:gopady_rider/features/rider/dashboard/views/screens/rider_dashboard_screen.dart';
+import 'package:gopady_rider/features/rider/profile/providers/rider_avatar_providers.dart';
+import 'package:gopady_rider/features/rider/kyc/providers/kyc_providers.dart';
+import 'package:gopady_rider/features/rider/shared_widgets/rider_avatar.dart';
+import 'package:gopady_rider/features/rider/vehicles/views/widgets/vehicle_profile_card.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 class RiderProfileScreen extends ConsumerWidget {
@@ -202,7 +203,7 @@ class _Header extends StatelessWidget {
               Text(
                 'Profile',
                 style: TextStyle(
-                  fontFamily: 'Mukta',
+                  fontFamily: AppFonts.body,
                   fontSize: w * 0.06,
                   fontWeight: FontWeight.w800,
                   color: AppColors.textPrimary,
@@ -246,7 +247,7 @@ class _Header extends StatelessWidget {
                     placeholder: Text(
                       initials,
                       style: TextStyle(
-                        fontFamily: 'Mukta',
+                        fontFamily: AppFonts.body,
                         color: Colors.white,
                         fontSize: w * 0.085,
                         fontWeight: FontWeight.w700,
@@ -278,7 +279,7 @@ class _Header extends StatelessWidget {
           Text(
             name,
             style: TextStyle(
-              fontFamily: 'Mukta',
+              fontFamily: AppFonts.body,
               fontSize: w * 0.05,
               fontWeight: FontWeight.w800,
               color: AppColors.textPrimary,
@@ -289,7 +290,7 @@ class _Header extends StatelessWidget {
             Text(
               phone.isNotEmpty ? phone : email!,
               style: TextStyle(
-                fontFamily: 'Mukta',
+                fontFamily: AppFonts.body,
                 fontSize: w * 0.033,
                 color: AppColors.textSecondary,
               ),
@@ -352,7 +353,7 @@ class _CompletionBar extends StatelessWidget {
                   Text(
                     'Complete your profile',
                     style: TextStyle(
-                      fontFamily: 'Mukta',
+                      fontFamily: AppFonts.body,
                       fontSize: w * 0.034,
                       fontWeight: FontWeight.w700,
                       color: AppColors.textPrimary,
@@ -364,7 +365,7 @@ class _CompletionBar extends StatelessWidget {
                       Text(
                         '$count/$total',
                         style: TextStyle(
-                          fontFamily: 'Mukta',
+                          fontFamily: AppFonts.body,
                           fontSize: w * 0.032,
                           fontWeight: FontWeight.w600,
                           color: AppColors.textSecondary,
@@ -433,7 +434,7 @@ class _KycBadge extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
-              fontFamily: 'Mukta',
+              fontFamily: AppFonts.body,
               fontSize: w * 0.03,
               fontWeight: FontWeight.w600,
               color: color,
@@ -465,7 +466,7 @@ class _SectionCard extends StatelessWidget {
             child: Text(
               label!,
               style: TextStyle(
-                fontFamily: 'Mukta',
+                fontFamily: AppFonts.body,
                 fontSize: w * 0.032,
                 fontWeight: FontWeight.w700,
                 color: AppColors.textHint,
@@ -538,7 +539,7 @@ class _ProfileTile extends StatelessWidget {
                 child: Text(
                   label,
                   style: TextStyle(
-                    fontFamily: 'Mukta',
+                    fontFamily: AppFonts.body,
                     fontSize: w * 0.037,
                     fontWeight: FontWeight.w600,
                     color: AppColors.textPrimary,
@@ -596,7 +597,7 @@ class _CountBadge extends StatelessWidget {
       child: Text(
         '$count/$total',
         style: TextStyle(
-          fontFamily: 'Mukta',
+          fontFamily: AppFonts.body,
           fontSize: w * 0.03,
           fontWeight: FontWeight.w600,
           color: isComplete ? AppColors.success : AppColors.warning,
@@ -635,7 +636,7 @@ class _LogoutButton extends StatelessWidget {
               Text(
                 'Log Out',
                 style: TextStyle(
-                  fontFamily: 'Mukta',
+                  fontFamily: AppFonts.body,
                   fontSize: w * 0.038,
                   fontWeight: FontWeight.w700,
                   color: AppColors.error,

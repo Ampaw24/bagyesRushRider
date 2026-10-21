@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hugeicons/hugeicons.dart';
 
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/core/errors/failures.dart';
-import 'package:delivery_boy/features/rider/report/models/rider_report_model.dart';
-import 'package:delivery_boy/features/rider/report/providers/rider_my_reports_providers.dart';
-import 'package:delivery_boy/features/rider/report/views/widgets/rider_report_card.dart'
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/core/errors/failures.dart';
+import 'package:gopady_rider/features/rider/report/models/rider_report_model.dart';
+import 'package:gopady_rider/features/rider/report/providers/rider_my_reports_providers.dart';
+import 'package:gopady_rider/features/rider/report/views/widgets/rider_report_card.dart'
     show reportRelativeTime;
-import 'package:delivery_boy/features/rider/report/views/widgets/rider_report_status_badge.dart';
-import 'package:delivery_boy/features/rider/report/views/widgets/rider_report_target_type_step.dart'
+import 'package:gopady_rider/features/rider/report/views/widgets/rider_report_status_badge.dart';
+import 'package:gopady_rider/features/rider/report/views/widgets/rider_report_target_type_step.dart'
     show targetTypeIcon;
 
 class RiderReportDetailScreen extends ConsumerWidget {

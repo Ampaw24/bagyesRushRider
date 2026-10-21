@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:delivery_boy/features/rider/chat/models/rider_chat_message_model.dart';
+import 'package:gopady_rider/features/rider/chat/models/rider_chat_message_model.dart';
 
 RiderChatMessageModel _message({required int? senderId, required bool isMine}) =>
     RiderChatMessageModel(

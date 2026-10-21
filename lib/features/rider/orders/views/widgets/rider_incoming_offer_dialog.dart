@@ -1,3 +1,4 @@
+import 'package:gopady_rider/constant/app_tokens.dart';
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -6,10 +7,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hugeicons/hugeicons.dart';
 
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/core/widgets/app_gradient_button.dart';
-import 'package:delivery_boy/features/rider/orders/models/rider_me_order_model.dart';
-import 'package:delivery_boy/features/rider/orders/providers/rider_me_order_providers.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/core/widgets/app_gradient_button.dart';
+import 'package:gopady_rider/features/rider/orders/models/rider_me_order_model.dart';
+import 'package:gopady_rider/features/rider/orders/providers/rider_me_order_providers.dart';
 
 /// How an [RiderIncomingOfferDialog] ended. Closing it any other way (back
 /// button) pops null: the rider chose neither, and the offer stays in the New
@@ -141,7 +142,7 @@ class _RiderIncomingOfferDialogState
                         Text(
                           'New Delivery Request',
                           style: TextStyle(
-                            fontFamily: 'Roboto',
+                            fontFamily: AppFonts.body,
                             fontSize: w * 0.048,
                             fontWeight: FontWeight.w700,
                             color: AppColors.textPrimary,
@@ -152,7 +153,7 @@ class _RiderIncomingOfferDialogState
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            fontFamily: 'Roboto',
+                            fontFamily: AppFonts.body,
                             fontSize: w * 0.035,
                             color: AppColors.textSecondary,
                           ),
@@ -177,7 +178,7 @@ class _RiderIncomingOfferDialogState
                 Text(
                   'Expires in ${_clock(remaining!)}',
                   style: TextStyle(
-                    fontFamily: 'Roboto',
+                    fontFamily: AppFonts.body,
                     fontSize: w * 0.032,
                     color: AppColors.textSecondary,
                   ),
@@ -236,7 +237,7 @@ class _RiderIncomingOfferDialogState
                       child: Text(
                         'Decline',
                         style: TextStyle(
-                          fontFamily: 'Roboto',
+                          fontFamily: AppFonts.body,
                           fontSize: w * 0.04,
                           fontWeight: FontWeight.w600,
                         ),
@@ -332,7 +333,7 @@ class _StopRow extends StatelessWidget {
               Text(
                 label,
                 style: TextStyle(
-                  fontFamily: 'Roboto',
+                  fontFamily: AppFonts.body,
                   fontSize: w * 0.03,
                   color: AppColors.textSecondary,
                 ),
@@ -342,7 +343,7 @@ class _StopRow extends StatelessWidget {
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  fontFamily: 'Roboto',
+                  fontFamily: AppFonts.body,
                   fontSize: w * 0.038,
                   fontWeight: FontWeight.w600,
                   color: AppColors.textPrimary,
@@ -371,7 +372,7 @@ class _Stat extends StatelessWidget {
         Text(
           label,
           style: TextStyle(
-            fontFamily: 'Roboto',
+            fontFamily: AppFonts.body,
             fontSize: w * 0.03,
             color: AppColors.textSecondary,
           ),
@@ -379,7 +380,7 @@ class _Stat extends StatelessWidget {
         Text(
           value,
           style: TextStyle(
-            fontFamily: 'Roboto',
+            fontFamily: AppFonts.body,
             fontSize: w * 0.045,
             fontWeight: FontWeight.w700,
             color: AppColors.textPrimary,

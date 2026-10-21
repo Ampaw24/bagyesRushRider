@@ -1,6 +1,6 @@
 {
-    "name": "delivery_boy",
-    "short_name": "delivery_boy",
+    "name": "GoPady Rider",
+    "short_name": "GoPady Rider",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

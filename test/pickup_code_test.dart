@@ -3,11 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:delivery_boy/features/rider/orders/models/rider_me_order_model.dart';
-import 'package:delivery_boy/features/rider/orders/providers/rider_me_order_providers.dart';
-import 'package:delivery_boy/features/rider/orders/services/rider_me_order_api_service.dart';
-import 'package:delivery_boy/features/rider/orders/views/widgets/pickup_code_sheet.dart';
-import 'package:delivery_boy/features/rider/shared/rider_me_action_status.dart';
+import 'package:gopady_rider/features/rider/orders/models/rider_me_order_model.dart';
+import 'package:gopady_rider/features/rider/orders/providers/rider_me_order_providers.dart';
+import 'package:gopady_rider/features/rider/orders/services/rider_me_order_api_service.dart';
+import 'package:gopady_rider/features/rider/orders/views/widgets/pickup_code_sheet.dart';
+import 'package:gopady_rider/features/rider/shared/rider_me_action_status.dart';
 
 /// A [RiderMeOrdersNotifier] with no network and no realtime socket: it
 /// records the code it was given and answers from [result].

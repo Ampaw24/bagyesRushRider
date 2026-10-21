@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/services.dart';
 
-import 'package:delivery_boy/core/utils/app_logger.dart';
+import 'package:gopady_rider/core/utils/app_logger.dart';
 
 /// The ring that plays while an incoming delivery offer is on screen —
 /// a looping custom tone plus a pulsing vibration, until [stop].

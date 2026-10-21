@@ -1,14 +1,15 @@
+import 'package:gopady_rider/constant/app_tokens.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/core/widgets/app_gradient_button.dart';
-import 'package:delivery_boy/core/widgets/drag_handle.dart';
-import 'package:delivery_boy/features/rider/orders/providers/rider_me_order_providers.dart';
-import 'package:delivery_boy/features/rider/shared_widgets/otp_input_field.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/core/widgets/app_gradient_button.dart';
+import 'package:gopady_rider/core/widgets/drag_handle.dart';
+import 'package:gopady_rider/features/rider/orders/providers/rider_me_order_providers.dart';
+import 'package:gopady_rider/features/rider/shared_widgets/otp_input_field.dart';
 
 /// Collection-code entry, shown right before `POST rider/me/orders/:id/pick-up`
 /// on a parcel the customer is receiving.
@@ -108,7 +109,7 @@ class _PickupCodeSheetState extends ConsumerState<PickupCodeSheet> {
                   Text(
                     'Enter Collection Code',
                     style: TextStyle(
-                      fontFamily: 'Roboto',
+                      fontFamily: AppFonts.body,
                       fontSize: w * 0.045,
                       fontWeight: FontWeight.w700,
                       color: AppColors.textPrimary,
@@ -119,7 +120,7 @@ class _PickupCodeSheetState extends ConsumerState<PickupCodeSheet> {
                     'Ask the sender for the 4-digit code we texted them. It '
                     'confirms you are the rider they are expecting.',
                     style: TextStyle(
-                      fontFamily: 'Roboto',
+                      fontFamily: AppFonts.body,
                       fontSize: w * 0.034,
                       color: AppColors.textSecondary,
                     ),
@@ -146,7 +147,7 @@ class _PickupCodeSheetState extends ConsumerState<PickupCodeSheet> {
                       child: Text(
                         _error!,
                         style: TextStyle(
-                          fontFamily: 'Roboto',
+                          fontFamily: AppFonts.body,
                           fontSize: w * 0.032,
                           color: AppColors.error,
                         ),

@@ -1,8 +1,9 @@
+import 'package:gopady_rider/constant/app_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hugeicons/hugeicons.dart';
 
-import 'package:delivery_boy/constant/app_theme.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
 
 /// The message input bar — owns its own [TextEditingController] so the
 /// parent view only needs [onSend] (called with the trimmed body, already
@@ -85,7 +86,7 @@ class _RiderChatComposerState extends State<RiderChatComposer> {
                     if (hasText != _hasText) setState(() => _hasText = hasText);
                   },
                   style: TextStyle(
-                    fontFamily: 'Roboto',
+                    fontFamily: AppFonts.body,
                     fontSize: (w * 0.038).clamp(14.0, 17.0),
                     color: AppColors.textPrimary,
                   ),
@@ -170,7 +171,7 @@ class _ClosedNotice extends StatelessWidget {
                 'This conversation is closed.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontFamily: 'Roboto',
+                  fontFamily: AppFonts.body,
                   fontSize: (w * 0.033).clamp(12.0, 15.0),
                   color: AppColors.textSecondary,
                 ),

@@ -1,16 +1,17 @@
+import 'package:gopady_rider/constant/app_tokens.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:go_router/go_router.dart';
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/core/router/app_routes.dart';
-import 'package:delivery_boy/core/widgets/app_gradient_button.dart';
-import 'package:delivery_boy/core/widgets/custom_dialogs.dart';
-import 'package:delivery_boy/features/rider/auth/viewmodels/rider_auth_viewmodel.dart';
-import 'package:delivery_boy/features/rider/profile/providers/rider_me_profile_providers.dart';
-import 'package:delivery_boy/features/rider/shared_widgets/otp_input_field.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/core/router/app_routes.dart';
+import 'package:gopady_rider/core/widgets/app_gradient_button.dart';
+import 'package:gopady_rider/core/widgets/custom_dialogs.dart';
+import 'package:gopady_rider/features/rider/auth/viewmodels/rider_auth_viewmodel.dart';
+import 'package:gopady_rider/features/rider/profile/providers/rider_me_profile_providers.dart';
+import 'package:gopady_rider/features/rider/shared_widgets/otp_input_field.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 /// Phone verification. Reached from two paths:
@@ -207,7 +208,7 @@ class _RiderOtpScreenState extends ConsumerState<RiderOtpScreen>
                 const Text(
                   'Verify Phone',
                   style: TextStyle(
-                    fontFamily: 'Roboto',
+                    fontFamily: AppFonts.body,
                     fontSize: 28,
                     fontWeight: FontWeight.w800,
                     color: AppColors.textPrimary,
@@ -218,7 +219,7 @@ class _RiderOtpScreenState extends ConsumerState<RiderOtpScreen>
                 RichText(
                   text: TextSpan(
                     style: TextStyle(
-                      fontFamily: 'Roboto',
+                      fontFamily: AppFonts.body,
                       fontSize: 14,
                       color: Colors.grey.shade500,
                     ),
@@ -256,7 +257,7 @@ class _RiderOtpScreenState extends ConsumerState<RiderOtpScreen>
                     Text(
                       "Didn't receive a code? ",
                       style: TextStyle(
-                        fontFamily: 'Roboto',
+                        fontFamily: AppFonts.body,
                         fontSize: 14,
                         color: Colors.grey.shade500,
                       ),
@@ -265,7 +266,7 @@ class _RiderOtpScreenState extends ConsumerState<RiderOtpScreen>
                         ? Text(
                             'Resend in ${_secondsLeft}s',
                             style: TextStyle(
-                              fontFamily: 'Roboto',
+                              fontFamily: AppFonts.body,
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
                               color: Colors.grey.shade400,
@@ -276,7 +277,7 @@ class _RiderOtpScreenState extends ConsumerState<RiderOtpScreen>
                             child: const Text(
                               'Resend',
                               style: TextStyle(
-                                fontFamily: 'Roboto',
+                                fontFamily: AppFonts.body,
                                 fontSize: 14,
                                 fontWeight: FontWeight.w700,
                                 color: AppColors.primary,

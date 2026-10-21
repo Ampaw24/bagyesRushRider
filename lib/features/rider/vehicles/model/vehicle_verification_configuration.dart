@@ -1,7 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:hugeicons/hugeicons.dart';
 
-import 'package:delivery_boy/features/rider/vehicles/model/vehicle_capture.dart';
+import 'package:gopady_rider/features/rider/vehicles/model/vehicle_capture.dart';
 
 /// The families of vehicle the verification flow knows how to guide.
 ///

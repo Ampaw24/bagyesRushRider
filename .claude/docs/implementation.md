@@ -1,4 +1,4 @@
-# BagyesRUSH — Rider App Implementation Guide
+# GoPady — Rider App Implementation Guide
 
 > Mirror the patterns from the vendor/consumer side exactly. This document is the reference for building the **rider (courier)** side of the app.
 
@@ -152,7 +152,7 @@ For all new rider features, **use Riverpod**. It is the modern pattern in this c
 
 ```dart
 // Import
-import 'package:bagyesrushappusernew/constant/app_theme.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
 
 // Backgrounds
 AppColors.scaffold          // Dark background (used as Scaffold bg)
@@ -187,7 +187,7 @@ AppColors.info              // #3182CE — informational
 
 ```dart
 // Import
-import 'package:bagyesrushappusernew/constant/constant.dart';
+import 'package:gopady_rider/constant/constant.dart';
 
 splashBigTextStyle      // 40px Pacifico, primary color — splash only
 blackHeadingTextStyle   // 17px Mukta w500 — section headings
@@ -283,7 +283,7 @@ Registration is split across **two files** in this codebase; for ordinary rider 
 ### Accessing the Container
 
 ```dart
-import 'package:bagyesrushappusernew/core/di/service_locator.dart';
+import 'package:gopady_rider/core/di/service_locator.dart';
 
 // Inside a Riverpod Notifier build():
 final _repo = sl<RiderOrdersRepository>();
@@ -313,7 +313,7 @@ Keep the API-service layer from §1's folder structure (it stays useful as the o
 // lib/features/rider/orders/services/rider_orders_api_service.dart
 
 import 'package:dio/dio.dart';
-import 'package:bagyesrushappusernew/core/network/api_endpoints.dart';
+import 'package:gopady_rider/core/network/api_endpoints.dart';
 import '../models/rider_order_model.dart';
 
 class RiderOrdersApiService {
@@ -495,7 +495,7 @@ class RiderOrdersState extends Equatable {
 
 ```dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:bagyesrushappusernew/core/di/service_locator.dart';
+import 'package:gopady_rider/core/di/service_locator.dart';
 import '../../repositories/rider_orders_repository.dart';
 import 'rider_orders_state.dart';  // or inline above
 
@@ -559,7 +559,7 @@ final activeOrdersCountProvider = Provider<int>((ref) {
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:bagyesrushappusernew/constant/app_theme.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
 import '../../providers/rider_orders_providers.dart';
 import '../widgets/rider_order_card.dart';
 
@@ -647,7 +647,7 @@ This mirrors `lib/src/auth` exactly — a **sealed-class state hierarchy**, not 
 // lib/features/rider/auth/viewmodels/rider_auth_state.dart
 
 import 'package:equatable/equatable.dart';
-import 'package:bagyesrushappusernew/core/errors/failure.dart';
+import 'package:gopady_rider/core/errors/failure.dart';
 
 sealed class RiderAuthState extends Equatable {
   const RiderAuthState();
@@ -683,7 +683,7 @@ final class RiderAuthError extends RiderAuthState {
 ```dart
 // lib/features/rider/auth/viewmodels/rider_auth_viewmodel.dart
 
-import 'package:bagyesrushappusernew/core/viewmodel/viewmodel.dart';
+import 'package:gopady_rider/core/viewmodel/viewmodel.dart';
 import '../repositories/rider_auth_repository.dart';
 import 'rider_auth_state.dart';
 
@@ -801,7 +801,7 @@ class RiderOrderModel extends Equatable {
 // lib/features/rider/<feature>/repositories/rider_orders_repository.dart
 
 import 'package:dartz/dartz.dart';
-import 'package:bagyesrushappusernew/core/errors/failures.dart';
+import 'package:gopady_rider/core/errors/failures.dart';
 import '../models/rider_order_model.dart';
 
 abstract class RiderOrdersRepository {
@@ -819,7 +819,7 @@ abstract class RiderOrdersRepository {
 
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
-import 'package:bagyesrushappusernew/core/errors/failures.dart';
+import 'package:gopady_rider/core/errors/failures.dart';
 import '../services/rider_orders_api_service.dart';
 import 'rider_orders_repository.dart';
 import '../models/rider_order_model.dart';
@@ -869,7 +869,7 @@ class RiderOrdersRepositoryImpl implements RiderOrdersRepository {
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:equatable/equatable.dart';
-import 'package:bagyesrushappusernew/core/di/service_locator.dart';
+import 'package:gopady_rider/core/di/service_locator.dart';
 import '../repositories/rider_orders_repository.dart';
 import '../models/rider_order_model.dart';
 
@@ -949,7 +949,7 @@ final riderOrdersProvider =
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:bagyesrushappusernew/constant/app_theme.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
 import '../../providers/rider_orders_providers.dart';
 import '../widgets/rider_order_card.dart';
 
@@ -1177,7 +1177,7 @@ class _RiderBalanceCardState extends State<RiderBalanceCard>
 ### Custom Dialog (reuse existing)
 
 ```dart
-import 'package:bagyesrushappusernew/core/widgets/custom_dialogs.dart';
+import 'package:gopady_rider/core/widgets/custom_dialogs.dart';
 
 // Success
 await CustomDialog.showSuccess(
@@ -1342,22 +1342,22 @@ Copy this checklist for every new feature:
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 // GetIt DI
-import 'package:bagyesrushappusernew/core/di/service_locator.dart';
+import 'package:gopady_rider/core/di/service_locator.dart';
 
 // Error types
-import 'package:bagyesrushappusernew/core/errors/failures.dart';
+import 'package:gopady_rider/core/errors/failures.dart';
 
 // Typedefs (ResultFuture, DataMap)
-import 'package:bagyesrushappusernew/constant/typedef.dart';
+import 'package:gopady_rider/constant/typedef.dart';
 
 // Colors + Theme
-import 'package:bagyesrushappusernew/constant/app_theme.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
 
 // Text styles + spacing
-import 'package:bagyesrushappusernew/constant/constant.dart';
+import 'package:gopady_rider/constant/constant.dart';
 
 // API endpoints
-import 'package:bagyesrushappusernew/core/network/api_endpoints.dart';
+import 'package:gopady_rider/core/network/api_endpoints.dart';
 
 // Either
 import 'package:dartz/dartz.dart';

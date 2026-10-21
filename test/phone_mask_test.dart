@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:delivery_boy/core/utils/phone_mask.dart';
+import 'package:gopady_rider/core/utils/phone_mask.dart';
 
 void main() {
   test('keeps the first three and last two digits', () {

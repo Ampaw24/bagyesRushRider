@@ -3,19 +3,19 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hugeicons/hugeicons.dart';
 
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/core/errors/failures.dart';
-import 'package:delivery_boy/core/widgets/custom_dialogs.dart';
-import 'package:delivery_boy/features/rider/kyc/views/widgets/kyc_hub_widgets.dart';
-import 'package:delivery_boy/features/rider/kyc/views/widgets/kyc_metrics.dart';
-import 'package:delivery_boy/features/rider/kyc/views/widgets/kyc_section_layout.dart';
-import 'package:delivery_boy/features/rider/profile/providers/rider_me_profile_providers.dart';
-import 'package:delivery_boy/features/rider/vehicles/model/vehicle_capture.dart';
-import 'package:delivery_boy/features/rider/vehicles/model/vehicle_verification.dart';
-import 'package:delivery_boy/features/rider/vehicles/viewmodel/vehicle_kyc_viewmodel.dart';
-import 'package:delivery_boy/features/rider/vehicles/views/screens/vehicle_verification_camera.dart';
-import 'package:delivery_boy/features/rider/vehicles/views/widgets/vehicle_capture_step_list.dart';
-import 'package:delivery_boy/features/rider/vehicles/views/widgets/vehicle_verification_widgets.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/core/errors/failures.dart';
+import 'package:gopady_rider/core/widgets/custom_dialogs.dart';
+import 'package:gopady_rider/features/rider/kyc/views/widgets/kyc_hub_widgets.dart';
+import 'package:gopady_rider/features/rider/kyc/views/widgets/kyc_metrics.dart';
+import 'package:gopady_rider/features/rider/kyc/views/widgets/kyc_section_layout.dart';
+import 'package:gopady_rider/features/rider/profile/providers/rider_me_profile_providers.dart';
+import 'package:gopady_rider/features/rider/vehicles/model/vehicle_capture.dart';
+import 'package:gopady_rider/features/rider/vehicles/model/vehicle_verification.dart';
+import 'package:gopady_rider/features/rider/vehicles/viewmodel/vehicle_kyc_viewmodel.dart';
+import 'package:gopady_rider/features/rider/vehicles/views/screens/vehicle_verification_camera.dart';
+import 'package:gopady_rider/features/rider/vehicles/views/widgets/vehicle_capture_step_list.dart';
+import 'package:gopady_rider/features/rider/vehicles/views/widgets/vehicle_verification_widgets.dart';
 
 /// Route target for `/dashboard/vehicle-verification`: the rider's vehicle,
 /// its verification status, and each photo — take, review, upload, retake.

@@ -1,4 +1,4 @@
-import 'package:delivery_boy/features/rider/orders/models/rider_me_order_model.dart';
+import 'package:gopady_rider/features/rider/orders/models/rider_me_order_model.dart';
 
 /// Which of [offers] deserve the ring-and-dialog treatment right now: ones the
 /// rider hasn't been told about yet ([announcedIds]) and that haven't already

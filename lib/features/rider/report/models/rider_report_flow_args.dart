@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:delivery_boy/features/rider/report/models/rider_report_model.dart';
+import 'package:gopady_rider/features/rider/report/models/rider_report_model.dart';
 
 /// Navigation payload for the report wizard.
 ///

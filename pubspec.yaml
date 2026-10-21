@@ -1,5 +1,5 @@
-name: delivery_boy
-description: BagyesRUSH rider delivery app
+name: gopady_rider
+description: GoPady rider delivery app
 
 # The following line prevents the package from being accidentally published to
 # pub.dev using `pub publish`. This is preferred for private packages.
@@ -98,28 +98,22 @@ dependency_overrides:
   geocoding_android:
     path: third_party/geocoding_android
 
-flutter_launcher_icons:
-  android: "launcher_icon"
-  ios: true
-  remove_alpha_ios: true
-  image_path: "assets/images/app_icon_ios.png"
-  adaptive_icon_background: "#E91D25"
-  adaptive_icon_foreground: "assets/images/app_icon_android_fg.png"
-  adaptive_icon_foreground_inset: 0
+# Launcher icons are not generated from here: the finished Android/iOS sets live
+# in assets/brand/LauncherIcons/ and are copied into android/ and ios/ as-is.
+# Re-running flutter_launcher_icons would overwrite them with the wrong layers.
 
 flutter_native_splash:
-  color: "#FFFFFF"
-  image: "assets/images/splash_logo_android12.png"
-  color_dark: "#121212"
-  image_dark: "assets/images/splash_logo_android12.png"
+  color: "#FFC928"
+  color_dark: "#FFC928"
+  image: tool/brand/splash_logo.png
+  image_dark: tool/brand/splash_logo.png
   android_12:
-    color: "#FFFFFF"
-    image: "assets/images/splash_logo_android12.png"
-    icon_background_color: "#FFFFFF"
-    color_dark: "#121212"
-    image_dark: "assets/images/splash_logo_android12.png"
-    icon_background_color_dark: "#121212"
+    color: "#FFC928"
+    image: tool/brand/splash_logo.png
+    color_dark: "#FFC928"
+    image_dark: tool/brand/splash_logo.png
   web: false
+  fullscreen: false
 
 flutter:
   uses-material-design: true
@@ -128,23 +122,25 @@ flutter:
     - .env
     - assets/images/
     - assets/images/onboarding/
+    - assets/brand/
     - assets/sounds/
 
   fonts:
-    - family: Mukta
+    - family: Outfit
       fonts:
-        - asset: fonts/mukta/Mukta-Regular.ttf
-        - asset: fonts/mukta/Mukta-Light.ttf
-          weight: 300
-        - asset: fonts/mukta/Mukta-Medium.ttf
+        - asset: fonts/outfit/Outfit-SemiBold.ttf
+          weight: 600
+        - asset: fonts/outfit/Outfit-Bold.ttf
+          weight: 700
+        - asset: fonts/outfit/Outfit-ExtraBold.ttf
+          weight: 800
+    - family: Inter
+      fonts:
+        - asset: fonts/inter/Inter-Regular.ttf
+          weight: 400
+        - asset: fonts/inter/Inter-Medium.ttf
           weight: 500
-    - family: Pacifico
-      fonts:
-        - asset: fonts/pecifico/Pacifico-Regular.ttf
-    - family: Roboto
-      fonts:
-        - asset: fonts/roboto/Roboto-Regular.ttf
-        - asset: fonts/roboto/Roboto-Light.ttf
-          weight: 300
-        - asset: fonts/roboto/Roboto-Medium.ttf
-          weight: 500
+        - asset: fonts/inter/Inter-SemiBold.ttf
+          weight: 600
+        - asset: fonts/inter/Inter-Bold.ttf
+          weight: 700

@@ -1,9 +1,10 @@
+import 'package:gopady_rider/constant/app_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/features/rider/chat/models/rider_chat_message_model.dart';
-import 'package:delivery_boy/features/rider/chat/views/widgets/rider_chat_avatar.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/features/rider/chat/models/rider_chat_message_model.dart';
+import 'package:gopady_rider/features/rider/chat/views/widgets/rider_chat_avatar.dart';
 
 String _formatTime(DateTime dt) {
   final local = dt.toLocal();
@@ -96,7 +97,7 @@ class RiderMessageBubble extends StatelessWidget {
             child: Text(
               message.body,
               style: TextStyle(
-                fontFamily: 'Roboto',
+                fontFamily: AppFonts.body,
                 fontSize: (w * 0.038).clamp(14.0, 17.0),
                 height: 1.35,
                 color: foreground,
@@ -111,7 +112,7 @@ class RiderMessageBubble extends StatelessWidget {
                 Text(
                   _formatTime(message.createdAt),
                   style: TextStyle(
-                    fontFamily: 'Roboto',
+                    fontFamily: AppFonts.body,
                     fontSize: (w * 0.027).clamp(10.0, 12.0),
                     color: metaColor,
                   ),
@@ -223,7 +224,7 @@ class _FailedNote extends StatelessWidget {
             Text(
               onRetry != null ? 'Not delivered · Tap to retry' : 'Not delivered',
               style: TextStyle(
-                fontFamily: 'Roboto',
+                fontFamily: AppFonts.body,
                 fontSize: (w * 0.029).clamp(11.0, 13.0),
                 fontWeight: FontWeight.w500,
                 color: AppColors.error,

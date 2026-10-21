@@ -1,7 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:delivery_boy/core/di/service_locator.dart';
-import 'package:delivery_boy/core/utils/app_logger.dart';
+import 'package:gopady_rider/core/di/service_locator.dart';
+import 'package:gopady_rider/core/utils/app_logger.dart';
 
 /// Last known good fix, persisted across launches.
 class CachedRiderLocation {

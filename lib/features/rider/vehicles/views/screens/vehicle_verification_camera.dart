@@ -6,11 +6,11 @@ import 'package:flutter/services.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-import 'package:delivery_boy/features/rider/vehicles/capture/camera_access.dart';
-import 'package:delivery_boy/features/rider/vehicles/capture/vehicle_photo_inspector.dart';
-import 'package:delivery_boy/features/rider/vehicles/model/vehicle_capture.dart';
-import 'package:delivery_boy/features/rider/vehicles/model/vehicle_verification_configuration.dart';
-import 'package:delivery_boy/features/rider/vehicles/views/widgets/vehicle_camera_overlays.dart';
+import 'package:gopady_rider/features/rider/vehicles/capture/camera_access.dart';
+import 'package:gopady_rider/features/rider/vehicles/capture/vehicle_photo_inspector.dart';
+import 'package:gopady_rider/features/rider/vehicles/model/vehicle_capture.dart';
+import 'package:gopady_rider/features/rider/vehicles/model/vehicle_verification_configuration.dart';
+import 'package:gopady_rider/features/rider/vehicles/views/widgets/vehicle_camera_overlays.dart';
 
 /// One photo the camera will ask for, numbered among all the vehicle's
 /// steps ("Step 2 of 4").

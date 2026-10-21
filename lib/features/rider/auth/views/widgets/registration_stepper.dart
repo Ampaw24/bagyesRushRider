@@ -1,5 +1,6 @@
+import 'package:gopady_rider/constant/app_tokens.dart';
 import 'package:flutter/material.dart';
-import 'package:delivery_boy/constant/app_theme.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 class RegistrationStepper extends StatelessWidget {
@@ -85,7 +86,7 @@ class RegistrationStepper extends StatelessWidget {
                                       '${i + 1}',
                                       key: ValueKey('num_$i'),
                                       style: TextStyle(
-                                        fontFamily: 'Mukta',
+                                        fontFamily: AppFonts.body,
                                         fontSize:
                                             (circleSize * 0.42).clamp(12.0, 16.0),
                                         fontWeight: FontWeight.w700,
@@ -101,7 +102,7 @@ class RegistrationStepper extends StatelessWidget {
                         AnimatedDefaultTextStyle(
                           duration: const Duration(milliseconds: 200),
                           style: TextStyle(
-                            fontFamily: 'Mukta',
+                            fontFamily: AppFonts.body,
                             fontSize: (w * 0.028).clamp(9.0, 12.0),
                             fontWeight: i == currentIndex
                                 ? FontWeight.w700

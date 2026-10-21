@@ -3,11 +3,11 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/features/rider/kyc/views/widgets/kyc_hub_widgets.dart';
-import 'package:delivery_boy/features/rider/kyc/views/widgets/kyc_metrics.dart';
-import 'package:delivery_boy/features/rider/vehicles/model/vehicle_verification.dart';
-import 'package:delivery_boy/features/rider/vehicles/model/vehicle_verification_configuration.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/features/rider/kyc/views/widgets/kyc_hub_widgets.dart';
+import 'package:gopady_rider/features/rider/kyc/views/widgets/kyc_metrics.dart';
+import 'package:gopady_rider/features/rider/vehicles/model/vehicle_verification.dart';
+import 'package:gopady_rider/features/rider/vehicles/model/vehicle_verification_configuration.dart';
 
 /// How a [VehicleVerificationStatus] reads on screen. Every status has an
 /// icon and words, never colour alone.

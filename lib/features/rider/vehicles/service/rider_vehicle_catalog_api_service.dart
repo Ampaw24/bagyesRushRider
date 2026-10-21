@@ -1,5 +1,5 @@
 import 'package:dio/dio.dart';
-import 'package:delivery_boy/core/network/api_endpoints.dart';
+import 'package:gopady_rider/core/network/api_endpoints.dart';
 
 /// Raw Dio calls for the public vehicle-catalogue reads. None of these need
 /// a bearer token — that's what makes them usable before a rider account

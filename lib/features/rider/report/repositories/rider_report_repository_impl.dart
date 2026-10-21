@@ -2,12 +2,12 @@ import 'dart:io';
 
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
-import 'package:delivery_boy/core/errors/failures.dart';
-import 'package:delivery_boy/core/network/api_error_parser.dart';
-import 'package:delivery_boy/core/network/request_error_message.dart';
-import 'package:delivery_boy/features/rider/report/models/rider_report_model.dart';
-import 'package:delivery_boy/features/rider/report/repositories/rider_report_repository.dart';
-import 'package:delivery_boy/features/rider/report/services/rider_report_api_service.dart';
+import 'package:gopady_rider/core/errors/failures.dart';
+import 'package:gopady_rider/core/network/api_error_parser.dart';
+import 'package:gopady_rider/core/network/request_error_message.dart';
+import 'package:gopady_rider/features/rider/report/models/rider_report_model.dart';
+import 'package:gopady_rider/features/rider/report/repositories/rider_report_repository.dart';
+import 'package:gopady_rider/features/rider/report/services/rider_report_api_service.dart';
 
 class RiderReportRepositoryImpl implements RiderReportRepository {
   final RiderReportApiService _api;

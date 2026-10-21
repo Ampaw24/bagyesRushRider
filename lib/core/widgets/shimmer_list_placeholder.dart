@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:delivery_boy/constant/app_theme.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
 import 'app_shimmer.dart';
 
 /// A full-list shimmer placeholder shown while data is loading.

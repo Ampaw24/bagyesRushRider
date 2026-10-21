@@ -6,12 +6,12 @@ import 'package:flutter/widgets.dart' show AppLifecycleState, WidgetsBinding;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:delivery_boy/core/services/rider_location_service.dart';
-import 'package:delivery_boy/core/utils/app_logger.dart';
-import 'package:delivery_boy/features/rider/location/providers/rider_location_providers.dart';
-import 'package:delivery_boy/features/rider/orders/providers/rider_me_order_providers.dart';
-import 'package:delivery_boy/features/rider/profile/models/rider_me_profile_model.dart';
-import 'package:delivery_boy/features/rider/profile/providers/rider_me_profile_providers.dart';
+import 'package:gopady_rider/core/services/rider_location_service.dart';
+import 'package:gopady_rider/core/utils/app_logger.dart';
+import 'package:gopady_rider/features/rider/location/providers/rider_location_providers.dart';
+import 'package:gopady_rider/features/rider/orders/providers/rider_me_order_providers.dart';
+import 'package:gopady_rider/features/rider/profile/models/rider_me_profile_model.dart';
+import 'package:gopady_rider/features/rider/profile/providers/rider_me_profile_providers.dart';
 
 /// How tightly [RiderTrackingNotifier] samples GPS. Two tiers, not one —
 /// mirrors Uber/Bolt: riders who are just online-and-waiting still need a
@@ -306,7 +306,7 @@ class RiderTrackingNotifier extends Notifier<RiderTrackingState> {
               ? const Duration(seconds: 5)
               : const Duration(seconds: 15),
           foregroundNotificationConfig: const ForegroundNotificationConfig(
-            notificationTitle: 'BagyesRIDER',
+            notificationTitle: 'GoPady Rider',
             notificationText: "You're online and visible to customers",
             notificationChannelName: 'Online status',
             notificationIcon: AndroidResource(

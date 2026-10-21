@@ -1,5 +1,5 @@
-import 'package:delivery_boy/core/errors/failures.dart';
-import 'package:delivery_boy/core/network/api_error_parser.dart';
+import 'package:gopady_rider/core/errors/failures.dart';
+import 'package:gopady_rider/core/network/api_error_parser.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

@@ -3,12 +3,12 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/features/rider/kyc/views/widgets/kyc_metrics.dart';
-import 'package:delivery_boy/features/rider/kyc/views/widgets/kyc_section_layout.dart';
-import 'package:delivery_boy/features/rider/vehicles/capture/camera_access.dart';
-import 'package:delivery_boy/features/rider/vehicles/capture/vehicle_photo_inspector.dart';
-import 'package:delivery_boy/features/rider/vehicles/model/vehicle_capture.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/features/rider/kyc/views/widgets/kyc_metrics.dart';
+import 'package:gopady_rider/features/rider/kyc/views/widgets/kyc_section_layout.dart';
+import 'package:gopady_rider/features/rider/vehicles/capture/camera_access.dart';
+import 'package:gopady_rider/features/rider/vehicles/capture/vehicle_photo_inspector.dart';
+import 'package:gopady_rider/features/rider/vehicles/model/vehicle_capture.dart';
 
 /// Panels sit on the live preview, so they get a dark scrim rather than a
 /// surface colour.
@@ -365,7 +365,7 @@ class CameraPermissionView extends StatelessWidget {
     final (title, message, action) = switch (access) {
       CameraAccess.permanentlyDenied => (
           'Camera permission is turned off',
-          'Enable camera access for BagyesRIDER in Settings to take your '
+          'Enable camera access for GoPady Rider in Settings to take your '
               'vehicle photos.',
           'Open Settings',
         ),

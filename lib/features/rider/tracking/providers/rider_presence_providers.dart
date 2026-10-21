@@ -2,14 +2,14 @@ import 'dart:async';
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:delivery_boy/core/di/service_locator.dart';
-import 'package:delivery_boy/core/services/rider_location_service.dart';
-import 'package:delivery_boy/core/services/rider_online_intent.dart';
-import 'package:delivery_boy/core/services/user_session_manager.dart';
-import 'package:delivery_boy/core/utils/app_logger.dart';
-import 'package:delivery_boy/features/rider/orders/providers/rider_me_order_providers.dart';
-import 'package:delivery_boy/features/rider/profile/providers/rider_me_profile_providers.dart';
-import 'package:delivery_boy/features/rider/tracking/providers/rider_tracking_providers.dart';
+import 'package:gopady_rider/core/di/service_locator.dart';
+import 'package:gopady_rider/core/services/rider_location_service.dart';
+import 'package:gopady_rider/core/services/rider_online_intent.dart';
+import 'package:gopady_rider/core/services/user_session_manager.dart';
+import 'package:gopady_rider/core/utils/app_logger.dart';
+import 'package:gopady_rider/features/rider/orders/providers/rider_me_order_providers.dart';
+import 'package:gopady_rider/features/rider/profile/providers/rider_me_profile_providers.dart';
+import 'package:gopady_rider/features/rider/tracking/providers/rider_tracking_providers.dart';
 
 /// What [RiderPresenceNotifier.sync] should do after comparing the rider's
 /// intent, the server's view and the location permission.

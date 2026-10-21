@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:flutter/widgets.dart';
 import 'package:hugeicons/hugeicons.dart';
 
-import 'package:delivery_boy/core/services/rider_location_service.dart';
-import 'package:delivery_boy/core/widgets/custom_dialogs.dart';
+import 'package:gopady_rider/core/services/rider_location_service.dart';
+import 'package:gopady_rider/core/widgets/custom_dialogs.dart';
 
 /// The location checks a rider must pass before going online.
 ///
@@ -38,7 +38,7 @@ class RiderOnlineLocationGate {
     final proceed = await _confirm(
       context,
       title: 'Stay Visible While Online',
-      subtitle: 'To receive orders, BagyesRIDER needs your location even '
+      subtitle: 'To receive orders, GoPady Rider needs your location even '
           'when the app is closed or in the background. On the next screen, '
           "choose 'Allow all the time'.",
       confirmText: 'Continue',
@@ -67,7 +67,7 @@ class RiderOnlineLocationGate {
     final openSettings = await _confirm(
       context,
       title: 'Location Access Changed',
-      subtitle: "BagyesRIDER no longer has 'Allow all the time' location, so "
+      subtitle: "GoPady Rider no longer has 'Allow all the time' location, so "
           "customers can't see you while the app is in the background. "
           'Restore it in Settings to go online.',
       confirmText: 'Open Settings',

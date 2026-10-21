@@ -1,9 +1,10 @@
+import 'package:gopady_rider/constant/app_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:intl/intl.dart';
 
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/features/rider/wallet/models/rider_me_wallet_model.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/features/rider/wallet/models/rider_me_wallet_model.dart';
 
 /// A single ledger row, shared by the wallet overview's "recent" preview and
 /// the full transactions list. Maps [RiderMeWalletTransactionModel.type] to
@@ -118,7 +119,7 @@ class RiderWalletTransactionTile extends StatelessWidget {
                 Text(
                   _title,
                   style: TextStyle(
-                    fontFamily: 'Mukta',
+                    fontFamily: AppFonts.body,
                     fontSize: w * 0.038,
                     fontWeight: FontWeight.w600,
                     color: AppColors.textPrimary,
@@ -131,7 +132,7 @@ class RiderWalletTransactionTile extends StatelessWidget {
                   Text(
                     _formattedDate!,
                     style: TextStyle(
-                      fontFamily: 'Mukta',
+                      fontFamily: AppFonts.body,
                       fontSize: w * 0.03,
                       color: AppColors.textSecondary,
                     ),
@@ -146,7 +147,7 @@ class RiderWalletTransactionTile extends StatelessWidget {
           Text(
             amountText,
             style: TextStyle(
-              fontFamily: 'Mukta',
+              fontFamily: AppFonts.body,
               fontSize: w * 0.038,
               fontWeight: FontWeight.w700,
               color: amountColor,

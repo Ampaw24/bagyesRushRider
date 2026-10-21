@@ -10,8 +10,8 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 
-import 'package:delivery_boy/core/network/api_error_parser.dart';
-import 'package:delivery_boy/core/utils/app_logger.dart';
+import 'package:gopady_rider/core/network/api_error_parser.dart';
+import 'package:gopady_rider/core/utils/app_logger.dart';
 
 const _unreachable =
     "Couldn't reach the server. Check your internet connection and try again.";

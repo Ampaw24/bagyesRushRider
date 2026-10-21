@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:delivery_boy/core/widgets/app_toast.dart';
-import 'package:delivery_boy/features/rider/orders/providers/reopened_order_logic.dart';
-import 'package:delivery_boy/features/rider/orders/providers/rider_me_order_providers.dart';
+import 'package:gopady_rider/core/widgets/app_toast.dart';
+import 'package:gopady_rider/features/rider/orders/providers/reopened_order_logic.dart';
+import 'package:gopady_rider/features/rider/orders/providers/rider_me_order_providers.dart';
 
 /// Tells the rider when support reopens an order they gave up on, so they
 /// can go back and deliver it.

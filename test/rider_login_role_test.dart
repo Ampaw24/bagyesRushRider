@@ -1,13 +1,13 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:delivery_boy/core/di/service_locator.dart';
-import 'package:delivery_boy/core/errors/failures.dart';
-import 'package:delivery_boy/core/services/user_session_manager.dart';
-import 'package:delivery_boy/features/rider/auth/repositories/rider_auth_repository.dart';
-import 'package:delivery_boy/features/rider/auth/repositories/rider_auth_repository_impl.dart';
-import 'package:delivery_boy/features/rider/auth/services/rider_auth_api_service.dart';
-import 'package:delivery_boy/features/rider/auth/viewmodels/rider_auth_viewmodel.dart';
+import 'package:gopady_rider/core/di/service_locator.dart';
+import 'package:gopady_rider/core/errors/failures.dart';
+import 'package:gopady_rider/core/services/user_session_manager.dart';
+import 'package:gopady_rider/features/rider/auth/repositories/rider_auth_repository.dart';
+import 'package:gopady_rider/features/rider/auth/repositories/rider_auth_repository_impl.dart';
+import 'package:gopady_rider/features/rider/auth/services/rider_auth_api_service.dart';
+import 'package:gopady_rider/features/rider/auth/viewmodels/rider_auth_viewmodel.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';

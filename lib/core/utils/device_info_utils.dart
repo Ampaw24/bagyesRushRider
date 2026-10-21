@@ -1,7 +1,7 @@
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
 
-import 'package:delivery_boy/core/utils/app_logger.dart';
+import 'package:gopady_rider/core/utils/app_logger.dart';
 
 /// Resolves the platform label and human-readable device name sent when
 /// registering this device's push token with the backend.

@@ -1,14 +1,14 @@
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
-import 'package:delivery_boy/core/errors/failures.dart';
-import 'package:delivery_boy/core/network/api_endpoints.dart';
-import 'package:delivery_boy/core/network/api_error_parser.dart';
-import 'package:delivery_boy/core/network/request_error_message.dart';
-import 'package:delivery_boy/core/utils/app_logger.dart';
-import 'package:delivery_boy/features/rider/auth/models/auth_user_model.dart';
-import 'package:delivery_boy/features/rider/auth/models/rider_agreement_model.dart';
-import 'package:delivery_boy/features/rider/auth/repositories/rider_auth_repository.dart';
-import 'package:delivery_boy/features/rider/auth/services/rider_auth_api_service.dart';
+import 'package:gopady_rider/core/errors/failures.dart';
+import 'package:gopady_rider/core/network/api_endpoints.dart';
+import 'package:gopady_rider/core/network/api_error_parser.dart';
+import 'package:gopady_rider/core/network/request_error_message.dart';
+import 'package:gopady_rider/core/utils/app_logger.dart';
+import 'package:gopady_rider/features/rider/auth/models/auth_user_model.dart';
+import 'package:gopady_rider/features/rider/auth/models/rider_agreement_model.dart';
+import 'package:gopady_rider/features/rider/auth/repositories/rider_auth_repository.dart';
+import 'package:gopady_rider/features/rider/auth/services/rider_auth_api_service.dart';
 
 class RiderAuthRepositoryImpl implements RiderAuthRepository {
   final RiderAuthApiService _api;

@@ -1,11 +1,13 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/core/router/app_routes.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/core/router/app_routes.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:gopady_rider/core/widgets/brand_pattern_background.dart';
+import 'package:gopady_rider/core/widgets/skyline_watermark.dart';
 
 // ── Data model ────────────────────────────────────────────────────────────────
 
@@ -31,11 +33,11 @@ class _PageData {
 
 const _pages = [
   _PageData(
-    title: 'Welcome to\nbagyesRUSH',
+    title: 'Welcome to\nGoPady Rider',
     subtitle:
         'Join thousands of riders delivering happiness across Ghana. Fast, reliable, and rewarding.',
     color: AppColors.primary,
-    accentLight: Color(0xFFFFEBEE),
+    accentLight: AppColors.surfaceVariant,
     badge: 'Rider Network',
     badgeIcon: HugeIcons.strokeRoundedUserGroup,
     illustrationAsset: 'assets/images/onboarding/welcome_delivery.svg',
@@ -45,7 +47,7 @@ const _pages = [
     subtitle:
         'Get real-time delivery requests straight to your phone. One tap to accept and start earning.',
     color: AppColors.primary,
-    accentLight: Color(0xFFFFEBEE),
+    accentLight: AppColors.surfaceVariant,
     badge: 'Real-Time Alerts',
     badgeIcon: HugeIcons.strokeRoundedFlash,
     illustrationAsset: 'assets/images/onboarding/order_alert.svg',
@@ -55,7 +57,7 @@ const _pages = [
     subtitle:
         'Monitor daily earnings, weekly bonuses, and withdraw instantly to your mobile money wallet.',
     color: AppColors.primary,
-    accentLight: Color(0xFFFFEBEE),
+    accentLight: AppColors.surfaceVariant,
     badge: 'Instant Payout',
     badgeIcon: HugeIcons.strokeRoundedChartUp,
     illustrationAsset: 'assets/images/onboarding/earnings_wallet.svg',
@@ -65,7 +67,7 @@ const _pages = [
     subtitle:
         'Verified customers, full coverage and a dedicated team available 24/7 for every ride you make.',
     color: AppColors.primary,
-    accentLight: Color(0xFFFFEBEE),
+    accentLight: AppColors.surfaceVariant,
     badge: '24/7 Support',
     badgeIcon: HugeIcons.strokeRoundedHeadphones,
     illustrationAsset: 'assets/images/onboarding/support_chat.svg',
@@ -166,160 +168,178 @@ class _OnboardingIntroScreenState extends State<OnboardingIntroScreen>
 
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // ── Top bar ────────────────────────────────────────────────────
-            Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: size.width * 0.05,
-                vertical: size.height * 0.008,
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    '${_currentPage + 1} / ${_pages.length}',
-                    style: TextStyle(
-                      color: Colors.grey[400],
-                      fontSize: _scaledFont(size, 13),
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: _skip,
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 8),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                        side: BorderSide(
-                          color: page.color.withValues(alpha: 0.3),
-                        ),
-                      ),
-                    ),
-                    child: Text(
-                      'Skip',
-                      style: TextStyle(
-                        color: page.color,
-                        fontSize: _scaledFont(size, 14),
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+      body: Stack(
+        children: [
+          // Brand pattern background
+          const Positioned.fill(
+            child: BrandPatternBackground(
+              backgroundColor: Colors.white,
+              markColor: AppColors.primary,
+              markOpacity: 0.03,
             ),
+          ),
 
-            // ── PageView ───────────────────────────────────────────────────
-            Expanded(
-              child: PageView.builder(
-                controller: _pageController,
-                onPageChanged: _onPageChanged,
-                itemCount: _pages.length,
-                itemBuilder: (_, i) => _OnboardingPage(
-                  data: _pages[i],
-                  scaleAnim: _scaleAnim,
-                  fadeAnim: _fadeAnim,
-                  slideAnim: _slideAnim,
-                  floatAnim: _floatAnim,
-                ),
-              ),
+          // Skyline watermark at the bottom
+          const Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: SkylineWatermark(
+              color: AppColors.surfaceVariant,
+              opacity: 0.4,
+              maxHeightFactor: 0.25,
             ),
+          ),
 
-            // ── Bottom: dots + button ──────────────────────────────────────
-            Padding(
-              padding: EdgeInsets.fromLTRB(
-                size.width * 0.06,
-                size.height * 0.01,
-                size.width * 0.06,
-                size.height * 0.04,
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  // Dot indicators
-                  Row(
-                    children: List.generate(_pages.length, (i) {
-                      final active = i == _currentPage;
-                      return AnimatedContainer(
-                        duration: const Duration(milliseconds: 300),
-                        curve: Curves.easeInOut,
-                        margin: const EdgeInsets.only(right: 7),
-                        width: active ? 28.0 : 9.0,
-                        height: 9.0,
-                        decoration: BoxDecoration(
-                          color: active
-                              ? page.color
-                              : page.color.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(5),
-                        ),
-                      );
-                    }),
+          SafeArea(
+            child: Column(
+              children: [
+                // ── Top bar ────────────────────────────────────────────────────
+                Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: size.width * 0.05,
+                    vertical: size.height * 0.008,
                   ),
-
-                  // Next / Get Started button
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 350),
-                    curve: Curves.easeInOut,
-                    height: _buttonHeight(size),
-                    width: isLast ? size.width * 0.52 : _buttonHeight(size),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          page.color,
-                          page.color.withValues(alpha: 0.75),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius:
-                          BorderRadius.circular(_buttonHeight(size) / 2),
-                      boxShadow: [
-                        BoxShadow(
-                          color: page.color.withValues(alpha: 0.38),
-                          blurRadius: 18,
-                          offset: const Offset(0, 7),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '${_currentPage + 1} / ${_pages.length}',
+                        style: TextStyle(
+                          color: Colors.grey[400],
+                          fontSize: _scaledFont(size, 13),
+                          fontWeight: FontWeight.w500,
                         ),
-                      ],
-                    ),
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: _next,
-                        borderRadius:
-                            BorderRadius.circular(_buttonHeight(size) / 2),
-                        child: Center(
-                          child: AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 250),
-                            child: isLast
-                                ? Text(
-                                    'Get Started',
-                                    key: const ValueKey('start'),
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: _scaledFont(size, 16),
-                                      letterSpacing: 0.3,
-                                    ),
-                                  )
-                                : const Icon(
-                                    HugeIcons.strokeRoundedArrowRight01,
-                                    key: ValueKey('arrow'),
-                                    color: Colors.white,
-                                    size: 24,
-                                  ),
+                      ),
+                      TextButton(
+                        onPressed: _skip,
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 8),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                            side: BorderSide(
+                              color: page.color.withValues(alpha: 0.3),
+                            ),
+                          ),
+                        ),
+                        child: Text(
+                          'Skip',
+                          style: TextStyle(
+                            color: page.color,
+                            fontSize: _scaledFont(size, 14),
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
+                    ],
+                  ),
+                ),
+
+                // ── PageView ───────────────────────────────────────────────────
+                Expanded(
+                  child: PageView.builder(
+                    controller: _pageController,
+                    onPageChanged: _onPageChanged,
+                    itemCount: _pages.length,
+                    itemBuilder: (_, i) => _OnboardingPage(
+                      data: _pages[i],
+                      scaleAnim: _scaleAnim,
+                      fadeAnim: _fadeAnim,
+                      slideAnim: _slideAnim,
+                      floatAnim: _floatAnim,
                     ),
                   ),
-                ],
-              ),
+                ),
+
+                // ── Bottom: dots + button ──────────────────────────────────────
+                Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    size.width * 0.06,
+                    size.height * 0.01,
+                    size.width * 0.06,
+                    size.height * 0.04,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      // Dot indicators
+                      Row(
+                        children: List.generate(_pages.length, (i) {
+                          final active = i == _currentPage;
+                          return AnimatedContainer(
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeInOut,
+                            margin: const EdgeInsets.only(right: 7),
+                            width: active ? 28.0 : 9.0,
+                            height: 9.0,
+                            decoration: BoxDecoration(
+                              color: active
+                                  ? page.color
+                                  : page.color.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(5),
+                            ),
+                          );
+                        }),
+                      ),
+
+                      // Next / Get Started button
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 350),
+                        curve: Curves.easeInOut,
+                        height: _buttonHeight(size),
+                        width: isLast ? size.width * 0.52 : _buttonHeight(size),
+                        decoration: BoxDecoration(
+                          color: page.color,
+                          borderRadius:
+                              BorderRadius.circular(_buttonHeight(size) / 2),
+                          boxShadow: [
+                            BoxShadow(
+                              color: page.color.withValues(alpha: 0.25),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: _next,
+                            borderRadius:
+                                BorderRadius.circular(_buttonHeight(size) / 2),
+                            child: Center(
+                              child: AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 250),
+                                child: isLast
+                                    ? Text(
+                                        'Get Started',
+                                        key: const ValueKey('start'),
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: _scaledFont(size, 16),
+                                          letterSpacing: 0.3,
+                                        ),
+                                      )
+                                    : const Icon(
+                                        HugeIcons.strokeRoundedArrowRight01,
+                                        key: ValueKey('arrow'),
+                                        color: Colors.white,
+                                        size: 24,
+                                      ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -380,10 +400,9 @@ class _OnboardingPage extends StatelessWidget {
                     Text(
                       data.title,
                       style: TextStyle(
-                        fontSize:
-                            (size.width * 0.068).clamp(22.0, 34.0),
+                        fontSize: (size.width * 0.068).clamp(22.0, 34.0),
                         fontWeight: FontWeight.w800,
-                        color: const Color(0xFF1A202C),
+                        color: AppColors.textPrimary,
                         height: 1.2,
                         letterSpacing: -0.5,
                       ),
@@ -392,9 +411,8 @@ class _OnboardingPage extends StatelessWidget {
                     Text(
                       data.subtitle,
                       style: TextStyle(
-                        fontSize:
-                            (size.width * 0.038).clamp(13.0, 18.0),
-                        color: const Color(0xFF718096),
+                        fontSize: (size.width * 0.038).clamp(13.0, 18.0),
+                        color: AppColors.textSecondary,
                         height: 1.65,
                         fontWeight: FontWeight.w400,
                       ),
@@ -473,8 +491,8 @@ class _Illustration extends StatelessWidget {
                 right: 0,
                 child: Center(
                   child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 9),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(24),

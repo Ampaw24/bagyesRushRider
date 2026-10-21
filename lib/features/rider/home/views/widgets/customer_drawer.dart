@@ -1,14 +1,15 @@
+import 'package:gopady_rider/constant/app_tokens.dart';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/core/di/service_locator.dart';
-import 'package:delivery_boy/core/router/app_routes.dart';
-import 'package:delivery_boy/core/services/user_session_manager.dart';
-import 'package:delivery_boy/core/utils/initials.dart';
-import 'package:delivery_boy/core/utils/legal_links.dart';
-import 'package:delivery_boy/features/rider/shared_widgets/rider_avatar.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/core/di/service_locator.dart';
+import 'package:gopady_rider/core/router/app_routes.dart';
+import 'package:gopady_rider/core/services/user_session_manager.dart';
+import 'package:gopady_rider/core/utils/initials.dart';
+import 'package:gopady_rider/core/utils/legal_links.dart';
+import 'package:gopady_rider/features/rider/shared_widgets/rider_avatar.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Data model
@@ -433,7 +434,7 @@ class _DrawerHeader extends StatelessWidget {
                   placeholder: Text(
                     initials,
                     style: TextStyle(
-                      fontFamily: 'Mukta',
+                      fontFamily: AppFonts.body,
                       fontSize: (w * 0.048).clamp(16.0, 22.0),
                       fontWeight: FontWeight.w700,
                       color: Colors.white,
@@ -458,7 +459,7 @@ class _DrawerHeader extends StatelessWidget {
                             child: Text(
                               name,
                               style: TextStyle(
-                                fontFamily: 'Mukta',
+                                fontFamily: AppFonts.body,
                                 fontSize: (w * 0.042).clamp(14.0, 18.0),
                                 fontWeight: FontWeight.w700,
                                 color: AppColors.textPrimary,
@@ -486,7 +487,7 @@ class _DrawerHeader extends StatelessWidget {
                         Text(
                           email,
                           style: TextStyle(
-                            fontFamily: 'Mukta',
+                            fontFamily: AppFonts.body,
                             fontSize: (w * 0.028).clamp(10.0, 12.0),
                             color: AppColors.textSecondary,
                             height: 1.2,
@@ -590,7 +591,7 @@ class _DrawerTile extends StatelessWidget {
                     child: Text(
                       item.label,
                       style: TextStyle(
-                        fontFamily: 'Mukta',
+                        fontFamily: AppFonts.body,
                         fontSize: (w * 0.038).clamp(13.0, 16.0),
                         fontWeight: FontWeight.w500,
                         color: labelColor,
@@ -611,7 +612,7 @@ class _DrawerTile extends StatelessWidget {
                         '${item.badgeCount}',
                         semanticsLabel: '${item.badgeCount} unread',
                         style: TextStyle(
-                          fontFamily: 'Mukta',
+                          fontFamily: AppFonts.body,
                           fontSize: (w * 0.028).clamp(10.0, 12.0),
                           fontWeight: FontWeight.w700,
                           color: Colors.white,

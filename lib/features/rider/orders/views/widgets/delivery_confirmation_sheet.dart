@@ -1,13 +1,14 @@
+import 'package:gopady_rider/constant/app_tokens.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/core/widgets/app_gradient_button.dart';
-import 'package:delivery_boy/core/widgets/drag_handle.dart';
-import 'package:delivery_boy/features/rider/orders/providers/rider_me_order_providers.dart';
-import 'package:delivery_boy/features/rider/shared_widgets/otp_input_field.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/core/widgets/app_gradient_button.dart';
+import 'package:gopady_rider/core/widgets/drag_handle.dart';
+import 'package:gopady_rider/features/rider/orders/providers/rider_me_order_providers.dart';
+import 'package:gopady_rider/features/rider/shared_widgets/otp_input_field.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 enum _ConfirmStep { pin, photo }
@@ -73,14 +74,14 @@ class _DeliveryConfirmationSheetState
                 leading: const Icon(HugeIcons.strokeRoundedCamera01,
                     color: AppColors.primary),
                 title: const Text('Take a photo',
-                    style: TextStyle(fontFamily: 'Roboto')),
+                    style: TextStyle(fontFamily: AppFonts.body)),
                 onTap: () => _pickPhoto(ImageSource.camera),
               ),
               ListTile(
                 leading: const Icon(HugeIcons.strokeRoundedImage01,
                     color: AppColors.primary),
                 title: const Text('Choose from gallery',
-                    style: TextStyle(fontFamily: 'Roboto')),
+                    style: TextStyle(fontFamily: AppFonts.body)),
                 onTap: () => _pickPhoto(ImageSource.gallery),
               ),
             ],
@@ -166,7 +167,7 @@ class _DeliveryConfirmationSheetState
         const Text(
           'Enter Delivery PIN',
           style: TextStyle(
-            fontFamily: 'Roboto',
+            fontFamily: AppFonts.body,
             fontSize: 16,
             fontWeight: FontWeight.w700,
             color: AppColors.textPrimary,
@@ -176,7 +177,7 @@ class _DeliveryConfirmationSheetState
         Text(
           'Ask the customer for their 4-digit delivery PIN',
           style: TextStyle(
-            fontFamily: 'Roboto',
+            fontFamily: AppFonts.body,
             fontSize: 13,
             color: Colors.grey.shade600,
           ),
@@ -201,7 +202,7 @@ class _DeliveryConfirmationSheetState
           Text(
             _pinError!,
             style: const TextStyle(
-              fontFamily: 'Roboto',
+              fontFamily: AppFonts.body,
               fontSize: 12,
               color: AppColors.error,
             ),
@@ -219,7 +220,7 @@ class _DeliveryConfirmationSheetState
         const Text(
           'Proof of Delivery',
           style: TextStyle(
-            fontFamily: 'Roboto',
+            fontFamily: AppFonts.body,
             fontSize: 16,
             fontWeight: FontWeight.w700,
             color: AppColors.textPrimary,
@@ -229,7 +230,7 @@ class _DeliveryConfirmationSheetState
         Text(
           'Optional — attach a photo of the delivered package',
           style: TextStyle(
-            fontFamily: 'Roboto',
+            fontFamily: AppFonts.body,
             fontSize: 13,
             color: Colors.grey.shade600,
           ),
@@ -281,7 +282,7 @@ class _DeliveryConfirmationSheetState
                           Text(
                             'Tap to add a photo',
                             style: TextStyle(
-                              fontFamily: 'Roboto',
+                              fontFamily: AppFonts.body,
                               fontSize: 12,
                               color: Colors.grey.shade500,
                             ),
@@ -297,7 +298,7 @@ class _DeliveryConfirmationSheetState
           Text(
             _genericError!,
             style: const TextStyle(
-              fontFamily: 'Roboto',
+              fontFamily: AppFonts.body,
               fontSize: 12,
               color: AppColors.error,
             ),
@@ -320,7 +321,7 @@ class _DeliveryConfirmationSheetState
                 child: const Text(
                   'Back',
                   style: TextStyle(
-                      fontFamily: 'Roboto',
+                      fontFamily: AppFonts.body,
                       fontWeight: FontWeight.w600,
                       color: AppColors.textPrimary),
                 ),

@@ -1,19 +1,20 @@
+import 'package:gopady_rider/constant/app_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
 
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/core/router/app_routes.dart';
-import 'package:delivery_boy/core/widgets/animated_list_item.dart';
-import 'package:delivery_boy/core/widgets/app_gradient_button.dart';
-import 'package:delivery_boy/core/widgets/app_toast.dart';
-import 'package:delivery_boy/core/widgets/custom_dialogs.dart';
-import 'package:delivery_boy/core/widgets/shimmer_list_placeholder.dart';
-import 'package:delivery_boy/features/rider/profile/providers/rider_me_profile_providers.dart';
-import 'package:delivery_boy/features/rider/wallet/providers/rider_me_wallet_providers.dart';
-import 'package:delivery_boy/features/rider/wallet/views/widgets/rider_withdrawal_request_sheet.dart';
-import 'package:delivery_boy/features/rider/wallet/views/widgets/rider_withdrawal_tile.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/core/router/app_routes.dart';
+import 'package:gopady_rider/core/widgets/animated_list_item.dart';
+import 'package:gopady_rider/core/widgets/app_gradient_button.dart';
+import 'package:gopady_rider/core/widgets/app_toast.dart';
+import 'package:gopady_rider/core/widgets/custom_dialogs.dart';
+import 'package:gopady_rider/core/widgets/shimmer_list_placeholder.dart';
+import 'package:gopady_rider/features/rider/profile/providers/rider_me_profile_providers.dart';
+import 'package:gopady_rider/features/rider/wallet/providers/rider_me_wallet_providers.dart';
+import 'package:gopady_rider/features/rider/wallet/views/widgets/rider_withdrawal_request_sheet.dart';
+import 'package:gopady_rider/features/rider/wallet/views/widgets/rider_withdrawal_tile.dart';
 
 /// Withdrawal lifecycle in one place: balance summary, the Withdraw action
 /// (gated on payout details being configured), and the full history from
@@ -140,7 +141,7 @@ class _RiderWithdrawalsScreenState
                   child: Text(
                     'History',
                     style: TextStyle(
-                      fontFamily: 'Mukta',
+                      fontFamily: AppFonts.body,
                       fontSize: w * 0.044,
                       fontWeight: FontWeight.w700,
                       color: AppColors.textPrimary,
@@ -239,7 +240,7 @@ class _BalanceSummary extends StatelessWidget {
           Text(
             'Available to withdraw',
             style: TextStyle(
-              fontFamily: 'Mukta',
+              fontFamily: AppFonts.body,
               fontSize: w * 0.033,
               color: AppColors.textSecondary,
               fontWeight: FontWeight.w500,
@@ -249,7 +250,7 @@ class _BalanceSummary extends StatelessWidget {
           Text(
             '$currency ${available.toStringAsFixed(2)}',
             style: TextStyle(
-              fontFamily: 'Mukta',
+              fontFamily: AppFonts.body,
               fontSize: w * 0.075,
               fontWeight: FontWeight.w800,
               color: AppColors.textPrimary,

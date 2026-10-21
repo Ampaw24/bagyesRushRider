@@ -1,13 +1,14 @@
+import 'package:gopady_rider/constant/app_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/core/widgets/app_gradient_button.dart';
-import 'package:delivery_boy/core/widgets/custom_dialogs.dart';
-import 'package:delivery_boy/core/widgets/drag_handle.dart';
-import 'package:delivery_boy/features/rider/orders/models/rider_me_order_model.dart';
-import 'package:delivery_boy/features/rider/orders/providers/rider_me_order_providers.dart';
-import 'package:delivery_boy/features/rider/orders/views/widgets/reason_input_sheet.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/core/widgets/app_gradient_button.dart';
+import 'package:gopady_rider/core/widgets/custom_dialogs.dart';
+import 'package:gopady_rider/core/widgets/drag_handle.dart';
+import 'package:gopady_rider/features/rider/orders/models/rider_me_order_model.dart';
+import 'package:gopady_rider/features/rider/orders/providers/rider_me_order_providers.dart';
+import 'package:gopady_rider/features/rider/orders/views/widgets/reason_input_sheet.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 /// Self-contained offer detail sheet — accept/decline are built in rather
@@ -86,7 +87,7 @@ class _RiderMeOfferDetailSheetState
               Text(
                 offer.orderReference ?? '#${offer.id}',
                 style: const TextStyle(
-                  fontFamily: 'Roboto',
+                  fontFamily: AppFonts.body,
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
                   color: AppColors.textPrimary,
@@ -129,7 +130,7 @@ class _RiderMeOfferDetailSheetState
                         child: const Text(
                           'Decline',
                           style: TextStyle(
-                              fontFamily: 'Roboto',
+                              fontFamily: AppFonts.body,
                               fontWeight: FontWeight.w600,
                               fontSize: 15,
                               color: AppColors.textPrimary),
@@ -167,14 +168,14 @@ class _RiderMeOfferDetailSheetState
             children: [
               Text(label,
                   style: TextStyle(
-                      fontFamily: 'Roboto',
+                      fontFamily: AppFonts.body,
                       fontSize: 11,
                       color: Colors.grey.shade500,
                       fontWeight: FontWeight.w600)),
               const SizedBox(height: 2),
               Text(value,
                   style: const TextStyle(
-                      fontFamily: 'Roboto',
+                      fontFamily: AppFonts.body,
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
                       color: AppColors.textPrimary)),
@@ -198,13 +199,13 @@ class _RiderMeOfferDetailSheetState
         children: [
           Text(label,
               style: TextStyle(
-                  fontFamily: 'Roboto',
+                  fontFamily: AppFonts.body,
                   fontSize: 11,
                   color: Colors.grey.shade500)),
           const SizedBox(height: 2),
           Text(value,
               style: const TextStyle(
-                  fontFamily: 'Roboto',
+                  fontFamily: AppFonts.body,
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
                   color: AppColors.textPrimary)),

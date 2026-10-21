@@ -1,7 +1,7 @@
 import 'dart:io';
 
-import 'package:delivery_boy/constant/typedef.dart';
-import 'package:delivery_boy/features/rider/report/models/rider_report_model.dart';
+import 'package:gopady_rider/constant/typedef.dart';
+import 'package:gopady_rider/features/rider/report/models/rider_report_model.dart';
 
 /// Contract for the "Report a Problem" feature — see
 /// `RiderReportApiService` and `ApiEndpoints.riderMeReports`.

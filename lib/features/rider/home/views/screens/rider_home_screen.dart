@@ -1,3 +1,4 @@
+import 'package:gopady_rider/constant/app_tokens.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -6,32 +7,32 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/core/di/service_locator.dart';
-import 'package:delivery_boy/core/router/app_routes.dart';
-import 'package:delivery_boy/core/services/user_session_manager.dart';
-import 'package:delivery_boy/core/widgets/app_loading_overlay.dart';
-import 'package:delivery_boy/core/widgets/app_shimmer.dart';
-import 'package:delivery_boy/core/widgets/custom_dialogs.dart';
-import 'package:delivery_boy/core/widgets/notification_permission_prompt.dart';
-import 'package:delivery_boy/features/rider/auth/models/rider_user_model.dart';
-import 'package:delivery_boy/features/rider/auth/viewmodels/rider_auth_viewmodel.dart';
-import 'package:delivery_boy/features/rider/dashboard/views/screens/rider_dashboard_screen.dart';
-import 'package:delivery_boy/features/rider/home/models/rider_banner_model.dart';
-import 'package:delivery_boy/features/rider/home/providers/rider_banner_providers.dart';
-import 'package:delivery_boy/features/rider/home/views/widgets/customer_drawer.dart';
-import 'package:delivery_boy/features/rider/home/views/widgets/rider_location_chip.dart';
-import 'package:delivery_boy/features/rider/location/providers/rider_location_providers.dart';
-import 'package:delivery_boy/features/rider/notifications/providers/rider_notifications_providers.dart';
-import 'package:delivery_boy/features/rider/orders/models/rider_me_order_model.dart';
-import 'package:delivery_boy/features/rider/orders/providers/rider_me_order_providers.dart';
-import 'package:delivery_boy/features/rider/orders/views/widgets/rider_me_order_detail_sheet.dart';
-import 'package:delivery_boy/features/rider/orders/views/widgets/rider_me_order_status.dart';
-import 'package:delivery_boy/features/rider/profile/providers/rider_avatar_providers.dart';
-import 'package:delivery_boy/features/rider/profile/providers/rider_me_profile_providers.dart';
-import 'package:delivery_boy/features/rider/kyc/providers/kyc_providers.dart';
-import 'package:delivery_boy/features/rider/shared_widgets/rider_avatar.dart';
-import 'package:delivery_boy/features/rider/shared_widgets/rider_setup_progress_card.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/core/di/service_locator.dart';
+import 'package:gopady_rider/core/router/app_routes.dart';
+import 'package:gopady_rider/core/services/user_session_manager.dart';
+import 'package:gopady_rider/core/widgets/app_loading_overlay.dart';
+import 'package:gopady_rider/core/widgets/app_shimmer.dart';
+import 'package:gopady_rider/core/widgets/custom_dialogs.dart';
+import 'package:gopady_rider/core/widgets/notification_permission_prompt.dart';
+import 'package:gopady_rider/features/rider/auth/models/rider_user_model.dart';
+import 'package:gopady_rider/features/rider/auth/viewmodels/rider_auth_viewmodel.dart';
+import 'package:gopady_rider/features/rider/dashboard/views/screens/rider_dashboard_screen.dart';
+import 'package:gopady_rider/features/rider/home/models/rider_banner_model.dart';
+import 'package:gopady_rider/features/rider/home/providers/rider_banner_providers.dart';
+import 'package:gopady_rider/features/rider/home/views/widgets/customer_drawer.dart';
+import 'package:gopady_rider/features/rider/home/views/widgets/rider_location_chip.dart';
+import 'package:gopady_rider/features/rider/location/providers/rider_location_providers.dart';
+import 'package:gopady_rider/features/rider/notifications/providers/rider_notifications_providers.dart';
+import 'package:gopady_rider/features/rider/orders/models/rider_me_order_model.dart';
+import 'package:gopady_rider/features/rider/orders/providers/rider_me_order_providers.dart';
+import 'package:gopady_rider/features/rider/orders/views/widgets/rider_me_order_detail_sheet.dart';
+import 'package:gopady_rider/features/rider/orders/views/widgets/rider_me_order_status.dart';
+import 'package:gopady_rider/features/rider/profile/providers/rider_avatar_providers.dart';
+import 'package:gopady_rider/features/rider/profile/providers/rider_me_profile_providers.dart';
+import 'package:gopady_rider/features/rider/kyc/providers/kyc_providers.dart';
+import 'package:gopady_rider/features/rider/shared_widgets/rider_avatar.dart';
+import 'package:gopady_rider/features/rider/shared_widgets/rider_setup_progress_card.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Screen
@@ -500,7 +501,7 @@ class _HomeHeader extends StatelessWidget {
                   placeholder: Text(
                     initials,
                     style: TextStyle(
-                      fontFamily: 'Mukta',
+                      fontFamily: AppFonts.body,
                       color: Colors.white,
                       fontSize: w * 0.032,
                       fontWeight: FontWeight.w700,
@@ -518,7 +519,7 @@ class _HomeHeader extends StatelessWidget {
         Text(
           greeting,
           style: TextStyle(
-            fontFamily: 'Mukta',
+            fontFamily: AppFonts.body,
             fontSize: (w * 0.034).clamp(12.0, 15.0),
             color: AppColors.textSecondary,
             fontWeight: FontWeight.w400,
@@ -528,7 +529,7 @@ class _HomeHeader extends StatelessWidget {
         Text(
           name,
           style: TextStyle(
-            fontFamily: 'Mukta',
+            fontFamily: AppFonts.body,
             fontSize: (w * 0.058).clamp(20.0, 28.0),
             color: AppColors.textPrimary,
             fontWeight: FontWeight.w800,
@@ -604,7 +605,7 @@ class _OnlineCard extends StatelessWidget {
                         isOnline ? 'You\'re Online' : 'You\'re Offline',
                         key: ValueKey(isOnline),
                         style: TextStyle(
-                          fontFamily: 'Mukta',
+                          fontFamily: AppFonts.body,
                           fontSize: (w * 0.048).clamp(16.0, 22.0),
                           fontWeight: FontWeight.w800,
                           color: Colors.white,
@@ -623,7 +624,7 @@ class _OnlineCard extends StatelessWidget {
                         : 'Tap to start accepting orders',
                     key: ValueKey(isOnline),
                     style: TextStyle(
-                      fontFamily: 'Mukta',
+                      fontFamily: AppFonts.body,
                       fontSize: (w * 0.032).clamp(11.0, 14.0),
                       color: Colors.white.withValues(alpha: 0.8),
                       fontWeight: FontWeight.w400,
@@ -788,7 +789,7 @@ class _AnnouncementsSection extends StatelessWidget {
           child: Text(
             'Announcements',
             style: TextStyle(
-              fontFamily: 'Mukta',
+              fontFamily: AppFonts.body,
               fontSize: (w * 0.042).clamp(14.0, 18.0),
               fontWeight: FontWeight.w700,
               color: AppColors.textPrimary,
@@ -920,7 +921,7 @@ class _AnnouncementCard extends StatelessWidget {
                     Text(
                       banner.title,
                       style: TextStyle(
-                        fontFamily: 'Mukta',
+                        fontFamily: AppFonts.body,
                         fontSize: (w * 0.04).clamp(14.0, 17.0),
                         fontWeight: FontWeight.w700,
                         color: Colors.white,
@@ -933,7 +934,7 @@ class _AnnouncementCard extends StatelessWidget {
                       Text(
                         subtitle,
                         style: TextStyle(
-                          fontFamily: 'Mukta',
+                          fontFamily: AppFonts.body,
                           fontSize: (w * 0.03).clamp(10.0, 13.0),
                           color: Colors.white.withValues(alpha: 0.88),
                           height: 1.35,
@@ -987,7 +988,7 @@ class _ActiveOrdersSection extends StatelessWidget {
               child: Text(
                 'Active Orders',
                 style: TextStyle(
-                  fontFamily: 'Mukta',
+                  fontFamily: AppFonts.body,
                   fontSize: (w * 0.042).clamp(14.0, 18.0),
                   fontWeight: FontWeight.w700,
                   color: AppColors.textPrimary,
@@ -1001,7 +1002,7 @@ class _ActiveOrdersSection extends StatelessWidget {
                   Text(
                     'Show all',
                     style: TextStyle(
-                      fontFamily: 'Mukta',
+                      fontFamily: AppFonts.body,
                       fontSize: (w * 0.032).clamp(11.0, 14.0),
                       fontWeight: FontWeight.w600,
                       color: AppColors.primary,
@@ -1059,7 +1060,7 @@ class _RecentOrdersSection extends StatelessWidget {
               child: Text(
                 'Recent Deliveries',
                 style: TextStyle(
-                  fontFamily: 'Mukta',
+                  fontFamily: AppFonts.body,
                   fontSize: (w * 0.042).clamp(14.0, 18.0),
                   fontWeight: FontWeight.w700,
                   color: AppColors.textPrimary,
@@ -1073,7 +1074,7 @@ class _RecentOrdersSection extends StatelessWidget {
                   Text(
                     'Show all',
                     style: TextStyle(
-                      fontFamily: 'Mukta',
+                      fontFamily: AppFonts.body,
                       fontSize: (w * 0.032).clamp(11.0, 14.0),
                       fontWeight: FontWeight.w600,
                       color: AppColors.primary,
@@ -1129,7 +1130,7 @@ class _EmptyOrders extends StatelessWidget {
           Text(
             'No recent deliveries',
             style: TextStyle(
-              fontFamily: 'Mukta',
+              fontFamily: AppFonts.body,
               fontSize: (w * 0.036).clamp(12.0, 15.0),
               fontWeight: FontWeight.w600,
               color: AppColors.textSecondary,
@@ -1139,7 +1140,7 @@ class _EmptyOrders extends StatelessWidget {
           Text(
             'Your completed orders will appear here',
             style: TextStyle(
-              fontFamily: 'Mukta',
+              fontFamily: AppFonts.body,
               fontSize: (w * 0.03).clamp(10.0, 12.0),
               color: AppColors.textHint,
             ),
@@ -1213,7 +1214,7 @@ class _MiniOrderCard extends StatelessWidget {
                 Text(
                   order.reference ?? '#${order.id}',
                   style: TextStyle(
-                    fontFamily: 'Mukta',
+                    fontFamily: AppFonts.body,
                     fontSize: (w * 0.036).clamp(12.0, 15.0),
                     fontWeight: FontWeight.w700,
                     color: AppColors.textPrimary,
@@ -1234,7 +1235,7 @@ class _MiniOrderCard extends StatelessWidget {
                             ? '${order.stops.length} stops'
                             : (order.dropoffAddress ?? '-'),
                         style: TextStyle(
-                          fontFamily: 'Mukta',
+                          fontFamily: AppFonts.body,
                           fontSize: (w * 0.029).clamp(10.0, 12.0),
                           color: AppColors.textSecondary,
                         ),
@@ -1257,7 +1258,7 @@ class _MiniOrderCard extends StatelessWidget {
               Text(
                 order.amountFormatted,
                 style: TextStyle(
-                  fontFamily: 'Mukta',
+                  fontFamily: AppFonts.body,
                   fontSize: (w * 0.036).clamp(12.0, 15.0),
                   fontWeight: FontWeight.w700,
                   color: AppColors.textPrimary,
@@ -1276,7 +1277,7 @@ class _MiniOrderCard extends StatelessWidget {
                 child: Text(
                   _statusLabel,
                   style: TextStyle(
-                    fontFamily: 'Mukta',
+                    fontFamily: AppFonts.body,
                     fontSize: (w * 0.026).clamp(9.0, 11.0),
                     fontWeight: FontWeight.w600,
                     color: _statusColor,

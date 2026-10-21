@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
 
-import 'package:delivery_boy/core/network/api_endpoints.dart';
-import 'package:delivery_boy/core/utils/json_utils.dart';
+import 'package:gopady_rider/core/network/api_endpoints.dart';
+import 'package:gopady_rider/core/utils/json_utils.dart';
 
 /// The account returned by `/register`, `/login` and `/profile`.
 ///

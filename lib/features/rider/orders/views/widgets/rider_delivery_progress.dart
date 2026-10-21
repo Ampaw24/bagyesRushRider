@@ -1,6 +1,7 @@
+import 'package:gopady_rider/constant/app_tokens.dart';
 import 'package:flutter/material.dart';
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/features/rider/orders/models/rider_delivery_stage.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/features/rider/orders/models/rider_delivery_stage.dart';
 
 const _kMilestones = ['At pickup', 'Picked up', 'At drop-off', 'Delivered'];
 
@@ -101,7 +102,7 @@ class _Milestone extends StatelessWidget {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: TextStyle(
-            fontFamily: 'Roboto',
+            fontFamily: AppFonts.body,
             fontSize: (w * 0.028).clamp(10.0, 12.0),
             fontWeight: isCurrent ? FontWeight.w700 : FontWeight.w500,
             color: isDone || isCurrent

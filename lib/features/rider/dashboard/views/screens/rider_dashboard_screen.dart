@@ -1,40 +1,41 @@
+import 'package:gopady_rider/constant/app_tokens.dart';
 import 'dart:async';
 import 'dart:ui' show ImageFilter;
 import 'package:flutter/material.dart';
-import 'package:delivery_boy/features/rider/orders/views/widgets/rider_orders_tab_bar.dart';
+import 'package:gopady_rider/features/rider/orders/views/widgets/rider_orders_tab_bar.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/core/di/service_locator.dart';
-import 'package:delivery_boy/core/router/app_routes.dart';
-import 'package:delivery_boy/core/services/app_background_channel.dart';
-import 'package:delivery_boy/core/services/navigation_return_notifier.dart';
-import 'package:delivery_boy/core/services/user_session_manager.dart';
-import 'package:delivery_boy/features/rider/auth/models/rider_user_model.dart';
-import 'package:delivery_boy/core/widgets/sos_floating_button.dart';
-import 'package:delivery_boy/core/widgets/app_toast.dart';
-import 'package:delivery_boy/core/widgets/custom_dialogs.dart';
-import 'package:delivery_boy/core/widgets/pulse_scale.dart';
-import 'package:delivery_boy/features/rider/notifications/providers/rider_notifications_providers.dart';
-import 'package:delivery_boy/features/rider/profile/providers/rider_avatar_providers.dart';
-import 'package:delivery_boy/features/rider/profile/providers/rider_me_profile_providers.dart';
-import 'package:delivery_boy/features/rider/shared_widgets/rider_avatar.dart';
-import 'package:delivery_boy/features/rider/orders/providers/rider_me_order_providers.dart';
-import 'package:delivery_boy/features/rider/orders/providers/rider_orders_tab_request_provider.dart';
-import 'package:delivery_boy/features/rider/orders/views/widgets/rider_incoming_offer_listener.dart';
-import 'package:delivery_boy/features/rider/orders/views/widgets/rider_order_reopened_listener.dart';
-import 'package:delivery_boy/features/rider/tracking/providers/rider_presence_providers.dart';
-import 'package:delivery_boy/features/rider/tracking/providers/rider_tracking_providers.dart';
-import 'package:delivery_boy/features/rider/tracking/views/widgets/rider_online_location_gate.dart';
-import 'package:delivery_boy/features/rider/home/views/screens/rider_home_screen.dart';
-import 'package:delivery_boy/features/rider/orders/views/screens/rider_new_orders_screen.dart';
-import 'package:delivery_boy/features/rider/orders/views/screens/rider_active_orders_screen.dart';
-import 'package:delivery_boy/features/rider/orders/views/screens/rider_order_history_screen.dart';
-import 'package:delivery_boy/features/rider/wallet/views/screens/rider_wallet_screen.dart';
-import 'package:delivery_boy/features/rider/profile/views/screens/rider_profile_screen.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/core/di/service_locator.dart';
+import 'package:gopady_rider/core/router/app_routes.dart';
+import 'package:gopady_rider/core/services/app_background_channel.dart';
+import 'package:gopady_rider/core/services/navigation_return_notifier.dart';
+import 'package:gopady_rider/core/services/user_session_manager.dart';
+import 'package:gopady_rider/features/rider/auth/models/rider_user_model.dart';
+import 'package:gopady_rider/core/widgets/sos_floating_button.dart';
+import 'package:gopady_rider/core/widgets/app_toast.dart';
+import 'package:gopady_rider/core/widgets/custom_dialogs.dart';
+import 'package:gopady_rider/core/widgets/pulse_scale.dart';
+import 'package:gopady_rider/features/rider/notifications/providers/rider_notifications_providers.dart';
+import 'package:gopady_rider/features/rider/profile/providers/rider_avatar_providers.dart';
+import 'package:gopady_rider/features/rider/profile/providers/rider_me_profile_providers.dart';
+import 'package:gopady_rider/features/rider/shared_widgets/rider_avatar.dart';
+import 'package:gopady_rider/features/rider/orders/providers/rider_me_order_providers.dart';
+import 'package:gopady_rider/features/rider/orders/providers/rider_orders_tab_request_provider.dart';
+import 'package:gopady_rider/features/rider/orders/views/widgets/rider_incoming_offer_listener.dart';
+import 'package:gopady_rider/features/rider/orders/views/widgets/rider_order_reopened_listener.dart';
+import 'package:gopady_rider/features/rider/tracking/providers/rider_presence_providers.dart';
+import 'package:gopady_rider/features/rider/tracking/providers/rider_tracking_providers.dart';
+import 'package:gopady_rider/features/rider/tracking/views/widgets/rider_online_location_gate.dart';
+import 'package:gopady_rider/features/rider/home/views/screens/rider_home_screen.dart';
+import 'package:gopady_rider/features/rider/orders/views/screens/rider_new_orders_screen.dart';
+import 'package:gopady_rider/features/rider/orders/views/screens/rider_active_orders_screen.dart';
+import 'package:gopady_rider/features/rider/orders/views/screens/rider_order_history_screen.dart';
+import 'package:gopady_rider/features/rider/wallet/views/screens/rider_wallet_screen.dart';
+import 'package:gopady_rider/features/rider/profile/views/screens/rider_profile_screen.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 /// Online/offline state, sourced from `GET /rider/me`'s `is_online`.
@@ -599,7 +600,7 @@ class _OrdersTabState extends ConsumerState<_OrdersTab> {
           title: Text(
             'Orders',
             style: TextStyle(
-              fontFamily: 'Roboto',
+              fontFamily: AppFonts.body,
               fontSize: w * 0.052,
               fontWeight: FontWeight.w700,
               color: AppColors.textPrimary,
@@ -637,7 +638,7 @@ class _OrdersTabState extends ConsumerState<_OrdersTab> {
                       child: Text(
                         unreadCount > 9 ? '9+' : '$unreadCount',
                         style: const TextStyle(
-                          fontFamily: 'Roboto',
+                          fontFamily: AppFonts.body,
                           fontSize: 10,
                           fontWeight: FontWeight.w700,
                           color: Colors.white,
@@ -687,7 +688,7 @@ class _OrdersTabState extends ConsumerState<_OrdersTab> {
                         isOnline ? 'Online' : 'Offline',
                         key: ValueKey(isOnline),
                         style: TextStyle(
-                          fontFamily: 'Roboto',
+                          fontFamily: AppFonts.body,
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                           color: isOnline
@@ -795,7 +796,7 @@ class _KycBanner extends ConsumerWidget {
                             ? 'Verification Rejected — Resubmit'
                             : 'Complete Identity Verification',
                     style: TextStyle(
-                      fontFamily: 'Roboto',
+                      fontFamily: AppFonts.body,
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
                       color: isPending
@@ -811,7 +812,7 @@ class _KycBanner extends ConsumerWidget {
                             ? 'Your submission was rejected. Please review and resubmit your documents.'
                             : 'Verify your identity to start accepting delivery orders.',
                     style: TextStyle(
-                      fontFamily: 'Roboto',
+                      fontFamily: AppFonts.body,
                       fontSize: 11,
                       color: isPending
                           ? Colors.blue.shade700
@@ -836,7 +837,7 @@ class _KycBanner extends ConsumerWidget {
                                   ? 'Resubmit'
                                   : 'Start Verification',
                               style: const TextStyle(
-                                fontFamily: 'Roboto',
+                                fontFamily: AppFonts.body,
                                 fontSize: 11,
                                 fontWeight: FontWeight.w700,
                                 color: Colors.white,
@@ -856,7 +857,7 @@ class _KycBanner extends ConsumerWidget {
                           child: Text(
                             'Later',
                             style: TextStyle(
-                              fontFamily: 'Roboto',
+                              fontFamily: AppFonts.body,
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
                               color: Colors.grey.shade600,

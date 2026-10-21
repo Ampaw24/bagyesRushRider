@@ -3,13 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
 
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/core/router/app_routes.dart';
-import 'package:delivery_boy/core/widgets/animated_list_item.dart';
-import 'package:delivery_boy/core/widgets/shimmer_list_placeholder.dart';
-import 'package:delivery_boy/features/rider/report/models/rider_report_model.dart';
-import 'package:delivery_boy/features/rider/report/providers/rider_my_reports_providers.dart';
-import 'package:delivery_boy/features/rider/report/views/widgets/rider_report_card.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/core/router/app_routes.dart';
+import 'package:gopady_rider/core/widgets/animated_list_item.dart';
+import 'package:gopady_rider/core/widgets/shimmer_list_placeholder.dart';
+import 'package:gopady_rider/features/rider/report/models/rider_report_model.dart';
+import 'package:gopady_rider/features/rider/report/providers/rider_my_reports_providers.dart';
+import 'package:gopady_rider/features/rider/report/views/widgets/rider_report_card.dart';
 
 enum _ReportFilter { open, closed, all }
 

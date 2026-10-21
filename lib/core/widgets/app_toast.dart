@@ -1,7 +1,8 @@
+import 'package:gopady_rider/constant/app_tokens.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:delivery_boy/constant/app_theme.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
 
 /// Animated overlay toast for success/error feedback — the same style used
 /// on the vendor and customer apps, in place of a raw [SnackBar].
@@ -200,7 +201,7 @@ class _AppToastState extends State<AppToast> with TickerProviderStateMixin {
                           Text(
                             widget.title,
                             style: TextStyle(
-                              fontFamily: 'Mukta',
+                              fontFamily: AppFonts.body,
                               fontSize: w * 0.038,
                               fontWeight: FontWeight.w700,
                               color: AppColors.textPrimary,
@@ -210,7 +211,7 @@ class _AppToastState extends State<AppToast> with TickerProviderStateMixin {
                           Text(
                             widget.subtitle,
                             style: TextStyle(
-                              fontFamily: 'Mukta',
+                              fontFamily: AppFonts.body,
                               fontSize: w * 0.031,
                               color: AppColors.textSecondary,
                               height: 1.3,

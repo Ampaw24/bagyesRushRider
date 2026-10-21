@@ -1,6 +1,7 @@
+import 'package:gopady_rider/constant/app_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:delivery_boy/constant/app_theme.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
 
 class AppTextField extends StatelessWidget {
   final String label;
@@ -58,7 +59,7 @@ class AppTextField extends StatelessWidget {
         Text(
           label,
           style: TextStyle(
-            fontFamily: 'Mukta',
+            fontFamily: AppFonts.body,
             fontSize: (w * 0.033).clamp(11.0, 14.0),
             fontWeight: FontWeight.w600,
             color: AppColors.textSecondary,
@@ -84,7 +85,7 @@ class AppTextField extends StatelessWidget {
           onTap: onTap,
           validator: validator,
           style: TextStyle(
-            fontFamily: 'Mukta',
+            fontFamily: AppFonts.body,
             fontSize: (w * 0.038).clamp(13.0, 16.0),
             fontWeight: FontWeight.w500,
             color: AppColors.textPrimary,
@@ -97,12 +98,12 @@ class AppTextField extends StatelessWidget {
                 : null,
             suffix: suffix,
             hintStyle: TextStyle(
-              fontFamily: 'Mukta',
+              fontFamily: AppFonts.body,
               fontSize: (w * 0.036).clamp(12.0, 15.0),
               color: AppColors.textHint,
             ),
             helperStyle: TextStyle(
-              fontFamily: 'Mukta',
+              fontFamily: AppFonts.body,
               fontSize: (w * 0.030).clamp(10.0, 13.0),
               color: AppColors.textSecondary,
             ),

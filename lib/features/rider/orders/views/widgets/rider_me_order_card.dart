@@ -1,12 +1,13 @@
+import 'package:gopady_rider/constant/app_tokens.dart';
 import 'package:flutter/material.dart';
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/features/rider/orders/models/rider_delivery_stage.dart';
-import 'package:delivery_boy/features/rider/orders/models/rider_me_order_model.dart';
-import 'package:delivery_boy/features/rider/orders/views/widgets/rider_delivery_progress.dart';
-import 'package:delivery_boy/features/rider/orders/views/widgets/rider_me_order_status.dart';
-import 'package:delivery_boy/features/rider/orders/views/widgets/rider_order_card_shell.dart';
-import 'package:delivery_boy/features/rider/orders/views/widgets/rider_order_status_header.dart';
-import 'package:delivery_boy/features/rider/orders/views/widgets/rider_route_summary.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/features/rider/orders/models/rider_delivery_stage.dart';
+import 'package:gopady_rider/features/rider/orders/models/rider_me_order_model.dart';
+import 'package:gopady_rider/features/rider/orders/views/widgets/rider_delivery_progress.dart';
+import 'package:gopady_rider/features/rider/orders/views/widgets/rider_me_order_status.dart';
+import 'package:gopady_rider/features/rider/orders/views/widgets/rider_order_card_shell.dart';
+import 'package:gopady_rider/features/rider/orders/views/widgets/rider_order_status_header.dart';
+import 'package:gopady_rider/features/rider/orders/views/widgets/rider_route_summary.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 /// Card for a `RiderMeOrderModel` — used by both the Active and History
@@ -46,7 +47,7 @@ class RiderMeOrderCard extends StatelessWidget {
         stage != RiderDeliveryStage.closed;
     final reference = order.reference ?? '#${order.id}';
     final titleStyle = TextStyle(
-      fontFamily: 'Roboto',
+      fontFamily: AppFonts.body,
       fontSize: (w * 0.04).clamp(14.0, 18.0),
       fontWeight: FontWeight.w700,
       color: AppColors.textPrimary,

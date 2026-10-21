@@ -2,11 +2,11 @@ import 'dart:async';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:delivery_boy/constant/baseurl.dart';
-import 'package:delivery_boy/core/di/service_locator.dart';
-import 'package:delivery_boy/core/realtime/realtime_service.dart';
-import 'package:delivery_boy/core/services/user_session_manager.dart';
-import 'package:delivery_boy/core/utils/app_logger.dart';
+import 'package:gopady_rider/constant/baseurl.dart';
+import 'package:gopady_rider/core/di/service_locator.dart';
+import 'package:gopady_rider/core/realtime/realtime_service.dart';
+import 'package:gopady_rider/core/services/user_session_manager.dart';
+import 'package:gopady_rider/core/utils/app_logger.dart';
 
 /// Bumped whenever the session is invalidated out-of-band (a 401).
 ///

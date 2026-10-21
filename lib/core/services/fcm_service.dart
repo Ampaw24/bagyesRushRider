@@ -1,5 +1,5 @@
+import 'package:gopady_rider/constant/app_theme.dart';
 import 'dart:async';
-import 'dart:ui' show Color;
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -7,8 +7,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:delivery_boy/core/utils/app_logger.dart';
-import 'package:delivery_boy/firebase_options.dart';
+import 'package:gopady_rider/core/utils/app_logger.dart';
+import 'package:gopady_rider/firebase_options.dart';
 
 /// Handles a push that arrives while the app is backgrounded or terminated.
 ///
@@ -44,8 +44,8 @@ class FcmService {
   static final _localNotifications = FlutterLocalNotificationsPlugin();
 
   static const _androidChannel = AndroidNotificationChannel(
-    'bagyes_rush_high_importance',
-    'BagyesRIDER Notifications',
+    'gopady_high_importance',
+    'GoPady Rider Notifications',
     description: 'Delivery updates and new order alerts',
     importance: Importance.high,
   );
@@ -297,7 +297,7 @@ class FcmService {
           // Matches ic_launcher_background / the manifest's
           // default_notification_color, so a foreground-shown notification
           // looks the same as one the FCM SDK auto-displays in background.
-          color: const Color(0xFFE91D25),
+          color: AppColors.primary,
           importance: Importance.high,
           priority: Priority.high,
         ),

@@ -1,3 +1,4 @@
+import 'package:gopady_rider/constant/app_tokens.dart';
 import 'package:flutter/material.dart';
 
 /// A small pill-shaped status chip with a colored background.
@@ -27,7 +28,7 @@ class StatusBadge extends StatelessWidget {
           color: textColor,
           fontSize: 11,
           fontWeight: FontWeight.w600,
-          fontFamily: 'Mukta',
+          fontFamily: AppFonts.body,
           letterSpacing: 0.3,
         ),
       ),

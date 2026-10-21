@@ -1,8 +1,8 @@
-import 'package:delivery_boy/core/router/app_routes.dart';
-import 'package:delivery_boy/features/rider/auth/viewmodels/rider_auth_viewmodel.dart';
-import 'package:delivery_boy/features/rider/auth/views/screens/rider_delete_account_screen.dart';
-import 'package:delivery_boy/features/rider/shared_widgets/app_password_field.dart';
-import 'package:delivery_boy/features/rider/shared_widgets/app_text_field.dart';
+import 'package:gopady_rider/core/router/app_routes.dart';
+import 'package:gopady_rider/features/rider/auth/viewmodels/rider_auth_viewmodel.dart';
+import 'package:gopady_rider/features/rider/auth/views/screens/rider_delete_account_screen.dart';
+import 'package:gopady_rider/features/rider/shared_widgets/app_password_field.dart';
+import 'package:gopady_rider/features/rider/shared_widgets/app_text_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';

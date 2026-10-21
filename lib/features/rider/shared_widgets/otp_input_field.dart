@@ -1,6 +1,7 @@
+import 'package:gopady_rider/constant/app_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:delivery_boy/constant/app_theme.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
 
 /// A reusable N-digit OTP input widget with auto-advance and backspace support.
 /// Calls [onCompleted] when all [digitCount] boxes are filled.
@@ -148,7 +149,7 @@ class _PinBox extends StatelessWidget {
           maxLength: 1,
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           style: const TextStyle(
-            fontFamily: 'Mukta',
+            fontFamily: AppFonts.body,
             fontSize: 22,
             fontWeight: FontWeight.w700,
             color: AppColors.textPrimary,

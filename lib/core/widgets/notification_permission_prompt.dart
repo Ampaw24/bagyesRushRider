@@ -2,10 +2,10 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-import 'package:delivery_boy/core/services/fcm_service.dart';
-import 'package:delivery_boy/core/services/firebase_bootstrap.dart';
-import 'package:delivery_boy/core/services/rider_location_service.dart';
-import 'package:delivery_boy/core/widgets/custom_dialogs.dart';
+import 'package:gopady_rider/core/services/fcm_service.dart';
+import 'package:gopady_rider/core/services/firebase_bootstrap.dart';
+import 'package:gopady_rider/core/services/rider_location_service.dart';
+import 'package:gopady_rider/core/widgets/custom_dialogs.dart';
 
 /// Makes sure a signed-in rider has notifications on — they're how new
 /// order offers arrive, so a rider with them off silently misses work.
@@ -46,7 +46,7 @@ class NotificationPermissionPrompt {
           title: 'Turn on notifications',
           subtitle: "Notifications are how new delivery requests reach you. "
               "With them off you'll miss orders while the app is closed. "
-              'Open Settings → Notifications and allow them for BagyesRIDER.',
+              'Open Settings → Notifications and allow them for GoPady Rider.',
           confirmText: 'Open Settings',
           cancelText: 'Not now',
           onConfirm: RiderLocationService.openAppSettings,

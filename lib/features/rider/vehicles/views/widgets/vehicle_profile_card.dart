@@ -1,14 +1,15 @@
+import 'package:gopady_rider/constant/app_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
 
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/core/router/app_routes.dart';
-import 'package:delivery_boy/features/rider/vehicles/model/vehicle_capture.dart';
-import 'package:delivery_boy/features/rider/vehicles/model/vehicle_verification.dart';
-import 'package:delivery_boy/features/rider/vehicles/viewmodel/vehicle_kyc_viewmodel.dart';
-import 'package:delivery_boy/features/rider/vehicles/views/widgets/vehicle_verification_widgets.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/core/router/app_routes.dart';
+import 'package:gopady_rider/features/rider/vehicles/model/vehicle_capture.dart';
+import 'package:gopady_rider/features/rider/vehicles/model/vehicle_verification.dart';
+import 'package:gopady_rider/features/rider/vehicles/viewmodel/vehicle_kyc_viewmodel.dart';
+import 'package:gopady_rider/features/rider/vehicles/views/widgets/vehicle_verification_widgets.dart';
 
 /// The rider's vehicle on the Profile tab: what it is, its plate and
 /// ownership, and where its verification stands. Sized from the screen
@@ -46,7 +47,7 @@ class VehicleProfileCard extends ConsumerWidget {
             child: Text(
               'Vehicle',
               style: TextStyle(
-                fontFamily: 'Mukta',
+                fontFamily: AppFonts.body,
                 fontSize: w * 0.032,
                 fontWeight: FontWeight.w700,
                 color: AppColors.textHint,
@@ -110,7 +111,7 @@ class _Details extends StatelessWidget {
   Widget build(BuildContext context) {
     final vehicle = view.vehicle;
     TextStyle caption(Color color) =>
-        TextStyle(fontFamily: 'Mukta', fontSize: w * 0.032, color: color);
+        TextStyle(fontFamily: AppFonts.body, fontSize: w * 0.032, color: color);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -118,7 +119,7 @@ class _Details extends StatelessWidget {
         Text(
           vehicle.displayName,
           style: TextStyle(
-            fontFamily: 'Mukta',
+            fontFamily: AppFonts.body,
             fontSize: w * 0.04,
             fontWeight: FontWeight.w700,
             color: AppColors.textPrimary,
@@ -166,7 +167,7 @@ class _Status extends StatelessWidget {
               Text(
                 style.label,
                 style: TextStyle(
-                  fontFamily: 'Mukta',
+                  fontFamily: AppFonts.body,
                   fontSize: w * 0.035,
                   fontWeight: FontWeight.w700,
                   color: style.color,
@@ -178,7 +179,7 @@ class _Status extends StatelessWidget {
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontFamily: 'Mukta',
+                    fontFamily: AppFonts.body,
                     fontSize: w * 0.031,
                     color: AppColors.textSecondary,
                   ),
@@ -190,7 +191,7 @@ class _Status extends StatelessWidget {
         Text(
           action,
           style: TextStyle(
-            fontFamily: 'Mukta',
+            fontFamily: AppFonts.body,
             fontSize: w * 0.033,
             fontWeight: FontWeight.w700,
             color: AppColors.primary,

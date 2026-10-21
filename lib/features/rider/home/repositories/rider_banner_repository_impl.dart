@@ -1,10 +1,10 @@
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
-import 'package:delivery_boy/core/errors/failures.dart';
-import 'package:delivery_boy/core/network/request_error_message.dart';
-import 'package:delivery_boy/features/rider/home/models/rider_banner_model.dart';
-import 'package:delivery_boy/features/rider/home/repositories/rider_banner_repository.dart';
-import 'package:delivery_boy/features/rider/home/services/rider_banner_api_service.dart';
+import 'package:gopady_rider/core/errors/failures.dart';
+import 'package:gopady_rider/core/network/request_error_message.dart';
+import 'package:gopady_rider/features/rider/home/models/rider_banner_model.dart';
+import 'package:gopady_rider/features/rider/home/repositories/rider_banner_repository.dart';
+import 'package:gopady_rider/features/rider/home/services/rider_banner_api_service.dart';
 
 class RiderBannerRepositoryImpl implements RiderBannerRepository {
   final RiderBannerApiService _api;

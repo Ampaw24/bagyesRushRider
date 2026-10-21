@@ -1,8 +1,8 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:delivery_boy/core/di/service_locator.dart';
-import 'package:delivery_boy/features/rider/report/models/rider_report_model.dart';
-import 'package:delivery_boy/features/rider/report/repositories/rider_report_repository.dart';
+import 'package:gopady_rider/core/di/service_locator.dart';
+import 'package:gopady_rider/features/rider/report/models/rider_report_model.dart';
+import 'package:gopady_rider/features/rider/report/repositories/rider_report_repository.dart';
 
 enum RiderMyReportsStatus { initial, loading, loaded, error }
 

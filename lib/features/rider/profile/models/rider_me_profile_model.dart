@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-import 'package:delivery_boy/core/utils/json_utils.dart';
+import 'package:gopady_rider/core/utils/json_utils.dart';
 
 /// Upload state of one verification document, from `/rider/me`'s
 /// `documents` map. [required] is decided server-side and can change with

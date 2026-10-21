@@ -5,17 +5,17 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hugeicons/hugeicons.dart';
 
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/core/widgets/custom_dialogs.dart';
-import 'package:delivery_boy/features/rider/kyc/models/kyc_section.dart';
-import 'package:delivery_boy/features/rider/kyc/models/upload_state.dart';
-import 'package:delivery_boy/features/rider/kyc/providers/kyc_providers.dart';
-import 'package:delivery_boy/features/rider/kyc/views/widgets/kyc_metrics.dart';
-import 'package:delivery_boy/features/rider/kyc/views/widgets/kyc_section_form_mixin.dart';
-import 'package:delivery_boy/features/rider/kyc/views/widgets/kyc_section_layout.dart';
-import 'package:delivery_boy/features/rider/profile/providers/rider_avatar_providers.dart';
-import 'package:delivery_boy/features/rider/profile/views/screens/rider_selfie_capture_screen.dart';
-import 'package:delivery_boy/features/rider/shared_widgets/rider_avatar.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/core/widgets/custom_dialogs.dart';
+import 'package:gopady_rider/features/rider/kyc/models/kyc_section.dart';
+import 'package:gopady_rider/features/rider/kyc/models/upload_state.dart';
+import 'package:gopady_rider/features/rider/kyc/providers/kyc_providers.dart';
+import 'package:gopady_rider/features/rider/kyc/views/widgets/kyc_metrics.dart';
+import 'package:gopady_rider/features/rider/kyc/views/widgets/kyc_section_form_mixin.dart';
+import 'package:gopady_rider/features/rider/kyc/views/widgets/kyc_section_layout.dart';
+import 'package:gopady_rider/features/rider/profile/providers/rider_avatar_providers.dart';
+import 'package:gopady_rider/features/rider/profile/views/screens/rider_selfie_capture_screen.dart';
+import 'package:gopady_rider/features/rider/shared_widgets/rider_avatar.dart';
 
 class PhotoSection extends ConsumerStatefulWidget {
   const PhotoSection({super.key});

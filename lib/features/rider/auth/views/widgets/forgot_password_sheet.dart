@@ -1,13 +1,14 @@
+import 'package:gopady_rider/constant/app_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/core/router/app_routes.dart';
-import 'package:delivery_boy/core/widgets/app_gradient_button.dart';
-import 'package:delivery_boy/core/widgets/custom_dialogs.dart';
-import 'package:delivery_boy/features/rider/auth/viewmodels/rider_auth_viewmodel.dart';
-import 'package:delivery_boy/features/rider/shared_widgets/app_phone_field.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/core/router/app_routes.dart';
+import 'package:gopady_rider/core/widgets/app_gradient_button.dart';
+import 'package:gopady_rider/core/widgets/custom_dialogs.dart';
+import 'package:gopady_rider/features/rider/auth/viewmodels/rider_auth_viewmodel.dart';
+import 'package:gopady_rider/features/rider/shared_widgets/app_phone_field.dart';
 
 /// Forgot-password step 1, opened from the login screen: request a reset
 /// code (`/password/forgot`). As in the customer/vendor app this is a sheet
@@ -93,7 +94,7 @@ class _ForgotPasswordSheetState extends ConsumerState<ForgotPasswordSheet> {
                     '6-digit code to verify your identity and reset your '
                     'password.',
                     style: TextStyle(
-                      fontFamily: 'Mukta',
+                      fontFamily: AppFonts.body,
                       fontSize: (w * 0.036).clamp(13.0, 16.0),
                       color: AppColors.textSecondary,
                       height: 1.4,
@@ -103,7 +104,7 @@ class _ForgotPasswordSheetState extends ConsumerState<ForgotPasswordSheet> {
                   Text(
                     'Phone Number',
                     style: TextStyle(
-                      fontFamily: 'Mukta',
+                      fontFamily: AppFonts.body,
                       fontSize: (w * 0.033).clamp(11.0, 14.0),
                       fontWeight: FontWeight.w600,
                       color: AppColors.textSecondary,
@@ -151,7 +152,7 @@ class _SheetHeader extends StatelessWidget {
           child: Text(
             'Forgot Password',
             style: TextStyle(
-              fontFamily: 'Mukta',
+              fontFamily: AppFonts.body,
               fontSize: (w * 0.05).clamp(18.0, 22.0),
               fontWeight: FontWeight.w700,
               color: AppColors.textPrimary,

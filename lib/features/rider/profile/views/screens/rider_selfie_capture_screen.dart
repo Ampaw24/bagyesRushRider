@@ -1,3 +1,4 @@
+import 'package:gopady_rider/constant/app_tokens.dart';
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
@@ -8,7 +9,7 @@ import 'package:flutter/services.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:delivery_boy/constant/app_theme.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
 
 /// Live, camera-only selfie capture with on-device face guidance.
 ///
@@ -471,7 +472,7 @@ class _RiderSelfieCaptureScreenState extends State<RiderSelfieCaptureScreen>
               Text(
                 'Verify it\'s you',
                 style: TextStyle(
-                  fontFamily: 'Roboto',
+                  fontFamily: AppFonts.body,
                   color: Colors.white,
                   fontWeight: FontWeight.w700,
                   fontSize: (w * 0.05).clamp(18.0, 22.0),
@@ -482,7 +483,7 @@ class _RiderSelfieCaptureScreenState extends State<RiderSelfieCaptureScreen>
                 _statusMessage,
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontFamily: 'Roboto',
+                  fontFamily: AppFonts.body,
                   color: Colors.white.withValues(alpha: 0.85),
                   fontWeight: FontWeight.w500,
                   fontSize: (w * 0.037).clamp(13.0, 15.0),
@@ -495,7 +496,7 @@ class _RiderSelfieCaptureScreenState extends State<RiderSelfieCaptureScreen>
                   child: Text(
                     'Trouble with auto-capture? Tap to take the photo',
                     style: TextStyle(
-                      fontFamily: 'Roboto',
+                      fontFamily: AppFonts.body,
                       color: AppColors.primaryLight,
                       fontWeight: FontWeight.w600,
                       fontSize: (w * 0.032).clamp(11.5, 13.0),
@@ -531,7 +532,7 @@ class _RiderSelfieCaptureScreenState extends State<RiderSelfieCaptureScreen>
               'Camera access is needed to verify your identity',
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontFamily: 'Roboto',
+                fontFamily: AppFonts.body,
                 color: Colors.white,
                 fontWeight: FontWeight.w600,
                 fontSize: (w * 0.04).clamp(14.0, 17.0),
@@ -540,11 +541,11 @@ class _RiderSelfieCaptureScreenState extends State<RiderSelfieCaptureScreen>
             SizedBox(height: w * 0.02),
             Text(
               _permissionPermanentlyDenied
-                  ? 'Camera permission was denied. Enable it for BagyesRIDER in your device settings to continue.'
-                  : 'BagyesRIDER needs camera access to verify your identity with a live selfie.',
+                  ? 'Camera permission was denied. Enable it for GoPady Rider in your device settings to continue.'
+                  : 'GoPady Rider needs camera access to verify your identity with a live selfie.',
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontFamily: 'Roboto',
+                fontFamily: AppFonts.body,
                 color: Colors.white.withValues(alpha: 0.75),
                 fontSize: (w * 0.033).clamp(12.0, 13.5),
               ),
@@ -556,7 +557,7 @@ class _RiderSelfieCaptureScreenState extends State<RiderSelfieCaptureScreen>
                 TextButton(
                   onPressed: () => Navigator.of(context).maybePop(),
                   child: const Text('Go back',
-                      style: TextStyle(fontFamily: 'Roboto', color: Colors.white)),
+                      style: TextStyle(fontFamily: AppFonts.body, color: Colors.white)),
                 ),
                 SizedBox(width: w * 0.04),
                 TextButton(
@@ -569,7 +570,7 @@ class _RiderSelfieCaptureScreenState extends State<RiderSelfieCaptureScreen>
                   child: Text(
                     _permissionPermanentlyDenied ? 'Open Settings' : 'Grant permission',
                     style: TextStyle(
-                        fontFamily: 'Roboto', color: AppColors.primaryLight),
+                        fontFamily: AppFonts.body, color: AppColors.primaryLight),
                   ),
                 ),
               ],
@@ -595,7 +596,7 @@ class _RiderSelfieCaptureScreenState extends State<RiderSelfieCaptureScreen>
               'Something went wrong starting the camera',
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontFamily: 'Roboto',
+                fontFamily: AppFonts.body,
                 color: Colors.white,
                 fontWeight: FontWeight.w600,
                 fontSize: (w * 0.04).clamp(14.0, 17.0),
@@ -607,7 +608,7 @@ class _RiderSelfieCaptureScreenState extends State<RiderSelfieCaptureScreen>
                 _errorMessage!,
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontFamily: 'Roboto',
+                  fontFamily: AppFonts.body,
                   color: Colors.white.withValues(alpha: 0.6),
                   fontSize: (w * 0.03).clamp(11.0, 12.5),
                 ),
@@ -620,7 +621,7 @@ class _RiderSelfieCaptureScreenState extends State<RiderSelfieCaptureScreen>
                 TextButton(
                   onPressed: () => Navigator.of(context).maybePop(),
                   child: const Text('Go back',
-                      style: TextStyle(fontFamily: 'Roboto', color: Colors.white)),
+                      style: TextStyle(fontFamily: AppFonts.body, color: Colors.white)),
                 ),
                 SizedBox(width: w * 0.04),
                 TextButton(
@@ -630,7 +631,7 @@ class _RiderSelfieCaptureScreenState extends State<RiderSelfieCaptureScreen>
                   },
                   child: Text('Retry',
                       style: TextStyle(
-                          fontFamily: 'Roboto', color: AppColors.primaryLight)),
+                          fontFamily: AppFonts.body, color: AppColors.primaryLight)),
                 ),
               ],
             ),

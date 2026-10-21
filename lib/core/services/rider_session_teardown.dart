@@ -2,21 +2,21 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:delivery_boy/core/di/service_locator.dart';
-import 'package:delivery_boy/core/services/rider_online_intent.dart';
-import 'package:delivery_boy/core/services/user_session_manager.dart';
-import 'package:delivery_boy/core/utils/network_utility.dart'
+import 'package:gopady_rider/core/di/service_locator.dart';
+import 'package:gopady_rider/core/services/rider_online_intent.dart';
+import 'package:gopady_rider/core/services/user_session_manager.dart';
+import 'package:gopady_rider/core/utils/network_utility.dart'
     show sessionRevision;
-import 'package:delivery_boy/features/rider/chat/providers/rider_chat_list_providers.dart';
-import 'package:delivery_boy/features/rider/kyc/providers/kyc_providers.dart';
-import 'package:delivery_boy/features/rider/notifications/providers/rider_notifications_providers.dart';
-import 'package:delivery_boy/features/rider/orders/providers/rider_me_order_providers.dart';
-import 'package:delivery_boy/features/rider/profile/providers/rider_me_profile_providers.dart';
-import 'package:delivery_boy/features/rider/report/providers/rider_my_reports_providers.dart';
-import 'package:delivery_boy/features/rider/tracking/providers/rider_presence_providers.dart';
-import 'package:delivery_boy/features/rider/tracking/providers/rider_tracking_providers.dart';
-import 'package:delivery_boy/features/rider/wallet/providers/rider_me_wallet_providers.dart';
-import 'package:delivery_boy/features/rider/wallet/providers/rider_me_wallet_transactions_providers.dart';
+import 'package:gopady_rider/features/rider/chat/providers/rider_chat_list_providers.dart';
+import 'package:gopady_rider/features/rider/kyc/providers/kyc_providers.dart';
+import 'package:gopady_rider/features/rider/notifications/providers/rider_notifications_providers.dart';
+import 'package:gopady_rider/features/rider/orders/providers/rider_me_order_providers.dart';
+import 'package:gopady_rider/features/rider/profile/providers/rider_me_profile_providers.dart';
+import 'package:gopady_rider/features/rider/report/providers/rider_my_reports_providers.dart';
+import 'package:gopady_rider/features/rider/tracking/providers/rider_presence_providers.dart';
+import 'package:gopady_rider/features/rider/tracking/providers/rider_tracking_providers.dart';
+import 'package:gopady_rider/features/rider/wallet/providers/rider_me_wallet_providers.dart';
+import 'package:gopady_rider/features/rider/wallet/providers/rider_me_wallet_transactions_providers.dart';
 
 /// Resets every piece of per-rider Riverpod state whenever the session
 /// ends — logout, account deletion, or a 401 clearing it out of band.

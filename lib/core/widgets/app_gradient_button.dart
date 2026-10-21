@@ -1,7 +1,8 @@
+import 'package:gopady_rider/constant/app_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:delivery_boy/constant/app_theme.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
 
 /// A full-width gradient button with loading state and haptic feedback.
 class AppGradientButton extends StatelessWidget {
@@ -54,7 +55,7 @@ class AppGradientButton extends StatelessWidget {
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                         letterSpacing: 0.4,
-                        fontFamily: 'Mukta',
+                        fontFamily: AppFonts.body,
                       ),
                 ),
         ),

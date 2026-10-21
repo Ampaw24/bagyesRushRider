@@ -1,5 +1,5 @@
-import 'package:delivery_boy/features/rider/vehicles/model/vehicle_capture.dart';
-import 'package:delivery_boy/features/rider/vehicles/model/vehicle_verification_configuration.dart';
+import 'package:gopady_rider/features/rider/vehicles/model/vehicle_capture.dart';
+import 'package:gopady_rider/features/rider/vehicles/model/vehicle_verification_configuration.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

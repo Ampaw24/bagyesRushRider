@@ -2,7 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
-import 'package:delivery_boy/features/rider/vehicles/capture/vehicle_photo_inspector.dart';
+import 'package:gopady_rider/features/rider/vehicles/capture/vehicle_photo_inspector.dart';
 import 'package:flutter/painting.dart';
 import 'package:flutter_test/flutter_test.dart';
 

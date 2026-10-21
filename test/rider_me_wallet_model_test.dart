@@ -1,4 +1,4 @@
-import 'package:delivery_boy/features/rider/wallet/models/rider_me_wallet_model.dart';
+import 'package:gopady_rider/features/rider/wallet/models/rider_me_wallet_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

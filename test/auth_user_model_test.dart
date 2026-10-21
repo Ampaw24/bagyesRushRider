@@ -1,4 +1,4 @@
-import 'package:delivery_boy/features/rider/auth/models/auth_user_model.dart';
+import 'package:gopady_rider/features/rider/auth/models/auth_user_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// Mirrors `RiderAuthRepositoryImpl._parseAuth` so the envelope handling is

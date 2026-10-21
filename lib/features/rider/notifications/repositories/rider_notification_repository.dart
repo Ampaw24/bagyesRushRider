@@ -1,6 +1,6 @@
 import 'package:dartz/dartz.dart';
-import 'package:delivery_boy/core/errors/failures.dart';
-import 'package:delivery_boy/features/rider/notifications/models/rider_notification_model.dart';
+import 'package:gopady_rider/core/errors/failures.dart';
+import 'package:gopady_rider/features/rider/notifications/models/rider_notification_model.dart';
 
 abstract class RiderNotificationRepository {
   Future<Either<Failure, List<RiderNotificationModel>>> getNotifications();

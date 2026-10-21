@@ -1,10 +1,10 @@
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
-import 'package:delivery_boy/core/errors/failures.dart';
-import 'package:delivery_boy/core/network/request_error_message.dart';
-import 'package:delivery_boy/features/rider/legal/models/legal_document_model.dart';
-import 'package:delivery_boy/features/rider/legal/repositories/legal_document_repository.dart';
-import 'package:delivery_boy/features/rider/legal/services/legal_document_api_service.dart';
+import 'package:gopady_rider/core/errors/failures.dart';
+import 'package:gopady_rider/core/network/request_error_message.dart';
+import 'package:gopady_rider/features/rider/legal/models/legal_document_model.dart';
+import 'package:gopady_rider/features/rider/legal/repositories/legal_document_repository.dart';
+import 'package:gopady_rider/features/rider/legal/services/legal_document_api_service.dart';
 
 class LegalDocumentRepositoryImpl implements LegalDocumentRepository {
   final LegalDocumentApiService _api;

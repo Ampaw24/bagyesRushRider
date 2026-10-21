@@ -1,5 +1,6 @@
+import 'package:gopady_rider/constant/app_tokens.dart';
 import 'package:flutter/material.dart';
-import 'package:delivery_boy/constant/app_theme.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 /// Horizontal animated step indicator for multi-step flows.
@@ -94,7 +95,7 @@ class _StepCircle extends StatelessWidget {
                       '${stepIndex + 1}',
                       key: ValueKey(stepIndex),
                       style: TextStyle(
-                        fontFamily: 'Mukta',
+                        fontFamily: AppFonts.body,
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
                         color: isActive ? Colors.white : Colors.grey.shade500,
@@ -107,7 +108,7 @@ class _StepCircle extends StatelessWidget {
         Text(
           label,
           style: TextStyle(
-            fontFamily: 'Mukta',
+            fontFamily: AppFonts.body,
             fontSize: 9,
             fontWeight:
                 isActive ? FontWeight.w600 : FontWeight.w400,

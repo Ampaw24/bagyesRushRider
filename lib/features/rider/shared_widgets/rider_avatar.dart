@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:delivery_boy/constant/app_theme.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
 
 /// Circular profile photo that shows [placeholder] — usually the rider's
 /// initials — when there is no [imageUrl], while the photo loads, and if it

@@ -2,11 +2,11 @@ import 'dart:async';
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:delivery_boy/core/di/service_locator.dart';
-import 'package:delivery_boy/core/errors/failures.dart';
-import 'package:delivery_boy/features/rider/shared/rider_me_action_status.dart';
-import 'package:delivery_boy/features/rider/wallet/models/rider_me_wallet_model.dart';
-import 'package:delivery_boy/features/rider/wallet/repositories/rider_me_wallet_repository.dart';
+import 'package:gopady_rider/core/di/service_locator.dart';
+import 'package:gopady_rider/core/errors/failures.dart';
+import 'package:gopady_rider/features/rider/shared/rider_me_action_status.dart';
+import 'package:gopady_rider/features/rider/wallet/models/rider_me_wallet_model.dart';
+import 'package:gopady_rider/features/rider/wallet/repositories/rider_me_wallet_repository.dart';
 
 enum RiderMeWalletStatus { initial, loading, loaded, error }
 

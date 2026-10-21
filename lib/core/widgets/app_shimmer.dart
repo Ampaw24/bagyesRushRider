@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:delivery_boy/constant/app_theme.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
 
 /// A shimmer effect widget built without any extra package.
 /// Wraps [child] with a cycling linear gradient shader mask.

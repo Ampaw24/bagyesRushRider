@@ -3,16 +3,16 @@ import 'dart:async';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:delivery_boy/core/di/service_locator.dart';
-import 'package:delivery_boy/core/realtime/realtime_service.dart';
-import 'package:delivery_boy/core/router/app_router.dart';
-import 'package:delivery_boy/core/services/fcm_service.dart';
-import 'package:delivery_boy/core/services/firebase_bootstrap.dart';
-import 'package:delivery_boy/core/services/user_session_manager.dart';
-import 'package:delivery_boy/core/utils/app_logger.dart';
-import 'package:delivery_boy/features/rider/auth/viewmodels/rider_auth_viewmodel.dart';
-import 'package:delivery_boy/features/rider/location/providers/rider_location_providers.dart';
-import 'package:delivery_boy/features/rider/orders/providers/rider_me_order_providers.dart';
+import 'package:gopady_rider/core/di/service_locator.dart';
+import 'package:gopady_rider/core/realtime/realtime_service.dart';
+import 'package:gopady_rider/core/router/app_router.dart';
+import 'package:gopady_rider/core/services/fcm_service.dart';
+import 'package:gopady_rider/core/services/firebase_bootstrap.dart';
+import 'package:gopady_rider/core/services/user_session_manager.dart';
+import 'package:gopady_rider/core/utils/app_logger.dart';
+import 'package:gopady_rider/features/rider/auth/viewmodels/rider_auth_viewmodel.dart';
+import 'package:gopady_rider/features/rider/location/providers/rider_location_providers.dart';
+import 'package:gopady_rider/features/rider/orders/providers/rider_me_order_providers.dart';
 
 /// Non-critical startup work: OS permission prompts, the first GPS fix, and
 /// push-token registration.

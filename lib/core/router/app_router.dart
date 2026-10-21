@@ -1,51 +1,51 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:delivery_boy/core/di/service_locator.dart';
-import 'package:delivery_boy/core/services/user_session_manager.dart';
-import 'package:delivery_boy/core/router/app_routes.dart';
-import 'package:delivery_boy/core/utils/network_utility.dart'
+import 'package:gopady_rider/core/di/service_locator.dart';
+import 'package:gopady_rider/core/services/user_session_manager.dart';
+import 'package:gopady_rider/core/router/app_routes.dart';
+import 'package:gopady_rider/core/utils/network_utility.dart'
     show sessionRevision;
 
 // ── Splash / Intro ─────────────────────────────────────────────────────────────
-import 'package:delivery_boy/pages/splashScreen.dart';
-import 'package:delivery_boy/pages/unboardingscreen/onboarding_screen.dart';
+import 'package:gopady_rider/pages/splashScreen.dart';
+import 'package:gopady_rider/pages/unboardingscreen/onboarding_screen.dart';
 // ── Auth screens ──────────────────────────────────────────────────────────────
-import 'package:delivery_boy/features/rider/auth/views/screens/rider_login_screen.dart';
-import 'package:delivery_boy/features/rider/auth/views/screens/rider_signup_screen.dart';
-import 'package:delivery_boy/features/rider/auth/views/screens/rider_otp_screen.dart';
-import 'package:delivery_boy/features/rider/auth/views/screens/rider_password_reset_otp_screen.dart';
-import 'package:delivery_boy/features/rider/auth/views/screens/rider_reset_password_screen.dart';
-import 'package:delivery_boy/features/rider/auth/views/screens/rider_vehicle_info_screen.dart';
-import 'package:delivery_boy/features/rider/auth/views/screens/rider_vehicle_details_screen.dart';
-import 'package:delivery_boy/features/rider/auth/views/screens/rider_terms_conditions_screen.dart';
+import 'package:gopady_rider/features/rider/auth/views/screens/rider_login_screen.dart';
+import 'package:gopady_rider/features/rider/auth/views/screens/rider_signup_screen.dart';
+import 'package:gopady_rider/features/rider/auth/views/screens/rider_otp_screen.dart';
+import 'package:gopady_rider/features/rider/auth/views/screens/rider_password_reset_otp_screen.dart';
+import 'package:gopady_rider/features/rider/auth/views/screens/rider_reset_password_screen.dart';
+import 'package:gopady_rider/features/rider/auth/views/screens/rider_vehicle_info_screen.dart';
+import 'package:gopady_rider/features/rider/auth/views/screens/rider_vehicle_details_screen.dart';
+import 'package:gopady_rider/features/rider/auth/views/screens/rider_terms_conditions_screen.dart';
 // ── Dashboard ─────────────────────────────────────────────────────────────────
-import 'package:delivery_boy/features/rider/dashboard/views/screens/rider_dashboard_screen.dart';
+import 'package:gopady_rider/features/rider/dashboard/views/screens/rider_dashboard_screen.dart';
 // ── Profile ───────────────────────────────────────────────────────────────────
-import 'package:delivery_boy/features/rider/profile/views/screens/rider_profile_edit_screen.dart';
+import 'package:gopady_rider/features/rider/profile/views/screens/rider_profile_edit_screen.dart';
 // ── Notifications ─────────────────────────────────────────────────────────────
-import 'package:delivery_boy/features/rider/notifications/views/screens/rider_notifications_screen.dart';
+import 'package:gopady_rider/features/rider/notifications/views/screens/rider_notifications_screen.dart';
 // ── Chat ──────────────────────────────────────────────────────────────────────
-import 'package:delivery_boy/features/rider/chat/views/screens/rider_chat_list_screen.dart';
+import 'package:gopady_rider/features/rider/chat/views/screens/rider_chat_list_screen.dart';
 // ── Settings ──────────────────────────────────────────────────────────────────
-import 'package:delivery_boy/features/rider/settings/views/screens/rider_settings_screen.dart';
+import 'package:gopady_rider/features/rider/settings/views/screens/rider_settings_screen.dart';
 // ── Wallet ────────────────────────────────────────────────────────────────────
-import 'package:delivery_boy/features/rider/wallet/views/screens/rider_wallet_transactions_screen.dart';
-import 'package:delivery_boy/features/rider/wallet/views/screens/rider_withdrawals_screen.dart';
+import 'package:gopady_rider/features/rider/wallet/views/screens/rider_wallet_transactions_screen.dart';
+import 'package:gopady_rider/features/rider/wallet/views/screens/rider_withdrawals_screen.dart';
 // ── Support / Report a Problem ───────────────────────────────────────────────
-import 'package:delivery_boy/features/rider/support/views/screens/rider_help_support_screen.dart';
-import 'package:delivery_boy/features/rider/report/models/rider_report_flow_args.dart';
-import 'package:delivery_boy/features/rider/report/views/screens/rider_my_reports_screen.dart';
-import 'package:delivery_boy/features/rider/report/views/screens/rider_report_flow_screen.dart';
-import 'package:delivery_boy/features/rider/report/views/screens/rider_report_detail_screen.dart';
+import 'package:gopady_rider/features/rider/support/views/screens/rider_help_support_screen.dart';
+import 'package:gopady_rider/features/rider/report/models/rider_report_flow_args.dart';
+import 'package:gopady_rider/features/rider/report/views/screens/rider_my_reports_screen.dart';
+import 'package:gopady_rider/features/rider/report/views/screens/rider_report_flow_screen.dart';
+import 'package:gopady_rider/features/rider/report/views/screens/rider_report_detail_screen.dart';
 // ── Verification (KYC) ────────────────────────────────────────────────────────
-import 'package:delivery_boy/features/rider/kyc/models/kyc_section.dart';
-import 'package:delivery_boy/features/rider/kyc/views/screens/kyc_hub_screen.dart';
-import 'package:delivery_boy/features/rider/kyc/views/screens/kyc_section_screen.dart';
-import 'package:delivery_boy/features/rider/auth/views/screens/rider_delete_account_screen.dart';
-import 'package:delivery_boy/features/rider/vehicles/views/screens/vehicle_verification_screen.dart';
+import 'package:gopady_rider/features/rider/kyc/models/kyc_section.dart';
+import 'package:gopady_rider/features/rider/kyc/views/screens/kyc_hub_screen.dart';
+import 'package:gopady_rider/features/rider/kyc/views/screens/kyc_section_screen.dart';
+import 'package:gopady_rider/features/rider/auth/views/screens/rider_delete_account_screen.dart';
+import 'package:gopady_rider/features/rider/vehicles/views/screens/vehicle_verification_screen.dart';
 // ── Orders ────────────────────────────────────────────────────────────────────
-import 'package:delivery_boy/features/rider/orders/models/rider_me_order_model.dart';
-import 'package:delivery_boy/features/rider/orders/views/screens/rider_order_map_screen.dart';
+import 'package:gopady_rider/features/rider/orders/models/rider_me_order_model.dart';
+import 'package:gopady_rider/features/rider/orders/views/screens/rider_order_map_screen.dart';
 
 /// Routes reachable while signed out.
 ///

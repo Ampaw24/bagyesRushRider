@@ -1,4 +1,4 @@
-# BagyesRUSH Rider — Claude Guidelines
+# GoPady Rider — Claude Guidelines
 
 ## Icons
 
@@ -11,7 +11,7 @@
 ## Tech Stack
 
 - Flutter 3.x / Dart
-- Package: `com.bagye.bagyesrushrider` (iOS bundle ID + Android applicationId)
+- Package: `com.gopady.rider` (Android applicationId; iOS bundle ID still `com.bagye.bagyesrushrider` pending migration)
 - AGP 8.9.1, Kotlin 2.1.0, Gradle 8.11.1, compileSdk 36
 # Flutter Responsiveness Rules (STRICT)
 

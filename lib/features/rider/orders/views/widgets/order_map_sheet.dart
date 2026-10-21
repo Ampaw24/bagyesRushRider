@@ -1,11 +1,12 @@
+import 'package:gopady_rider/constant/app_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hugeicons/hugeicons.dart';
 
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/core/services/rider_directions_service.dart';
-import 'package:delivery_boy/core/widgets/app_gradient_button.dart';
-import 'package:delivery_boy/features/rider/orders/views/widgets/rider_order_detail_sections.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/core/services/rider_directions_service.dart';
+import 'package:gopady_rider/core/widgets/app_gradient_button.dart';
+import 'package:gopady_rider/features/rider/orders/views/widgets/rider_order_detail_sections.dart';
 
 enum OrderMapStopKind { pickup, pending, delivered, failed }
 
@@ -112,7 +113,7 @@ class OrderMapSheet extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontFamily: 'Roboto',
+                    fontFamily: AppFonts.body,
                     fontSize: _font(w, 0.034, 12, 15),
                     color: AppColors.textSecondary,
                   ),
@@ -226,7 +227,7 @@ class _TripSummary extends StatelessWidget {
             ),
           ],
         ),
-        style: const TextStyle(fontFamily: 'Roboto'),
+        style: const TextStyle(fontFamily: AppFonts.body),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       );
@@ -234,7 +235,7 @@ class _TripSummary extends StatelessWidget {
       headline = Text(
         loading ? 'Finding route…' : 'Route overview',
         style: TextStyle(
-          fontFamily: 'Roboto',
+          fontFamily: AppFonts.body,
           fontSize: _font(w, 0.05, 18, 22),
           fontWeight: FontWeight.w700,
           color: AppColors.textPrimary,
@@ -351,7 +352,7 @@ class _StopRow extends StatelessWidget {
                     [stop.label, if (status != null) status, if (isNext) 'Next']
                         .join(' · '),
                     style: TextStyle(
-                      fontFamily: 'Roboto',
+                      fontFamily: AppFonts.body,
                       fontSize: _font(w, 0.03, 11, 13),
                       fontWeight: FontWeight.w500,
                       color: isNext ? AppColors.primary : AppColors.textSecondary,
@@ -365,7 +366,7 @@ class _StopRow extends StatelessWidget {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      fontFamily: 'Roboto',
+                      fontFamily: AppFonts.body,
                       fontSize: _font(w, 0.035, 13, 15),
                       fontWeight: FontWeight.w600,
                       color: stop.isDone

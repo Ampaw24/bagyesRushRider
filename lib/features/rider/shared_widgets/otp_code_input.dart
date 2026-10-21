@@ -1,9 +1,10 @@
+import 'package:gopady_rider/constant/app_tokens.dart';
 import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:delivery_boy/constant/app_theme.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
 
 /// Caps a digit box on wide layouts (tablets, landscape) so the row keeps
 /// phone proportions instead of stretching edge to edge.
@@ -319,7 +320,7 @@ class _OtpBox extends StatelessWidget {
           autofillHints: const [AutofillHints.oneTimeCode],
           inputFormatters: [_OtpDigitFormatter(onPaste: onPaste)],
           style: TextStyle(
-            fontFamily: 'Mukta',
+            fontFamily: AppFonts.body,
             fontSize: digitSize,
             fontWeight: FontWeight.w700,
             height: 1.0,

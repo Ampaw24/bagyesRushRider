@@ -1,5 +1,5 @@
-import 'package:delivery_boy/constant/typedef.dart';
-import 'package:delivery_boy/features/rider/orders/models/rider_me_order_model.dart';
+import 'package:gopady_rider/constant/typedef.dart';
+import 'package:gopady_rider/features/rider/orders/models/rider_me_order_model.dart';
 
 /// Contract for the `/rider/me` order lifecycle API — offer → accept →
 /// arrived-at-pickup → pick-up → arrived-at-dropoff → deliver (or per-stop

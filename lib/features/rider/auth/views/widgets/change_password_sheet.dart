@@ -1,11 +1,12 @@
+import 'package:gopady_rider/constant/app_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/core/widgets/custom_dialogs.dart';
-import 'package:delivery_boy/features/rider/auth/viewmodels/rider_auth_viewmodel.dart';
-import 'package:delivery_boy/features/rider/shared_widgets/password_strength_validator.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/core/widgets/custom_dialogs.dart';
+import 'package:gopady_rider/features/rider/auth/viewmodels/rider_auth_viewmodel.dart';
+import 'package:gopady_rider/features/rider/shared_widgets/password_strength_validator.dart';
 
 /// Modal sheet for changing the signed-in rider's password.
 ///
@@ -124,7 +125,7 @@ class _ChangePasswordSheetState extends ConsumerState<ChangePasswordSheet> {
                   Text(
                     'Change Password',
                     style: TextStyle(
-                      fontFamily: 'Roboto',
+                      fontFamily: AppFonts.body,
                       fontSize: (w * 0.045).clamp(16.0, 20.0),
                       fontWeight: FontWeight.w800,
                       color: AppColors.textPrimary,
@@ -223,7 +224,7 @@ class _SubmitButton extends StatelessWidget {
             : Text(
                 'Update Password',
                 style: TextStyle(
-                  fontFamily: 'Roboto',
+                  fontFamily: AppFonts.body,
                   fontSize: (w * 0.04).clamp(14.0, 17.0),
                   fontWeight: FontWeight.w800,
                 ),
@@ -259,7 +260,7 @@ class _PasswordField extends StatelessWidget {
         Text(
           label,
           style: TextStyle(
-            fontFamily: 'Roboto',
+            fontFamily: AppFonts.body,
             fontSize: (w * 0.03).clamp(11.0, 13.0),
             fontWeight: FontWeight.w700,
             color: AppColors.textSecondary,
@@ -273,7 +274,7 @@ class _PasswordField extends StatelessWidget {
           validator: validator,
           onChanged: onChanged,
           style: TextStyle(
-            fontFamily: 'Roboto',
+            fontFamily: AppFonts.body,
             fontSize: (w * 0.038).clamp(13.0, 16.0),
             fontWeight: FontWeight.w600,
             color: AppColors.textPrimary,

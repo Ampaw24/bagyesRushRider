@@ -1,4 +1,4 @@
-# BagyesRUSH Rider App — Feature Documentation
+# GoPady Rider App — Feature Documentation
 
 **Version:** 1.0.0
 **Platform:** Flutter (iOS & Android)
@@ -32,14 +32,14 @@
 
 ## 1. Project Overview
 
-BagyesRUSH Rider is the delivery-courier companion app for the BagyesRUSH platform. It enables registered riders to:
+GoPady Rider is the delivery-courier companion app for the GoPady platform. It enables registered riders to:
 
 - Receive, accept, and fulfil delivery orders in real time
 - Track their GPS location and share it with the platform during active trips
 - Manage their account, documents, and earnings
 - Toggle their availability (online/offline queue)
 
-**Package ID:** `com.example.delivery_boy`
+**Package ID:** `com.gopady.rider`
 **Flutter SDK:** 3.38.6 · **Dart:** 3.10.7
 
 ---
@@ -576,4 +576,4 @@ Guard: GoRouter redirect reads `UserSessionManager.isLoggedIn`:
 
 ---
 
-*Document generated: 2026-03-25 — BagyesRUSH Rider v1.0.0*
+*Document generated: 2026-03-25 — GoPady Rider v1.0.0*

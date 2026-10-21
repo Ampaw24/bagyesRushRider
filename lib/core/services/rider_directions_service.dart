@@ -2,8 +2,8 @@ import 'package:dio/dio.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
-import 'package:delivery_boy/constant/map_config.dart';
-import 'package:delivery_boy/core/utils/app_logger.dart';
+import 'package:gopady_rider/constant/map_config.dart';
+import 'package:gopady_rider/core/utils/app_logger.dart';
 
 /// A road-following route through an order's points.
 class RiderRoute {

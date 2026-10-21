@@ -1,12 +1,12 @@
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
-import 'package:delivery_boy/core/errors/failures.dart';
-import 'package:delivery_boy/core/network/api_error_parser.dart';
-import 'package:delivery_boy/core/network/request_error_message.dart';
-import 'package:delivery_boy/features/rider/profile/models/rider_me_profile_model.dart';
-import 'package:delivery_boy/features/rider/vehicles/model/vehicle_capture.dart';
-import 'package:delivery_boy/features/rider/vehicles/repository/vehicle_verification_repository.dart';
-import 'package:delivery_boy/features/rider/vehicles/service/rider_vehicle_photo_api_service.dart';
+import 'package:gopady_rider/core/errors/failures.dart';
+import 'package:gopady_rider/core/network/api_error_parser.dart';
+import 'package:gopady_rider/core/network/request_error_message.dart';
+import 'package:gopady_rider/features/rider/profile/models/rider_me_profile_model.dart';
+import 'package:gopady_rider/features/rider/vehicles/model/vehicle_capture.dart';
+import 'package:gopady_rider/features/rider/vehicles/repository/vehicle_verification_repository.dart';
+import 'package:gopady_rider/features/rider/vehicles/service/rider_vehicle_photo_api_service.dart';
 
 const _sessionExpired = 'Your session has expired. Please sign in again.';
 const _unavailable =

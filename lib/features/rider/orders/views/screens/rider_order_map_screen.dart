@@ -1,3 +1,4 @@
+import 'package:gopady_rider/constant/app_tokens.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -6,20 +7,20 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/constant/map_style.dart';
-import 'package:delivery_boy/core/services/rider_directions_service.dart';
-import 'package:delivery_boy/core/services/rider_location_service.dart';
-import 'package:delivery_boy/core/services/rider_places_service.dart';
-import 'package:delivery_boy/core/utils/app_logger.dart';
-import 'package:delivery_boy/core/utils/external_navigation_launcher.dart';
-import 'package:delivery_boy/features/rider/chat/providers/rider_chat_thread_args.dart';
-import 'package:delivery_boy/features/rider/chat/views/widgets/rider_chat_thread_sheet.dart';
-import 'package:delivery_boy/features/rider/orders/models/rider_delivery_stage.dart';
-import 'package:delivery_boy/features/rider/orders/models/rider_me_order_model.dart';
-import 'package:delivery_boy/features/rider/orders/providers/rider_me_order_providers.dart';
-import 'package:delivery_boy/features/rider/orders/views/widgets/order_map_sheet.dart';
-import 'package:delivery_boy/features/rider/orders/views/widgets/rider_me_order_status.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/constant/map_style.dart';
+import 'package:gopady_rider/core/services/rider_directions_service.dart';
+import 'package:gopady_rider/core/services/rider_location_service.dart';
+import 'package:gopady_rider/core/services/rider_places_service.dart';
+import 'package:gopady_rider/core/utils/app_logger.dart';
+import 'package:gopady_rider/core/utils/external_navigation_launcher.dart';
+import 'package:gopady_rider/features/rider/chat/providers/rider_chat_thread_args.dart';
+import 'package:gopady_rider/features/rider/chat/views/widgets/rider_chat_thread_sheet.dart';
+import 'package:gopady_rider/features/rider/orders/models/rider_delivery_stage.dart';
+import 'package:gopady_rider/features/rider/orders/models/rider_me_order_model.dart';
+import 'package:gopady_rider/features/rider/orders/providers/rider_me_order_providers.dart';
+import 'package:gopady_rider/features/rider/orders/views/widgets/order_map_sheet.dart';
+import 'package:gopady_rider/features/rider/orders/views/widgets/rider_me_order_status.dart';
 
 /// Route overview for an order: the road route through every stop, drawn
 /// with the brand marker, plus a compact trip sheet. Turn-by-turn guidance
@@ -530,7 +531,7 @@ class _MapUnavailable extends StatelessWidget {
               'Map preview unavailable',
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontFamily: 'Roboto',
+                fontFamily: AppFonts.body,
                 fontSize: (w * 0.038).clamp(13.0, 16.0),
                 fontWeight: FontWeight.w600,
                 color: AppColors.textSecondary,
@@ -541,7 +542,7 @@ class _MapUnavailable extends StatelessWidget {
               'Use Navigate below to get directions',
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontFamily: 'Roboto',
+                fontFamily: AppFonts.body,
                 fontSize: (w * 0.032).clamp(11.0, 13.0),
                 color: AppColors.textHint,
               ),

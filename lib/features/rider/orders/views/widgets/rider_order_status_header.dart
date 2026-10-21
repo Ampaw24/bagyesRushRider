@@ -1,7 +1,8 @@
+import 'package:gopady_rider/constant/app_tokens.dart';
 import 'package:flutter/material.dart';
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/core/widgets/pulse_scale.dart';
-import 'package:delivery_boy/features/rider/orders/views/widgets/rider_me_order_status.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/core/widgets/pulse_scale.dart';
+import 'package:gopady_rider/features/rider/orders/views/widgets/rider_me_order_status.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 /// Full-width band leading an order card with the order's status: its icon,
@@ -111,7 +112,7 @@ class RiderOrderStatusHeader extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      fontFamily: 'Roboto',
+                      fontFamily: AppFonts.body,
                       fontSize: (w * 0.038).clamp(13.0, 17.0),
                       fontWeight: FontWeight.w700,
                       color: AppColors.textPrimary,
@@ -125,7 +126,7 @@ class RiderOrderStatusHeader extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      fontFamily: 'Roboto',
+                      fontFamily: AppFonts.body,
                       fontSize: (w * 0.03).clamp(11.0, 13.0),
                       color: AppColors.textSecondary,
                     ),
@@ -168,7 +169,7 @@ class _OnHoldIndicator extends StatelessWidget {
         Text(
           'On hold',
           style: TextStyle(
-            fontFamily: 'Roboto',
+            fontFamily: AppFonts.body,
             fontSize: size,
             fontWeight: FontWeight.w600,
             color: AppColors.warning,
@@ -206,7 +207,7 @@ class _LiveIndicator extends StatelessWidget {
         Text(
           'Live',
           style: TextStyle(
-            fontFamily: 'Roboto',
+            fontFamily: AppFonts.body,
             fontSize: (w * 0.03).clamp(11.0, 13.0),
             fontWeight: FontWeight.w600,
             color: AppColors.textSecondary,

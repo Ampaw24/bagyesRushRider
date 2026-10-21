@@ -1,4 +1,4 @@
-# delivery_boy
+# GoPady Rider
 
 A new Flutter project.
 

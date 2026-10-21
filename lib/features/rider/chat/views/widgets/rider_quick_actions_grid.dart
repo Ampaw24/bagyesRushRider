@@ -1,6 +1,7 @@
+import 'package:gopady_rider/constant/app_tokens.dart';
 import 'package:flutter/material.dart';
 
-import 'package:delivery_boy/constant/app_theme.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
 
 /// Server-supplied `quick_replies` as one horizontally scrolling row of
 /// compact chips. A single line keeps the message history visible above
@@ -73,7 +74,7 @@ class _QuickReplyChip extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                fontFamily: 'Roboto',
+                fontFamily: AppFonts.body,
                 fontSize: (w * 0.033).clamp(12.0, 15.0),
                 fontWeight: FontWeight.w600,
                 color: AppColors.primary,

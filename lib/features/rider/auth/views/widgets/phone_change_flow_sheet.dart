@@ -1,15 +1,16 @@
+import 'package:gopady_rider/constant/app_tokens.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/core/di/service_locator.dart';
-import 'package:delivery_boy/core/services/user_session_manager.dart';
-import 'package:delivery_boy/features/rider/auth/viewmodels/rider_auth_viewmodel.dart';
-import 'package:delivery_boy/features/rider/profile/providers/rider_me_profile_providers.dart';
-import 'package:delivery_boy/features/rider/shared_widgets/app_phone_field.dart';
-import 'package:delivery_boy/features/rider/shared_widgets/otp_input_field.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/core/di/service_locator.dart';
+import 'package:gopady_rider/core/services/user_session_manager.dart';
+import 'package:gopady_rider/features/rider/auth/viewmodels/rider_auth_viewmodel.dart';
+import 'package:gopady_rider/features/rider/profile/providers/rider_me_profile_providers.dart';
+import 'package:gopady_rider/features/rider/shared_widgets/app_phone_field.dart';
+import 'package:gopady_rider/features/rider/shared_widgets/otp_input_field.dart';
 
 enum _PhoneChangeStep { confirmSend, verifyOtp, enterNewPhone }
 
@@ -191,7 +192,7 @@ class _PhoneChangeFlowSheetState extends ConsumerState<PhoneChangeFlowSheet> {
               Text(
                 _stepTitle,
                 style: TextStyle(
-                  fontFamily: 'Roboto',
+                  fontFamily: AppFonts.body,
                   fontSize: (w * 0.045).clamp(16.0, 20.0),
                   fontWeight: FontWeight.w800,
                   color: AppColors.textPrimary,
@@ -239,7 +240,7 @@ class _PhoneChangeFlowSheetState extends ConsumerState<PhoneChangeFlowSheet> {
                     child: Text(
                       _errorMessage!,
                       style: TextStyle(
-                        fontFamily: 'Roboto',
+                        fontFamily: AppFonts.body,
                         color: AppColors.error,
                         fontSize: (w * 0.033).clamp(11.0, 14.0),
                         fontWeight: FontWeight.w600,
@@ -324,7 +325,7 @@ class _ConfirmSendStep extends StatelessWidget {
           'To protect your account, we\'ll send a verification code to your current phone number:',
           textAlign: TextAlign.center,
           style: TextStyle(
-            fontFamily: 'Roboto',
+            fontFamily: AppFonts.body,
             fontSize: (w * 0.034).clamp(12.0, 15.0),
             color: AppColors.textSecondary,
           ),
@@ -349,7 +350,7 @@ class _ConfirmSendStep extends StatelessWidget {
               Text(
                 oldPhone,
                 style: TextStyle(
-                  fontFamily: 'Roboto',
+                  fontFamily: AppFonts.body,
                   fontSize: (w * 0.042).clamp(15.0, 18.0),
                   fontWeight: FontWeight.w800,
                   letterSpacing: 1.1,
@@ -384,7 +385,7 @@ class _ConfirmSendStep extends StatelessWidget {
                 : Text(
                     'Send Verification Code',
                     style: TextStyle(
-                      fontFamily: 'Roboto',
+                      fontFamily: AppFonts.body,
                       fontSize: (w * 0.04).clamp(14.0, 17.0),
                       fontWeight: FontWeight.w700,
                     ),
@@ -420,7 +421,7 @@ class _VerifyOtpStep extends StatelessWidget {
         Text(
           'Enter the 6-digit code sent to $oldPhone:',
           style: TextStyle(
-            fontFamily: 'Roboto',
+            fontFamily: AppFonts.body,
             fontSize: (w * 0.034).clamp(12.0, 15.0),
             color: AppColors.textSecondary,
           ),
@@ -438,7 +439,7 @@ class _VerifyOtpStep extends StatelessWidget {
             Text(
               "Didn't receive it? ",
               style: TextStyle(
-                fontFamily: 'Roboto',
+                fontFamily: AppFonts.body,
                 fontSize: (w * 0.033).clamp(11.0, 14.0),
                 color: AppColors.textHint,
               ),
@@ -447,7 +448,7 @@ class _VerifyOtpStep extends StatelessWidget {
               Text(
                 'Resend in ${secondsRemaining}s',
                 style: TextStyle(
-                  fontFamily: 'Roboto',
+                  fontFamily: AppFonts.body,
                   fontSize: (w * 0.033).clamp(11.0, 14.0),
                   fontWeight: FontWeight.w700,
                   color: AppColors.primary,
@@ -459,7 +460,7 @@ class _VerifyOtpStep extends StatelessWidget {
                 child: Text(
                   'Resend Code',
                   style: TextStyle(
-                    fontFamily: 'Roboto',
+                    fontFamily: AppFonts.body,
                     fontSize: (w * 0.033).clamp(11.0, 14.0),
                     fontWeight: FontWeight.w800,
                     color: AppColors.primary,
@@ -507,7 +508,7 @@ class _EnterNewPhoneStepState extends State<_EnterNewPhoneStep> {
           Text(
             'Your current phone number has been verified. Enter your new one below:',
             style: TextStyle(
-              fontFamily: 'Roboto',
+              fontFamily: AppFonts.body,
               fontSize: (w * 0.034).clamp(12.0, 15.0),
               color: AppColors.textSecondary,
             ),
@@ -544,7 +545,7 @@ class _EnterNewPhoneStepState extends State<_EnterNewPhoneStep> {
                   : Text(
                       'Update Phone Number',
                       style: TextStyle(
-                        fontFamily: 'Roboto',
+                        fontFamily: AppFonts.body,
                         fontSize: (w * 0.04).clamp(14.0, 17.0),
                         fontWeight: FontWeight.w700,
                       ),

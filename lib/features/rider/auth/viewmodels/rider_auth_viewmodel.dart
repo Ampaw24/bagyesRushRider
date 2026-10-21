@@ -4,21 +4,21 @@ import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:delivery_boy/core/di/service_locator.dart';
-import 'package:delivery_boy/core/errors/failures.dart';
-import 'package:delivery_boy/core/realtime/realtime_service.dart';
-import 'package:delivery_boy/core/services/fcm_service.dart';
-import 'package:delivery_boy/core/services/firebase_bootstrap.dart';
-import 'package:delivery_boy/core/services/rider_session_teardown.dart';
-import 'package:delivery_boy/core/services/user_session_manager.dart';
-import 'package:delivery_boy/core/utils/app_logger.dart';
-import 'package:delivery_boy/core/utils/device_info_utils.dart';
-import 'package:delivery_boy/core/utils/network_utility.dart'
+import 'package:gopady_rider/core/di/service_locator.dart';
+import 'package:gopady_rider/core/errors/failures.dart';
+import 'package:gopady_rider/core/realtime/realtime_service.dart';
+import 'package:gopady_rider/core/services/fcm_service.dart';
+import 'package:gopady_rider/core/services/firebase_bootstrap.dart';
+import 'package:gopady_rider/core/services/rider_session_teardown.dart';
+import 'package:gopady_rider/core/services/user_session_manager.dart';
+import 'package:gopady_rider/core/utils/app_logger.dart';
+import 'package:gopady_rider/core/utils/device_info_utils.dart';
+import 'package:gopady_rider/core/utils/network_utility.dart'
     show sessionRevision;
-import 'package:delivery_boy/features/rider/auth/models/auth_user_model.dart';
-import 'package:delivery_boy/features/rider/auth/repositories/rider_auth_repository.dart';
-import 'package:delivery_boy/features/rider/notifications/repositories/device_token_repository.dart';
-import 'package:delivery_boy/features/rider/profile/providers/rider_me_profile_providers.dart';
+import 'package:gopady_rider/features/rider/auth/models/auth_user_model.dart';
+import 'package:gopady_rider/features/rider/auth/repositories/rider_auth_repository.dart';
+import 'package:gopady_rider/features/rider/notifications/repositories/device_token_repository.dart';
+import 'package:gopady_rider/features/rider/profile/providers/rider_me_profile_providers.dart';
 
 // ── State ─────────────────────────────────────────────────────────────────────
 

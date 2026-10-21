@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/core/widgets/animated_list_item.dart';
-import 'package:delivery_boy/core/widgets/shimmer_list_placeholder.dart';
-import 'package:delivery_boy/features/rider/orders/models/rider_me_order_model.dart';
-import 'package:delivery_boy/features/rider/orders/providers/rider_me_order_providers.dart';
-import 'package:delivery_boy/features/rider/orders/views/widgets/rider_me_order_card.dart';
-import 'package:delivery_boy/features/rider/orders/views/widgets/rider_me_order_detail_sheet.dart';
-import 'package:delivery_boy/features/rider/orders/views/widgets/rider_orders_empty_state.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/core/widgets/animated_list_item.dart';
+import 'package:gopady_rider/core/widgets/shimmer_list_placeholder.dart';
+import 'package:gopady_rider/features/rider/orders/models/rider_me_order_model.dart';
+import 'package:gopady_rider/features/rider/orders/providers/rider_me_order_providers.dart';
+import 'package:gopady_rider/features/rider/orders/views/widgets/rider_me_order_card.dart';
+import 'package:gopady_rider/features/rider/orders/views/widgets/rider_me_order_detail_sheet.dart';
+import 'package:gopady_rider/features/rider/orders/views/widgets/rider_orders_empty_state.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 class RiderOrderHistoryScreen extends ConsumerStatefulWidget {

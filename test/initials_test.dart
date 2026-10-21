@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:delivery_boy/core/utils/initials.dart';
-import 'package:delivery_boy/features/rider/orders/views/widgets/rider_order_detail_sections.dart';
+import 'package:gopady_rider/core/utils/initials.dart';
+import 'package:gopady_rider/features/rider/orders/views/widgets/rider_order_detail_sections.dart';
 
 void main() {
   group('initialsOf', () {

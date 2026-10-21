@@ -1,6 +1,6 @@
-import 'package:delivery_boy/constant/typedef.dart';
-import 'package:delivery_boy/features/rider/profile/models/payout_provider_model.dart';
-import 'package:delivery_boy/features/rider/profile/models/rider_me_profile_model.dart';
+import 'package:gopady_rider/constant/typedef.dart';
+import 'package:gopady_rider/features/rider/profile/models/payout_provider_model.dart';
+import 'package:gopady_rider/features/rider/profile/models/rider_me_profile_model.dart';
 
 /// Contract for the `/rider/me` profile API — see
 /// the "v1 / rider" Postman collection (profile #1-10).

@@ -1,7 +1,8 @@
+import 'package:gopady_rider/constant/app_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/features/rider/orders/providers/rider_me_order_providers.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/features/rider/orders/providers/rider_me_order_providers.dart';
 
 /// Segmented Active / New / History switcher for the Orders page, with live
 /// counts so the rider sees waiting work without opening each tab. Must sit
@@ -41,12 +42,12 @@ class RiderOrdersTabBar extends ConsumerWidget {
           labelColor: AppColors.textPrimary,
           unselectedLabelColor: AppColors.textSecondary,
           labelStyle: TextStyle(
-            fontFamily: 'Roboto',
+            fontFamily: AppFonts.body,
             fontWeight: FontWeight.w600,
             fontSize: w * 0.034,
           ),
           unselectedLabelStyle: TextStyle(
-            fontFamily: 'Roboto',
+            fontFamily: AppFonts.body,
             fontWeight: FontWeight.w500,
             fontSize: w * 0.034,
           ),
@@ -91,7 +92,7 @@ class _TabLabel extends StatelessWidget {
               child: Text(
                 count > 99 ? '99+' : '$count',
                 style: TextStyle(
-                  fontFamily: 'Roboto',
+                  fontFamily: AppFonts.body,
                   fontSize: w * 0.026,
                   fontWeight: FontWeight.w700,
                   color: AppColors.onPrimary,

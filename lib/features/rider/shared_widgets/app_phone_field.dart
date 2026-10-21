@@ -1,7 +1,8 @@
+import 'package:gopady_rider/constant/app_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:delivery_boy/constant/app_theme.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
 
 class _CountryCode {
   final String flag;
@@ -116,7 +117,7 @@ class _AppPhoneFieldState extends State<AppPhoneField> {
                 title: Text(
                   c.country,
                   style: const TextStyle(
-                    fontFamily: 'Mukta',
+                    fontFamily: AppFonts.body,
                     fontSize: 15,
                     fontWeight: FontWeight.w500,
                     color: AppColors.textPrimary,
@@ -125,7 +126,7 @@ class _AppPhoneFieldState extends State<AppPhoneField> {
                 trailing: Text(
                   c.code,
                   style: const TextStyle(
-                    fontFamily: 'Mukta',
+                    fontFamily: AppFonts.body,
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                     color: AppColors.textSecondary,
@@ -185,9 +186,9 @@ class _AppPhoneFieldState extends State<AppPhoneField> {
           children: [
             AnimatedContainer(
               duration: const Duration(milliseconds: 200),
-              height: 46,
+              height: 54,
               decoration: BoxDecoration(
-                color: const Color(0xFFF8F9FB),
+                color: Colors.white,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: borderColor, width: borderWidth),
               ),
@@ -198,7 +199,7 @@ class _AppPhoneFieldState extends State<AppPhoneField> {
                   GestureDetector(
                     onTap: () => _showCountryPicker(context, state),
                     child: Container(
-                      height: 46,
+                      height: 54,
                       padding: const EdgeInsets.symmetric(horizontal: 12),
                       color: Colors.transparent,
                       child: Row(
@@ -213,7 +214,7 @@ class _AppPhoneFieldState extends State<AppPhoneField> {
                           Text(
                             _selected.code,
                             style: const TextStyle(
-                              fontFamily: 'Mukta',
+                              fontFamily: AppFonts.body,
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
                               color: AppColors.textPrimary,
@@ -255,7 +256,7 @@ class _AppPhoneFieldState extends State<AppPhoneField> {
                         state.didChange('$_selectedCode${v.trim()}');
                       },
                       style: const TextStyle(
-                        fontFamily: 'Mukta',
+                        fontFamily: AppFonts.body,
                         fontSize: 15,
                         fontWeight: FontWeight.w500,
                         color: AppColors.textPrimary,
@@ -263,10 +264,13 @@ class _AppPhoneFieldState extends State<AppPhoneField> {
                       decoration: InputDecoration(
                         hintText: _hintText,
                         hintStyle: TextStyle(
-                          fontFamily: 'Mukta',
+                          fontFamily: AppFonts.body,
                           fontSize: 14,
                           color: Colors.grey.shade400,
                         ),
+                        // The surrounding container supplies the white fill;
+                        // opt out of the theme's tinted input fill.
+                        filled: false,
                         border: InputBorder.none,
                         enabledBorder: InputBorder.none,
                         focusedBorder: InputBorder.none,
@@ -291,7 +295,7 @@ class _AppPhoneFieldState extends State<AppPhoneField> {
                 child: Text(
                   state.errorText!,
                   style: const TextStyle(
-                    fontFamily: 'Mukta',
+                    fontFamily: AppFonts.body,
                     fontSize: 12,
                     color: AppColors.error,
                     fontWeight: FontWeight.w500,

@@ -1,6 +1,7 @@
+import 'package:gopady_rider/constant/app_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:delivery_boy/constant/app_theme.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 /// A modern select field styled to match [AppTextField] — external label
@@ -72,7 +73,7 @@ class AppSelectField<T> extends StatelessWidget {
         Text(
           label,
           style: TextStyle(
-            fontFamily: 'Mukta',
+            fontFamily: AppFonts.body,
             fontSize: (w * 0.033).clamp(11.0, 14.0),
             fontWeight: FontWeight.w600,
             color: AppColors.textSecondary,
@@ -102,7 +103,7 @@ class AppSelectField<T> extends StatelessWidget {
                     child: Text(
                       state.errorText!,
                       style: TextStyle(
-                        fontFamily: 'Mukta',
+                        fontFamily: AppFonts.body,
                         fontSize: (w * 0.03).clamp(10.5, 12.5),
                         color: AppColors.error,
                       ),
@@ -192,7 +193,7 @@ class _SelectTileState<T> extends State<_SelectTile<T>> {
                 hasValue ? widget.labelBuilder(widget.value as T) : (widget.hint ?? ''),
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  fontFamily: 'Mukta',
+                  fontFamily: AppFonts.body,
                   fontSize: (w * 0.038).clamp(13.0, 16.0),
                   fontWeight: FontWeight.w500,
                   color: hasValue ? AppColors.textPrimary : AppColors.textHint,
@@ -272,7 +273,7 @@ class _SelectSheet<T> extends StatelessWidget {
                   child: Text(
                     title,
                     style: TextStyle(
-                      fontFamily: 'Mukta',
+                      fontFamily: AppFonts.body,
                       fontSize: (w * 0.05).clamp(17.0, 21.0),
                       fontWeight: FontWeight.w800,
                       color: AppColors.textPrimary,
@@ -346,7 +347,7 @@ class _SelectOptionTile extends StatelessWidget {
               child: Text(
                 label,
                 style: TextStyle(
-                  fontFamily: 'Mukta',
+                  fontFamily: AppFonts.body,
                   fontSize: (w * 0.04).clamp(14.0, 16.0),
                   fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                   color: isSelected ? AppColors.primary : AppColors.textPrimary,

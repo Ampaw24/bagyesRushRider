@@ -1,5 +1,5 @@
-import 'package:delivery_boy/features/rider/auth/models/rider_user_model.dart';
-import 'package:delivery_boy/features/rider/dashboard/views/screens/rider_dashboard_screen.dart'
+import 'package:gopady_rider/features/rider/auth/models/rider_user_model.dart';
+import 'package:gopady_rider/features/rider/dashboard/views/screens/rider_dashboard_screen.dart'
     show kycStatusFrom;
 import 'package:flutter_test/flutter_test.dart';
 

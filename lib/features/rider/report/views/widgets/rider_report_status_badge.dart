@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:delivery_boy/features/rider/report/models/rider_report_model.dart';
+import 'package:gopady_rider/features/rider/report/models/rider_report_model.dart';
 
 class RiderReportStatusBadge extends StatelessWidget {
   final RiderReportStatus status;

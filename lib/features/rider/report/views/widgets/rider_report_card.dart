@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/features/rider/report/models/rider_report_model.dart';
-import 'package:delivery_boy/features/rider/report/views/widgets/rider_report_target_type_step.dart'
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/features/rider/report/models/rider_report_model.dart';
+import 'package:gopady_rider/features/rider/report/views/widgets/rider_report_target_type_step.dart'
     show targetTypeIcon;
 
 /// Leading-badge icon — a checkmark/cancel glyph once a report is closed,

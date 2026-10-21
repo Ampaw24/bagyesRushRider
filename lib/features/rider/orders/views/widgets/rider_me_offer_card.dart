@@ -1,8 +1,9 @@
+import 'package:gopady_rider/constant/app_tokens.dart';
 import 'package:flutter/material.dart';
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/features/rider/orders/models/rider_me_order_model.dart';
-import 'package:delivery_boy/features/rider/orders/views/widgets/rider_order_card_shell.dart';
-import 'package:delivery_boy/features/rider/orders/views/widgets/rider_route_summary.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/features/rider/orders/models/rider_me_order_model.dart';
+import 'package:gopady_rider/features/rider/orders/views/widgets/rider_order_card_shell.dart';
+import 'package:gopady_rider/features/rider/orders/views/widgets/rider_route_summary.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 /// Card for a `RiderMeOfferModel` — a delivery offer awaiting accept/decline.
@@ -47,7 +48,7 @@ class RiderMeOfferCard extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      fontFamily: 'Roboto',
+                      fontFamily: AppFonts.body,
                       fontSize: w * 0.04,
                       fontWeight: FontWeight.w700,
                       color: AppColors.textPrimary,
@@ -68,7 +69,7 @@ class RiderMeOfferCard extends StatelessWidget {
               Text(
                 'GHS ${fare.toStringAsFixed(2)}',
                 style: TextStyle(
-                  fontFamily: 'Roboto',
+                  fontFamily: AppFonts.body,
                   fontSize: w * 0.045,
                   fontWeight: FontWeight.w700,
                   color: AppColors.primary,

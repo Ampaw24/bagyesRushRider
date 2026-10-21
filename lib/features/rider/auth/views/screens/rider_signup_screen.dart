@@ -1,3 +1,4 @@
+import 'package:gopady_rider/constant/app_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -5,21 +6,21 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
 
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/core/router/app_routes.dart';
-import 'package:delivery_boy/core/widgets/app_gradient_button.dart';
-import 'package:delivery_boy/core/widgets/custom_dialogs.dart';
-import 'package:delivery_boy/features/rider/auth/viewmodels/rider_auth_viewmodel.dart';
-import 'package:delivery_boy/features/rider/auth/views/widgets/registration_stepper.dart';
-import 'package:delivery_boy/features/rider/shared_widgets/app_password_field.dart';
-import 'package:delivery_boy/features/rider/shared_widgets/app_phone_field.dart';
-import 'package:delivery_boy/features/rider/shared_widgets/app_select_field.dart';
-import 'package:delivery_boy/features/rider/shared_widgets/app_text_field.dart';
-import 'package:delivery_boy/features/rider/shared_widgets/password_strength_validator.dart';
-import 'package:delivery_boy/features/rider/vehicles/model/vehicle_make_model.dart';
-import 'package:delivery_boy/features/rider/vehicles/model/vehicle_model_model.dart';
-import 'package:delivery_boy/features/rider/vehicles/model/vehicle_type_model.dart';
-import 'package:delivery_boy/features/rider/vehicles/viewmodel/vehicle_catalog_viewmodel.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/core/router/app_routes.dart';
+import 'package:gopady_rider/core/widgets/app_gradient_button.dart';
+import 'package:gopady_rider/core/widgets/custom_dialogs.dart';
+import 'package:gopady_rider/features/rider/auth/viewmodels/rider_auth_viewmodel.dart';
+import 'package:gopady_rider/features/rider/auth/views/widgets/registration_stepper.dart';
+import 'package:gopady_rider/features/rider/shared_widgets/app_password_field.dart';
+import 'package:gopady_rider/features/rider/shared_widgets/app_phone_field.dart';
+import 'package:gopady_rider/features/rider/shared_widgets/app_select_field.dart';
+import 'package:gopady_rider/features/rider/shared_widgets/app_text_field.dart';
+import 'package:gopady_rider/features/rider/shared_widgets/password_strength_validator.dart';
+import 'package:gopady_rider/features/rider/vehicles/model/vehicle_make_model.dart';
+import 'package:gopady_rider/features/rider/vehicles/model/vehicle_model_model.dart';
+import 'package:gopady_rider/features/rider/vehicles/model/vehicle_type_model.dart';
+import 'package:gopady_rider/features/rider/vehicles/viewmodel/vehicle_catalog_viewmodel.dart';
 
 class RiderSignupScreen extends ConsumerStatefulWidget {
   /// Values to restore into the form when registration fails or is redirected back.
@@ -476,7 +477,7 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
           title: Text(
             'Step ${_currentStep + 1} of 4',
             style: const TextStyle(
-              fontFamily: 'Mukta',
+              fontFamily: AppFonts.body,
               fontSize: 14,
               fontWeight: FontWeight.w600,
               color: AppColors.textSecondary,
@@ -518,7 +519,7 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
                           _stepTitles[_currentStep],
                           textAlign: TextAlign.left,
                           style: TextStyle(
-                            fontFamily: 'Mukta',
+                            fontFamily: AppFonts.body,
                             fontSize: (w * 0.068).clamp(22.0, 30.0),
                             fontWeight: FontWeight.w800,
                             color: AppColors.textPrimary,
@@ -531,7 +532,7 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
                           _stepSubtitles[_currentStep],
                           textAlign: TextAlign.left,
                           style: TextStyle(
-                            fontFamily: 'Mukta',
+                            fontFamily: AppFonts.body,
                             fontSize: (w * 0.035).clamp(12.0, 15.0),
                             color: AppColors.textSecondary,
                           ),
@@ -613,7 +614,7 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
             Text(
               'Phone Number',
               style: TextStyle(
-                fontFamily: 'Mukta',
+                fontFamily: AppFonts.body,
                 fontSize: (w * 0.033).clamp(11.0, 14.0),
                 fontWeight: FontWeight.w600,
                 color: AppColors.textSecondary,
@@ -766,7 +767,7 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
               child: Text(
                 'No vehicle types are available right now.',
                 style: TextStyle(
-                  fontFamily: 'Mukta',
+                  fontFamily: AppFonts.body,
                   color: AppColors.textSecondary,
                   fontSize: (w * 0.036).clamp(13.0, 15.0),
                 ),
@@ -821,7 +822,7 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
                               Text(
                                 type.name,
                                 style: TextStyle(
-                                  fontFamily: 'Mukta',
+                                  fontFamily: AppFonts.body,
                                   fontSize: 16,
                                   fontWeight: FontWeight.w700,
                                   color: isSelected
@@ -835,7 +836,7 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
                                     ? type.description!
                                     : 'Max parcel size: ${type.maxParcelSizeLabel}',
                                 style: const TextStyle(
-                                  fontFamily: 'Mukta',
+                                  fontFamily: AppFonts.body,
                                   fontSize: 13,
                                   color: AppColors.textSecondary,
                                   height: 1.3,
@@ -1085,7 +1086,7 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
                       child: Text(
                         'Electric vehicle — ensure battery is charged before starting deliveries.',
                         style: TextStyle(
-                          fontFamily: 'Mukta',
+                          fontFamily: AppFonts.body,
                           fontSize: 13,
                           color: AppColors.info,
                           fontWeight: FontWeight.w500,
@@ -1146,7 +1147,7 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
                     child: const Text(
                       'Back',
                       style: TextStyle(
-                        fontFamily: 'Mukta',
+                        fontFamily: AppFonts.body,
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                       ),
@@ -1175,7 +1176,7 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
                 const Text(
                   'Already have an account? ',
                   style: TextStyle(
-                    fontFamily: 'Mukta',
+                    fontFamily: AppFonts.body,
                     color: AppColors.textSecondary,
                     fontSize: 14,
                   ),
@@ -1185,7 +1186,7 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
                   child: const Text(
                     'Sign In',
                     style: TextStyle(
-                      fontFamily: 'Mukta',
+                      fontFamily: AppFonts.body,
                       color: AppColors.primary,
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
@@ -1223,7 +1224,7 @@ class _CatalogRetry extends StatelessWidget {
           Text(
             message,
             style: const TextStyle(
-              fontFamily: 'Mukta',
+              fontFamily: AppFonts.body,
               color: AppColors.error,
               fontSize: 13,
             ),
@@ -1240,7 +1241,7 @@ class _CatalogRetry extends StatelessWidget {
             child: const Text(
               'Retry',
               style:
-                  TextStyle(fontFamily: 'Mukta', fontWeight: FontWeight.w600),
+                  TextStyle(fontFamily: AppFonts.body, fontWeight: FontWeight.w600),
             ),
           ),
         ],
@@ -1271,7 +1272,7 @@ class _InlineRetry extends StatelessWidget {
             child: Text(
               message,
               style: const TextStyle(
-                fontFamily: 'Mukta',
+                fontFamily: AppFonts.body,
                 color: AppColors.error,
                 fontSize: 12,
               ),
@@ -1287,7 +1288,7 @@ class _InlineRetry extends StatelessWidget {
             child: const Text(
               'Retry',
               style: TextStyle(
-                fontFamily: 'Mukta',
+                fontFamily: AppFonts.body,
                 fontWeight: FontWeight.w700,
                 fontSize: 12,
                 color: AppColors.primary,
@@ -1351,7 +1352,7 @@ class _InlineRetry extends StatelessWidget {
 //             child: Text(
 //               name,
 //               style: TextStyle(
-//                 fontFamily: 'Mukta',
+//                 fontFamily: AppFonts.body,
 //                 fontSize: 12,
 //                 fontWeight: FontWeight.w600,
 //                 color: isSelected

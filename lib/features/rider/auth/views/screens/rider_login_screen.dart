@@ -1,5 +1,7 @@
-import 'package:delivery_boy/components/widget/decorative.widget.dart';
-import 'package:delivery_boy/features/rider/shared_widgets/app_phone_field.dart';
+import 'package:gopady_rider/constant/app_tokens.dart';
+import 'package:gopady_rider/core/widgets/brand_watermark_background.dart';
+import 'package:gopady_rider/core/widgets/gopady_logo.dart';
+import 'package:gopady_rider/features/rider/shared_widgets/app_phone_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,13 +9,12 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:delivery_boy/constant/asset_images.dart';
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/constant/constant.dart';
-import 'package:delivery_boy/core/router/app_routes.dart';
-import 'package:delivery_boy/core/widgets/custom_dialogs.dart';
-import 'package:delivery_boy/features/rider/auth/viewmodels/rider_auth_viewmodel.dart';
-import 'package:delivery_boy/features/rider/auth/views/widgets/forgot_password_sheet.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/constant/constant.dart';
+import 'package:gopady_rider/core/router/app_routes.dart';
+import 'package:gopady_rider/core/widgets/custom_dialogs.dart';
+import 'package:gopady_rider/features/rider/auth/viewmodels/rider_auth_viewmodel.dart';
+import 'package:gopady_rider/features/rider/auth/views/widgets/forgot_password_sheet.dart';
 
 class RiderLoginScreen extends ConsumerStatefulWidget {
   const RiderLoginScreen({super.key});
@@ -130,8 +131,8 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
         }
       },
       child: Scaffold(
-        backgroundColor: AppColors.kDecorativeBackgroundColor,
-        body: DecorativeBackground(
+        backgroundColor: AppColors.cream,
+        body: BrandWatermarkBackground(
           child: MediaQuery(
             data: MediaQuery.of(context).copyWith(
               textScaler: TextScaler.noScaling,
@@ -158,66 +159,22 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Container(
-                                      width: (w * 0.22).clamp(72.0, 100.0),
-                                      height: (w * 0.22).clamp(72.0, 100.0),
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(22),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: AppColors.primary
-                                                .withValues(alpha: 0.22),
-                                            blurRadius: 24,
-                                            offset: const Offset(0, 8),
-                                          ),
-                                        ],
-                                      ),
-                                      child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(22),
-                                        child: Image.asset(
-                                          AssetImages.bagyesLogo,
-                                          fit: BoxFit.cover,
-                                        ),
+                                    GoPadyLogo(
+                                      width: (w * 0.45).clamp(
+                                        GoPadyLogo.minLockupWidth,
+                                        260.0,
                                       ),
                                     ),
-                                    SizedBox(height: h * 0.014),
-                                    RichText(
-                                      text: TextSpan(
-                                        children: [
-                                          TextSpan(
-                                            text: 'Bagyes',
-                                            style: TextStyle(
-                                              fontFamily: 'Mukta',
-                                              fontSize:
-                                                  (w * 0.058).clamp(18.0, 26.0),
-                                              fontWeight: FontWeight.w900,
-                                              color: AppColors.textPrimary,
-                                              letterSpacing: -0.4,
-                                            ),
-                                          ),
-                                          TextSpan(
-                                            text: 'RUSH',
-                                            style: TextStyle(
-                                              fontFamily: 'Mukta',
-                                              fontSize:
-                                                  (w * 0.058).clamp(18.0, 26.0),
-                                              fontWeight: FontWeight.w900,
-                                              color: AppColors.primary,
-                                              letterSpacing: -0.4,
-                                            ),
-                                          ),
-                                          TextSpan(
-                                            text: ' Rider',
-                                            style: TextStyle(
-                                              fontFamily: 'Mukta',
-                                              fontSize:
-                                                  (w * 0.042).clamp(13.0, 18.0),
-                                              fontWeight: FontWeight.w500,
-                                              color: AppColors.textSecondary,
-                                              letterSpacing: 0,
-                                            ),
-                                          ),
-                                        ],
+                                    SizedBox(height: h * 0.01),
+                                    Text(
+                                      'RIDER',
+                                      style: TextStyle(
+                                        fontFamily: AppFonts.display,
+                                        fontSize:
+                                            (w * 0.04).clamp(13.0, 18.0),
+                                        fontWeight: FontWeight.w700,
+                                        color: AppColors.accentInk,
+                                        letterSpacing: 2,
                                       ),
                                     ),
                                   ],
@@ -229,7 +186,7 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
                                 Text(
                                   'Welcome back',
                                   style: TextStyle(
-                                    fontFamily: 'Mukta',
+                                    fontFamily: AppFonts.body,
                                     fontSize: (w * 0.072).clamp(24.0, 34.0),
                                     fontWeight: FontWeight.w800,
                                     color: AppColors.textPrimary,
@@ -241,7 +198,7 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
                                 Text(
                                   'Sign in to continue delivering',
                                   style: TextStyle(
-                                    fontFamily: 'Mukta',
+                                    fontFamily: AppFonts.body,
                                     fontSize: (w * 0.036).clamp(12.0, 16.0),
                                     color: AppColors.textSecondary,
                                     fontWeight: FontWeight.w400,
@@ -254,7 +211,7 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
                                 Text(
                                   'Phone Number',
                                   style: TextStyle(
-                                    fontFamily: 'Mukta',
+                                    fontFamily: AppFonts.body,
                                     fontSize: (w * 0.033).clamp(11.0, 14.0),
                                     fontWeight: FontWeight.w600,
                                     color: AppColors.textSecondary,
@@ -281,7 +238,7 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
                                 Text(
                                   'Password',
                                   style: TextStyle(
-                                    fontFamily: 'Mukta',
+                                    fontFamily: AppFonts.body,
                                     fontSize: (w * 0.033).clamp(11.0, 14.0),
                                     fontWeight: FontWeight.w600,
                                     color: AppColors.textSecondary,
@@ -311,7 +268,7 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
                                     return null;
                                   },
                                   style: TextStyle(
-                                    fontFamily: 'Mukta',
+                                    fontFamily: AppFonts.body,
                                     fontSize: (w * 0.038).clamp(13.0, 16.0),
                                     fontWeight: FontWeight.w500,
                                     color: AppColors.textPrimary,
@@ -339,17 +296,17 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
                                       ),
                                     ),
                                     hintStyle: TextStyle(
-                                      fontFamily: 'Mukta',
+                                      fontFamily: AppFonts.body,
                                       fontSize: (w * 0.036).clamp(12.0, 15.0),
                                       color: AppColors.textHint,
                                     ),
                                     filled: true,
                                     fillColor: isLoading
                                         ? Colors.grey.shade100
-                                        : const Color(0xFFF8F9FB),
+                                        : Colors.white,
                                     contentPadding: const EdgeInsets.symmetric(
                                       horizontal: 14,
-                                      vertical: 12,
+                                      vertical: 16,
                                     ),
                                     isDense: true,
                                     border: OutlineInputBorder(
@@ -399,7 +356,7 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
                                     child: Text(
                                       'Forgot Password?',
                                       style: TextStyle(
-                                        fontFamily: 'Mukta',
+                                        fontFamily: AppFonts.body,
                                         color: AppColors.primary,
                                         fontSize: (w * 0.033).clamp(11.0, 14.0),
                                         fontWeight: FontWeight.w600,
@@ -439,7 +396,7 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
                                         : Text(
                                             'Sign In',
                                             style: TextStyle(
-                                              fontFamily: 'Mukta',
+                                              fontFamily: AppFonts.body,
                                               color: Colors.white,
                                               fontSize:
                                                   (w * 0.04).clamp(14.0, 17.0),
@@ -461,7 +418,7 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
                                       Text(
                                         "Don't have an account? ",
                                         style: TextStyle(
-                                          fontFamily: 'Mukta',
+                                          fontFamily: AppFonts.body,
                                           color: AppColors.textSecondary,
                                           fontSize:
                                               (w * 0.036).clamp(12.0, 15.0),
@@ -475,7 +432,7 @@ class _RiderLoginScreenState extends ConsumerState<RiderLoginScreen>
                                         child: Text(
                                           'Sign Up',
                                           style: TextStyle(
-                                            fontFamily: 'Mukta',
+                                            fontFamily: AppFonts.body,
                                             color: AppColors.primary,
                                             fontSize:
                                                 (w * 0.036).clamp(12.0, 15.0),

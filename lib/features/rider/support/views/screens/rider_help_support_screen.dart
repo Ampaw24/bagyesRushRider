@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import 'package:delivery_boy/constant/app_theme.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
 
 /// Help & Support — lets the rider reach the support team via email,
 /// WhatsApp, or a direct call, each opening the respective app. Ported
@@ -10,7 +10,7 @@ import 'package:delivery_boy/constant/app_theme.dart';
 class RiderHelpSupportScreen extends StatelessWidget {
   const RiderHelpSupportScreen({super.key});
 
-  static const String supportEmail = 'support@bagyesrush.com';
+  static const String supportEmail = 'support@gopady.com';
   static const String supportPhone = '+233 54 879 0987';
   static const String supportWhatsapp = '+233 54 879 0987';
 

@@ -3,15 +3,15 @@ import 'dart:io';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:delivery_boy/core/di/service_locator.dart';
-import 'package:delivery_boy/core/errors/failures.dart';
-import 'package:delivery_boy/core/utils/app_logger.dart';
-import 'package:delivery_boy/features/rider/profile/models/rider_me_profile_model.dart';
-import 'package:delivery_boy/features/rider/profile/providers/rider_me_profile_providers.dart';
-import 'package:delivery_boy/features/rider/vehicles/capture/vehicle_photo_inspector.dart';
-import 'package:delivery_boy/features/rider/vehicles/model/vehicle_capture.dart';
-import 'package:delivery_boy/features/rider/vehicles/model/vehicle_verification.dart';
-import 'package:delivery_boy/features/rider/vehicles/repository/vehicle_verification_repository.dart';
+import 'package:gopady_rider/core/di/service_locator.dart';
+import 'package:gopady_rider/core/errors/failures.dart';
+import 'package:gopady_rider/core/utils/app_logger.dart';
+import 'package:gopady_rider/features/rider/profile/models/rider_me_profile_model.dart';
+import 'package:gopady_rider/features/rider/profile/providers/rider_me_profile_providers.dart';
+import 'package:gopady_rider/features/rider/vehicles/capture/vehicle_photo_inspector.dart';
+import 'package:gopady_rider/features/rider/vehicles/model/vehicle_capture.dart';
+import 'package:gopady_rider/features/rider/vehicles/model/vehicle_verification.dart';
+import 'package:gopady_rider/features/rider/vehicles/repository/vehicle_verification_repository.dart';
 
 class VehicleKycState extends Equatable {
   /// Photos taken this session that the server doesn't have yet.

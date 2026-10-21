@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:delivery_boy/core/network/request_error_message.dart';
+import 'package:gopady_rider/core/network/request_error_message.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 

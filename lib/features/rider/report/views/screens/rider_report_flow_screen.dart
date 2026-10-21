@@ -5,16 +5,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:image_picker/image_picker.dart';
 
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/core/widgets/custom_dialogs.dart';
-import 'package:delivery_boy/features/rider/orders/providers/rider_me_order_providers.dart';
-import 'package:delivery_boy/features/rider/report/models/rider_report_flow_args.dart';
-import 'package:delivery_boy/features/rider/report/providers/rider_report_form_providers.dart';
-import 'package:delivery_boy/features/rider/report/views/widgets/rider_report_details_step.dart';
-import 'package:delivery_boy/features/rider/report/views/widgets/rider_report_order_link_step.dart';
-import 'package:delivery_boy/features/rider/report/views/widgets/rider_report_reason_step.dart';
-import 'package:delivery_boy/features/rider/report/views/widgets/rider_report_target_type_step.dart';
-import 'package:delivery_boy/features/rider/shared/rider_me_action_status.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/core/widgets/custom_dialogs.dart';
+import 'package:gopady_rider/features/rider/orders/providers/rider_me_order_providers.dart';
+import 'package:gopady_rider/features/rider/report/models/rider_report_flow_args.dart';
+import 'package:gopady_rider/features/rider/report/providers/rider_report_form_providers.dart';
+import 'package:gopady_rider/features/rider/report/views/widgets/rider_report_details_step.dart';
+import 'package:gopady_rider/features/rider/report/views/widgets/rider_report_order_link_step.dart';
+import 'package:gopady_rider/features/rider/report/views/widgets/rider_report_reason_step.dart';
+import 'package:gopady_rider/features/rider/report/views/widgets/rider_report_target_type_step.dart';
+import 'package:gopady_rider/features/rider/shared/rider_me_action_status.dart';
 
 /// The "Report a Problem" wizard. A fresh instance of
 /// [riderReportFormProvider] is created for [args] on entry and disposed

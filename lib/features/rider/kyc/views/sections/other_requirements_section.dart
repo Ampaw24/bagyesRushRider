@@ -3,13 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
 
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/core/router/app_routes.dart';
-import 'package:delivery_boy/features/rider/kyc/models/kyc_section.dart';
-import 'package:delivery_boy/features/rider/kyc/providers/kyc_providers.dart';
-import 'package:delivery_boy/features/rider/kyc/views/widgets/kyc_document_field.dart';
-import 'package:delivery_boy/features/rider/kyc/views/widgets/kyc_metrics.dart';
-import 'package:delivery_boy/features/rider/kyc/views/widgets/kyc_section_layout.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/core/router/app_routes.dart';
+import 'package:gopady_rider/features/rider/kyc/models/kyc_section.dart';
+import 'package:gopady_rider/features/rider/kyc/providers/kyc_providers.dart';
+import 'package:gopady_rider/features/rider/kyc/views/widgets/kyc_document_field.dart';
+import 'package:gopady_rider/features/rider/kyc/views/widgets/kyc_metrics.dart';
+import 'package:gopady_rider/features/rider/kyc/views/widgets/kyc_section_layout.dart';
 
 /// Requirements the server reports that this version of the app doesn't
 /// recognise. Unknown documents can still be uploaded (the endpoint is

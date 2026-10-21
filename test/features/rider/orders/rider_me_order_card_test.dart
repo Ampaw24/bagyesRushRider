@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hugeicons/hugeicons.dart';
 
-import 'package:delivery_boy/features/rider/orders/models/rider_delivery_stage.dart';
-import 'package:delivery_boy/features/rider/orders/models/rider_me_order_model.dart';
-import 'package:delivery_boy/features/rider/orders/views/widgets/rider_delivery_progress.dart';
-import 'package:delivery_boy/features/rider/orders/views/widgets/rider_me_order_card.dart';
-import 'package:delivery_boy/features/rider/orders/views/widgets/rider_me_order_status.dart';
+import 'package:gopady_rider/features/rider/orders/models/rider_delivery_stage.dart';
+import 'package:gopady_rider/features/rider/orders/models/rider_me_order_model.dart';
+import 'package:gopady_rider/features/rider/orders/views/widgets/rider_delivery_progress.dart';
+import 'package:gopady_rider/features/rider/orders/views/widgets/rider_me_order_card.dart';
+import 'package:gopady_rider/features/rider/orders/views/widgets/rider_me_order_status.dart';
 
 RiderMeOrderModel _order(String status, {String? dropoff}) =>
     RiderMeOrderModel(

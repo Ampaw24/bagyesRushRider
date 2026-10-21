@@ -1,18 +1,19 @@
+import 'package:gopady_rider/constant/app_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/core/widgets/drag_handle.dart';
-import 'package:delivery_boy/features/rider/chat/models/rider_chat_message_model.dart';
-import 'package:delivery_boy/features/rider/chat/providers/rider_chat_thread_args.dart';
-import 'package:delivery_boy/features/rider/chat/providers/rider_chat_thread_providers.dart';
-import 'package:delivery_boy/features/rider/chat/views/widgets/rider_chat_avatar.dart';
-import 'package:delivery_boy/features/rider/chat/views/widgets/rider_chat_composer.dart';
-import 'package:delivery_boy/features/rider/chat/views/widgets/rider_chat_timeline.dart';
-import 'package:delivery_boy/features/rider/chat/views/widgets/rider_message_bubble.dart';
-import 'package:delivery_boy/features/rider/chat/views/widgets/rider_quick_actions_grid.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/core/widgets/drag_handle.dart';
+import 'package:gopady_rider/features/rider/chat/models/rider_chat_message_model.dart';
+import 'package:gopady_rider/features/rider/chat/providers/rider_chat_thread_args.dart';
+import 'package:gopady_rider/features/rider/chat/providers/rider_chat_thread_providers.dart';
+import 'package:gopady_rider/features/rider/chat/views/widgets/rider_chat_avatar.dart';
+import 'package:gopady_rider/features/rider/chat/views/widgets/rider_chat_composer.dart';
+import 'package:gopady_rider/features/rider/chat/views/widgets/rider_chat_timeline.dart';
+import 'package:gopady_rider/features/rider/chat/views/widgets/rider_message_bubble.dart';
+import 'package:gopady_rider/features/rider/chat/views/widgets/rider_quick_actions_grid.dart';
 
 /// Presents a conversation thread as a draggable bottom sheet over whatever
 /// screen is already on-screen (the order detail sheet, the chat inbox, …)
@@ -161,7 +162,7 @@ class _SheetHeader extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontFamily: 'Roboto',
+                    fontFamily: AppFonts.body,
                     fontSize: (w * 0.042).clamp(15.0, 18.0),
                     fontWeight: FontWeight.w700,
                     color: AppColors.textPrimary,
@@ -175,7 +176,7 @@ class _SheetHeader extends StatelessWidget {
                           'typing…',
                           key: const ValueKey('typing'),
                           style: TextStyle(
-                            fontFamily: 'Roboto',
+                            fontFamily: AppFonts.body,
                             fontSize: (w * 0.031).clamp(12.0, 14.0),
                             fontWeight: FontWeight.w500,
                             color: AppColors.primary,
@@ -235,7 +236,7 @@ class _HeaderMeta extends StatelessWidget {
           Text(
             role!,
             style: TextStyle(
-              fontFamily: 'Roboto',
+              fontFamily: AppFonts.body,
               fontSize: fontSize,
               color: AppColors.textSecondary,
             ),
@@ -251,7 +252,7 @@ class _HeaderMeta extends StatelessWidget {
             child: Text(
               orderNumber!,
               style: TextStyle(
-                fontFamily: 'Roboto',
+                fontFamily: AppFonts.body,
                 fontSize: fontSize,
                 fontWeight: FontWeight.w600,
                 color: AppColors.textPrimary,
@@ -453,7 +454,7 @@ class _EmptyThread extends StatelessWidget {
             Text(
               'Say hello to ${peerName.split(' ').first}',
               style: TextStyle(
-                fontFamily: 'Roboto',
+                fontFamily: AppFonts.body,
                 fontSize: (w * 0.042).clamp(15.0, 18.0),
                 fontWeight: FontWeight.w700,
                 color: AppColors.textPrimary,
@@ -464,7 +465,7 @@ class _EmptyThread extends StatelessWidget {
               'Send a message or tap a quick reply to update the customer.',
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontFamily: 'Roboto',
+                fontFamily: AppFonts.body,
                 fontSize: (w * 0.033).clamp(12.0, 15.0),
                 color: AppColors.textSecondary,
                 height: 1.4,

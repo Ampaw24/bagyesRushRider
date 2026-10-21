@@ -1,26 +1,26 @@
 import 'dart:async';
 
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/core/di/service_locator.dart';
-import 'package:delivery_boy/core/realtime/realtime_service.dart';
-import 'package:delivery_boy/core/router/app_router.dart';
-import 'package:delivery_boy/core/services/fcm_service.dart';
-import 'package:delivery_boy/core/services/firebase_bootstrap.dart';
-import 'package:delivery_boy/core/services/user_session_manager.dart';
-import 'package:delivery_boy/core/utils/app_logger.dart';
-import 'package:delivery_boy/features/rider/auth/viewmodels/rider_auth_viewmodel.dart';
-import 'package:delivery_boy/features/rider/tracking/providers/rider_presence_providers.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/core/di/service_locator.dart';
+import 'package:gopady_rider/core/realtime/realtime_service.dart';
+import 'package:gopady_rider/core/router/app_router.dart';
+import 'package:gopady_rider/core/services/fcm_service.dart';
+import 'package:gopady_rider/core/services/firebase_bootstrap.dart';
+import 'package:gopady_rider/core/services/user_session_manager.dart';
+import 'package:gopady_rider/core/utils/app_logger.dart';
+import 'package:gopady_rider/features/rider/auth/viewmodels/rider_auth_viewmodel.dart';
+import 'package:gopady_rider/features/rider/tracking/providers/rider_presence_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class BagyesRushApp extends ConsumerStatefulWidget {
-  const BagyesRushApp({super.key});
+class GoPadyRiderApp extends ConsumerStatefulWidget {
+  const GoPadyRiderApp({super.key});
 
   @override
-  ConsumerState<BagyesRushApp> createState() => _BagyesRushAppState();
+  ConsumerState<GoPadyRiderApp> createState() => _GoPadyRiderAppState();
 }
 
-class _BagyesRushAppState extends ConsumerState<BagyesRushApp>
+class _GoPadyRiderAppState extends ConsumerState<GoPadyRiderApp>
     with WidgetsBindingObserver {
   @override
   void initState() {
@@ -67,7 +67,7 @@ class _BagyesRushAppState extends ConsumerState<BagyesRushApp>
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      title: 'BagyesRIDER',
+      title: 'GoPady Rider',
       theme: AppTheme.light,
       debugShowCheckedModeBanner: false,
       routerConfig: appRouter,

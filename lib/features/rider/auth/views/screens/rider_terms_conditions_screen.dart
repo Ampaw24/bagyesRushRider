@@ -1,17 +1,18 @@
+import 'package:gopady_rider/constant/app_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_html/flutter_html.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:markdown/markdown.dart' as md;
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/core/router/app_routes.dart';
-import 'package:delivery_boy/core/widgets/app_gradient_button.dart';
-import 'package:delivery_boy/core/widgets/custom_dialogs.dart';
-import 'package:delivery_boy/features/rider/auth/viewmodels/rider_auth_viewmodel.dart';
-import 'package:delivery_boy/features/rider/auth/views/widgets/registration_stepper.dart';
-import 'package:delivery_boy/features/rider/legal/models/legal_document_model.dart';
-import 'package:delivery_boy/features/rider/legal/providers/legal_document_providers.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/core/router/app_routes.dart';
+import 'package:gopady_rider/core/widgets/app_gradient_button.dart';
+import 'package:gopady_rider/core/widgets/custom_dialogs.dart';
+import 'package:gopady_rider/features/rider/auth/viewmodels/rider_auth_viewmodel.dart';
+import 'package:gopady_rider/features/rider/auth/views/widgets/registration_stepper.dart';
+import 'package:gopady_rider/features/rider/legal/models/legal_document_model.dart';
+import 'package:gopady_rider/features/rider/legal/providers/legal_document_providers.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 /// Final gate of the signup wizard: the rider accepts the terms/consent,
@@ -234,7 +235,7 @@ class _RiderTermsConditionsScreenState
                         'Terms & Conditions',
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          fontFamily: 'Mukta',
+                          fontFamily: AppFonts.body,
                           fontSize: (w * 0.072).clamp(24.0, 34.0),
                           fontWeight: FontWeight.w800,
                           color: AppColors.textPrimary,
@@ -247,7 +248,7 @@ class _RiderTermsConditionsScreenState
                         'Review and accept to create your rider account',
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          fontFamily: 'Mukta',
+                          fontFamily: AppFonts.body,
                           fontSize: (w * 0.036).clamp(12.0, 16.0),
                           color: AppColors.textSecondary,
                         ),
@@ -272,7 +273,7 @@ class _RiderTermsConditionsScreenState
                         icon: HugeIcons.strokeRoundedUserCheck01,
                         title: 'I consent to verification checks',
                         subtitle:
-                            'I authorise BagyesRUSH to verify my identity, '
+                            'I authorise GoPady to verify my identity, '
                             'vehicle and background before I start '
                             'accepting deliveries.',
                         onChanged: (v) =>
@@ -351,27 +352,27 @@ class _TermsDocument extends ConsumerWidget {
         'body': Style(
           margin: Margins.zero,
           padding: HtmlPaddings.zero,
-          fontFamily: 'Mukta',
+          fontFamily: AppFonts.body,
           fontSize: FontSize((w * 0.033).clamp(11.5, 13.5)),
           color: AppColors.textSecondary,
           lineHeight: LineHeight.em(1.35),
         ),
         'h1': Style(
-          fontFamily: 'Mukta',
+          fontFamily: AppFonts.body,
           fontSize: FontSize((w * 0.046).clamp(16.0, 19.0)),
           fontWeight: FontWeight.w800,
           color: AppColors.textPrimary,
           margin: Margins.only(bottom: 12),
         ),
         'h2': Style(
-          fontFamily: 'Mukta',
+          fontFamily: AppFonts.body,
           fontSize: FontSize((w * 0.042).clamp(15.0, 17.0)),
           fontWeight: FontWeight.w800,
           color: AppColors.textPrimary,
           margin: Margins.only(top: 14, bottom: 10),
         ),
         'h3': Style(
-          fontFamily: 'Mukta',
+          fontFamily: AppFonts.body,
           fontSize: FontSize((w * 0.038).clamp(13.0, 15.0)),
           fontWeight: FontWeight.w700,
           color: AppColors.textPrimary,
@@ -427,7 +428,7 @@ class _TermsDocument extends ConsumerWidget {
                 "Couldn't load the agreement. Check your connection and try again.",
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontFamily: 'Mukta',
+                  fontFamily: AppFonts.body,
                   fontSize: (w * 0.033).clamp(11.5, 13.5),
                   color: AppColors.textSecondary,
                 ),
@@ -524,7 +525,7 @@ class _ConsentTile extends StatelessWidget {
                         child: Text(
                           title,
                           style: TextStyle(
-                            fontFamily: 'Mukta',
+                            fontFamily: AppFonts.body,
                             fontSize: (w * 0.036).clamp(13.0, 15.0),
                             fontWeight: FontWeight.w700,
                             color: AppColors.textPrimary,
@@ -537,7 +538,7 @@ class _ConsentTile extends StatelessWidget {
                   Text(
                     subtitle,
                     style: TextStyle(
-                      fontFamily: 'Mukta',
+                      fontFamily: AppFonts.body,
                       fontSize: (w * 0.031).clamp(11.0, 13.0),
                       color: AppColors.textSecondary,
                       height: 1.35,

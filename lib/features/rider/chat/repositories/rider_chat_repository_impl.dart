@@ -1,14 +1,14 @@
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
-import 'package:delivery_boy/core/errors/failures.dart';
-import 'package:delivery_boy/core/network/api_error_parser.dart';
-import 'package:delivery_boy/core/network/request_error_message.dart';
-import 'package:delivery_boy/core/utils/app_logger.dart';
-import 'package:delivery_boy/features/rider/chat/models/rider_chat_message_model.dart';
-import 'package:delivery_boy/features/rider/chat/models/rider_conversation_model.dart';
-import 'package:delivery_boy/features/rider/chat/models/rider_messages_page_model.dart';
-import 'package:delivery_boy/features/rider/chat/repositories/rider_chat_repository.dart';
-import 'package:delivery_boy/features/rider/chat/services/rider_chat_api_service.dart';
+import 'package:gopady_rider/core/errors/failures.dart';
+import 'package:gopady_rider/core/network/api_error_parser.dart';
+import 'package:gopady_rider/core/network/request_error_message.dart';
+import 'package:gopady_rider/core/utils/app_logger.dart';
+import 'package:gopady_rider/features/rider/chat/models/rider_chat_message_model.dart';
+import 'package:gopady_rider/features/rider/chat/models/rider_conversation_model.dart';
+import 'package:gopady_rider/features/rider/chat/models/rider_messages_page_model.dart';
+import 'package:gopady_rider/features/rider/chat/repositories/rider_chat_repository.dart';
+import 'package:gopady_rider/features/rider/chat/services/rider_chat_api_service.dart';
 
 class RiderChatRepositoryImpl implements RiderChatRepository {
   final RiderChatApiService _api;

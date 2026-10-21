@@ -1,12 +1,12 @@
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 
-import 'package:delivery_boy/constant/typedef.dart';
-import 'package:delivery_boy/core/errors/failures.dart';
-import 'package:delivery_boy/core/network/api_error_parser.dart';
-import 'package:delivery_boy/core/network/request_error_message.dart';
-import 'package:delivery_boy/features/rider/notifications/repositories/device_token_repository.dart';
-import 'package:delivery_boy/features/rider/notifications/services/device_token_api_service.dart';
+import 'package:gopady_rider/constant/typedef.dart';
+import 'package:gopady_rider/core/errors/failures.dart';
+import 'package:gopady_rider/core/network/api_error_parser.dart';
+import 'package:gopady_rider/core/network/request_error_message.dart';
+import 'package:gopady_rider/features/rider/notifications/repositories/device_token_repository.dart';
+import 'package:gopady_rider/features/rider/notifications/services/device_token_api_service.dart';
 
 class DeviceTokenRepositoryImpl implements DeviceTokenRepository {
   final DeviceTokenApiService _api;

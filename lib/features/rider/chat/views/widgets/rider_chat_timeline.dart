@@ -1,9 +1,10 @@
+import 'package:gopady_rider/constant/app_tokens.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/features/rider/chat/views/widgets/rider_chat_avatar.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/features/rider/chat/views/widgets/rider_chat_avatar.dart';
 
 const _months = [
   'Jan',
@@ -62,7 +63,7 @@ class RiderChatDaySeparator extends StatelessWidget {
           child: Text(
             _dayLabel(date),
             style: TextStyle(
-              fontFamily: 'Roboto',
+              fontFamily: AppFonts.body,
               fontSize: (w * 0.029).clamp(11.0, 13.0),
               fontWeight: FontWeight.w600,
               color: AppColors.textSecondary,

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/features/rider/kyc/models/kyc_progress.dart';
-import 'package:delivery_boy/features/rider/kyc/models/kyc_section.dart';
-import 'package:delivery_boy/features/rider/kyc/views/widgets/kyc_metrics.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/features/rider/kyc/models/kyc_progress.dart';
+import 'package:gopady_rider/features/rider/kyc/models/kyc_section.dart';
+import 'package:gopady_rider/features/rider/kyc/views/widgets/kyc_metrics.dart';
 
 /// Headline, progress and review status at the top of the checklist.
 class KycStatusHeader extends StatelessWidget {

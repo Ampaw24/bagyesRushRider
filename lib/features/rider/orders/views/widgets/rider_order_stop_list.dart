@@ -1,13 +1,14 @@
+import 'package:gopady_rider/constant/app_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/core/widgets/adaptive_animated_size.dart';
-import 'package:delivery_boy/features/rider/orders/models/rider_me_order_model.dart';
-import 'package:delivery_boy/features/rider/orders/providers/rider_me_order_providers.dart';
-import 'package:delivery_boy/features/rider/orders/views/widgets/dropoff_wait_countdown.dart';
-import 'package:delivery_boy/features/rider/orders/views/widgets/reason_input_sheet.dart';
-import 'package:delivery_boy/features/rider/orders/views/widgets/rider_order_card_shell.dart';
-import 'package:delivery_boy/features/rider/orders/views/widgets/rider_order_detail_sections.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/core/widgets/adaptive_animated_size.dart';
+import 'package:gopady_rider/features/rider/orders/models/rider_me_order_model.dart';
+import 'package:gopady_rider/features/rider/orders/providers/rider_me_order_providers.dart';
+import 'package:gopady_rider/features/rider/orders/views/widgets/dropoff_wait_countdown.dart';
+import 'package:gopady_rider/features/rider/orders/views/widgets/reason_input_sheet.dart';
+import 'package:gopady_rider/features/rider/orders/views/widgets/rider_order_card_shell.dart';
+import 'package:gopady_rider/features/rider/orders/views/widgets/rider_order_detail_sections.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 /// A parcel's stops, each worked on its own once the parcel is picked up:
@@ -190,7 +191,7 @@ class _StopTile extends StatelessWidget {
     final reason =
         state == _StopState.failed ? (stop.failureReason?.trim() ?? '') : '';
     final detailStyle = TextStyle(
-      fontFamily: 'Roboto',
+      fontFamily: AppFonts.body,
       fontSize: (w * 0.031).clamp(11.0, 13.0),
       color: AppColors.textSecondary,
     );
@@ -214,7 +215,7 @@ class _StopTile extends StatelessWidget {
                       maxLines: 3,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontFamily: 'Roboto',
+                        fontFamily: AppFonts.body,
                         fontSize: (w * 0.035).clamp(13.0, 15.0),
                         fontWeight: FontWeight.w600,
                         height: 1.3,
@@ -316,7 +317,7 @@ class _StopBadge extends StatelessWidget {
           : Text(
               '$number',
               style: TextStyle(
-                fontFamily: 'Roboto',
+                fontFamily: AppFonts.body,
                 fontSize: size * 0.42,
                 fontWeight: FontWeight.w700,
                 color: AppColors.textPrimary,

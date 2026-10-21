@@ -1,15 +1,16 @@
+import 'package:gopady_rider/constant/app_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/core/router/app_routes.dart';
-import 'package:delivery_boy/core/widgets/app_gradient_button.dart';
-import 'package:delivery_boy/core/widgets/custom_dialogs.dart';
-import 'package:delivery_boy/features/rider/auth/viewmodels/rider_auth_viewmodel.dart';
-import 'package:delivery_boy/features/rider/shared_widgets/app_password_field.dart';
-import 'package:delivery_boy/features/rider/shared_widgets/password_strength_validator.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/core/router/app_routes.dart';
+import 'package:gopady_rider/core/widgets/app_gradient_button.dart';
+import 'package:gopady_rider/core/widgets/custom_dialogs.dart';
+import 'package:gopady_rider/features/rider/auth/viewmodels/rider_auth_viewmodel.dart';
+import 'package:gopady_rider/features/rider/shared_widgets/app_password_field.dart';
+import 'package:gopady_rider/features/rider/shared_widgets/password_strength_validator.dart';
 
 /// Forgot-password step 3: choose a new password.
 ///
@@ -194,7 +195,7 @@ class _Header extends StatelessWidget {
         Text(
           'Reset Password',
           style: TextStyle(
-            fontFamily: 'Mukta',
+            fontFamily: AppFonts.body,
             fontSize: (w * 0.072).clamp(24.0, 34.0),
             fontWeight: FontWeight.w700,
             color: AppColors.textPrimary,
@@ -217,7 +218,7 @@ class _Header extends StatelessWidget {
             ],
           ),
           style: TextStyle(
-            fontFamily: 'Mukta',
+            fontFamily: AppFonts.body,
             fontSize: (w * 0.038).clamp(13.0, 17.0),
             color: AppColors.textSecondary,
             height: 1.5,

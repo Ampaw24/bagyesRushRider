@@ -1,4 +1,4 @@
-import 'package:delivery_boy/features/rider/orders/models/rider_delivery_stage.dart';
+import 'package:gopady_rider/features/rider/orders/models/rider_delivery_stage.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

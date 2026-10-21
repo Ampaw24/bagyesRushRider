@@ -4,13 +4,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
 
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/core/router/app_routes.dart';
-import 'package:delivery_boy/core/widgets/custom_dialogs.dart';
-import 'package:delivery_boy/features/rider/auth/viewmodels/rider_auth_viewmodel.dart';
-import 'package:delivery_boy/features/rider/kyc/views/widgets/kyc_hub_widgets.dart';
-import 'package:delivery_boy/features/rider/shared_widgets/app_password_field.dart';
-import 'package:delivery_boy/features/rider/shared_widgets/app_text_field.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/core/router/app_routes.dart';
+import 'package:gopady_rider/core/widgets/custom_dialogs.dart';
+import 'package:gopady_rider/features/rider/auth/viewmodels/rider_auth_viewmodel.dart';
+import 'package:gopady_rider/features/rider/kyc/views/widgets/kyc_hub_widgets.dart';
+import 'package:gopady_rider/features/rider/shared_widgets/app_password_field.dart';
+import 'package:gopady_rider/features/rider/shared_widgets/app_text_field.dart';
 
 /// Reasons offered for leaving. The label (or the rider's own words for
 /// "Other") is what's sent as `reason`.

@@ -1,9 +1,10 @@
+import 'package:gopady_rider/constant/app_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/features/rider/kyc/models/kyc_progress.dart';
-import 'package:delivery_boy/features/rider/kyc/models/kyc_section.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/features/rider/kyc/models/kyc_progress.dart';
+import 'package:gopady_rider/features/rider/kyc/models/kyc_section.dart';
 
 /// Dark "Finish setup" card for the home screen — the same technique the
 /// vendor dashboard uses to nudge outstanding onboarding.
@@ -43,7 +44,7 @@ class RiderSetupProgressCard extends StatelessWidget {
                 Text(
                   'FINISH SETUP',
                   style: TextStyle(
-                    fontFamily: 'Mukta',
+                    fontFamily: AppFonts.body,
                     color: AppColors.primaryLight,
                     fontSize: (w * 0.03).clamp(11.0, 13.0),
                     fontWeight: FontWeight.w800,
@@ -54,7 +55,7 @@ class RiderSetupProgressCard extends StatelessWidget {
                 Text(
                   '${progress.completedCount}/${progress.totalCount}',
                   style: TextStyle(
-                    fontFamily: 'Mukta',
+                    fontFamily: AppFonts.body,
                     color: Colors.white.withValues(alpha: 0.45),
                     fontSize: (w * 0.032).clamp(11.0, 13.0),
                     fontWeight: FontWeight.w700,
@@ -66,7 +67,7 @@ class RiderSetupProgressCard extends StatelessWidget {
             Text(
               current.prompt,
               style: TextStyle(
-                fontFamily: 'Mukta',
+                fontFamily: AppFonts.body,
                 color: Colors.white,
                 fontSize: (w * 0.046).clamp(16.0, 20.0),
                 fontWeight: FontWeight.w800,
@@ -182,7 +183,7 @@ class _StepRow extends StatelessWidget {
                     Text(
                       step.section.title,
                       style: TextStyle(
-                        fontFamily: 'Mukta',
+                        fontFamily: AppFonts.body,
                         color: isCurrent
                             ? Colors.white
                             : Colors.white.withValues(alpha: 0.6),
@@ -195,7 +196,7 @@ class _StepRow extends StatelessWidget {
                       Text(
                         '${step.summary} needed',
                         style: TextStyle(
-                          fontFamily: 'Mukta',
+                          fontFamily: AppFonts.body,
                           color: Colors.white.withValues(alpha: 0.4),
                           fontSize: (w * 0.029).clamp(10.5, 12.0),
                         ),
@@ -216,7 +217,7 @@ class _StepRow extends StatelessWidget {
                   child: Text(
                     'Start',
                     style: TextStyle(
-                      fontFamily: 'Mukta',
+                      fontFamily: AppFonts.body,
                       color: Colors.white,
                       fontSize: (w * 0.029).clamp(10.0, 12.0),
                       fontWeight: FontWeight.w700,

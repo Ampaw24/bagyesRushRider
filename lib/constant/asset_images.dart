@@ -3,7 +3,13 @@
 class AssetImages {
   AssetImages._();
 
-  static const bagyesLogo = 'assets/images/logo.png';
+  static const gopadyIconGreen = 'assets/brand/gopady-icon-green.png';
+  static const gopadyIconYellow = 'assets/brand/gopady-icon-yellow.png';
+  static const gopadyLogoLight = 'assets/brand/gopady-logo-light.png';
+  static const gopadyLogoTransparentWhite =
+      'assets/brand/gopady-logo-transparent-white.png';
+  static const gopadyLauncher = 'assets/brand/gopady-launcher.png';
+  static const accraSkyline = 'assets/brand/accra-skyline.jpeg';
   static const deliveryBoy = 'assets/images/delivery_boy.jpg';
   static const delivery = 'assets/images/delivery.png';
   static const user = 'assets/images/user.jpg';

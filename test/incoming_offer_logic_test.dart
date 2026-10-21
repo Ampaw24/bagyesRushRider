@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:delivery_boy/features/rider/orders/models/rider_me_order_model.dart';
-import 'package:delivery_boy/features/rider/orders/providers/incoming_offer_logic.dart';
+import 'package:gopady_rider/features/rider/orders/models/rider_me_order_model.dart';
+import 'package:gopady_rider/features/rider/orders/providers/incoming_offer_logic.dart';
 
 RiderMeOfferModel offer(int id, {String? expiresAt}) =>
     RiderMeOfferModel(id: id, expiresAt: expiresAt);

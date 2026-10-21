@@ -1,4 +1,4 @@
-import 'package:delivery_boy/constant/typedef.dart';
+import 'package:gopady_rider/constant/typedef.dart';
 
 /// Registers and deregisters this device's FCM token with the backend.
 abstract class DeviceTokenRepository {

@@ -2,10 +2,10 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:delivery_boy/core/errors/failures.dart';
-import 'package:delivery_boy/features/rider/vehicles/model/vehicle_capture.dart';
-import 'package:delivery_boy/features/rider/vehicles/repository/vehicle_verification_repository_impl.dart';
-import 'package:delivery_boy/features/rider/vehicles/service/rider_vehicle_photo_api_service.dart';
+import 'package:gopady_rider/core/errors/failures.dart';
+import 'package:gopady_rider/features/rider/vehicles/model/vehicle_capture.dart';
+import 'package:gopady_rider/features/rider/vehicles/repository/vehicle_verification_repository_impl.dart';
+import 'package:gopady_rider/features/rider/vehicles/service/rider_vehicle_photo_api_service.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 

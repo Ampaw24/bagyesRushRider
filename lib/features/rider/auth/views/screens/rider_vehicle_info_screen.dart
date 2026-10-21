@@ -1,10 +1,11 @@
+import 'package:gopady_rider/constant/app_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/core/router/app_routes.dart';
-import 'package:delivery_boy/core/widgets/app_gradient_button.dart';
-import 'package:delivery_boy/features/rider/auth/views/widgets/registration_stepper.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/core/router/app_routes.dart';
+import 'package:gopady_rider/core/widgets/app_gradient_button.dart';
+import 'package:gopady_rider/features/rider/auth/views/widgets/registration_stepper.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 // ── Vehicle Type Enum ─────────────────────────────────────────────────────────
@@ -170,7 +171,7 @@ class _RiderVehicleInfoScreenState extends State<RiderVehicleInfoScreen>
                       Text(
                         'Your Vehicle',
                         style: TextStyle(
-                          fontFamily: 'Mukta',
+                          fontFamily: AppFonts.body,
                           fontSize: (w * 0.072).clamp(24.0, 34.0),
                           fontWeight: FontWeight.w800,
                           color: AppColors.textPrimary,
@@ -182,7 +183,7 @@ class _RiderVehicleInfoScreenState extends State<RiderVehicleInfoScreen>
                       Text(
                         'Select the vehicle you\'ll use for deliveries',
                         style: TextStyle(
-                          fontFamily: 'Mukta',
+                          fontFamily: AppFonts.body,
                           fontSize: (w * 0.036).clamp(12.0, 16.0),
                           color: AppColors.textSecondary,
                         ),
@@ -394,7 +395,7 @@ class _VehicleTileState extends State<_VehicleTile>
                     AnimatedDefaultTextStyle(
                       duration: const Duration(milliseconds: 200),
                       style: TextStyle(
-                        fontFamily: 'Mukta',
+                        fontFamily: AppFonts.body,
                         fontSize: (w * 0.042).clamp(14.0, 18.0),
                         fontWeight: FontWeight.w700,
                         color: isSelected
@@ -408,7 +409,7 @@ class _VehicleTileState extends State<_VehicleTile>
                     Text(
                       widget.type.description,
                       style: TextStyle(
-                        fontFamily: 'Mukta',
+                        fontFamily: AppFonts.body,
                         fontSize: (w * 0.032).clamp(11.0, 13.0),
                         color: AppColors.textSecondary,
                         height: 1.4,

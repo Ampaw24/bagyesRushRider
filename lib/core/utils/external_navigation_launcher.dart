@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:url_launcher/url_launcher.dart';
 
-import 'package:delivery_boy/core/services/navigation_return_notifier.dart';
-import 'package:delivery_boy/core/utils/app_logger.dart';
+import 'package:gopady_rider/core/services/navigation_return_notifier.dart';
+import 'package:gopady_rider/core/utils/app_logger.dart';
 
 /// Hands a destination off to whatever turn-by-turn navigation app the rider
 /// already has — Google Maps' own universal link opens the native app when

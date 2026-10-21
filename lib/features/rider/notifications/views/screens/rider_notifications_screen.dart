@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/core/widgets/shimmer_list_placeholder.dart';
-import 'package:delivery_boy/features/rider/notifications/models/rider_notification_model.dart';
-import 'package:delivery_boy/features/rider/notifications/providers/rider_notifications_providers.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/core/widgets/shimmer_list_placeholder.dart';
+import 'package:gopady_rider/features/rider/notifications/models/rider_notification_model.dart';
+import 'package:gopady_rider/features/rider/notifications/providers/rider_notifications_providers.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 // ═════════════════════════════════════════════════════════════════════════════

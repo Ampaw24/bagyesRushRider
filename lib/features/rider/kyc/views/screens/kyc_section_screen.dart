@@ -2,19 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hugeicons/hugeicons.dart';
 
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/features/rider/kyc/models/kyc_section.dart';
-import 'package:delivery_boy/features/rider/kyc/views/sections/emergency_contact_section.dart';
-import 'package:delivery_boy/features/rider/kyc/views/sections/identity_section.dart';
-import 'package:delivery_boy/features/rider/kyc/views/sections/insurance_section.dart';
-import 'package:delivery_boy/features/rider/kyc/views/sections/licence_section.dart';
-import 'package:delivery_boy/features/rider/kyc/views/sections/other_requirements_section.dart';
-import 'package:delivery_boy/features/rider/kyc/views/sections/payout_section.dart';
-import 'package:delivery_boy/features/rider/kyc/views/sections/personal_section.dart';
-import 'package:delivery_boy/features/rider/kyc/views/sections/photo_section.dart';
-import 'package:delivery_boy/features/rider/kyc/views/sections/vehicle_section.dart';
-import 'package:delivery_boy/features/rider/kyc/views/widgets/kyc_hub_widgets.dart';
-import 'package:delivery_boy/features/rider/profile/providers/rider_me_profile_providers.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/features/rider/kyc/models/kyc_section.dart';
+import 'package:gopady_rider/features/rider/kyc/views/sections/emergency_contact_section.dart';
+import 'package:gopady_rider/features/rider/kyc/views/sections/identity_section.dart';
+import 'package:gopady_rider/features/rider/kyc/views/sections/insurance_section.dart';
+import 'package:gopady_rider/features/rider/kyc/views/sections/licence_section.dart';
+import 'package:gopady_rider/features/rider/kyc/views/sections/other_requirements_section.dart';
+import 'package:gopady_rider/features/rider/kyc/views/sections/payout_section.dart';
+import 'package:gopady_rider/features/rider/kyc/views/sections/personal_section.dart';
+import 'package:gopady_rider/features/rider/kyc/views/sections/photo_section.dart';
+import 'package:gopady_rider/features/rider/kyc/views/sections/vehicle_section.dart';
+import 'package:gopady_rider/features/rider/kyc/views/widgets/kyc_hub_widgets.dart';
+import 'package:gopady_rider/features/rider/profile/providers/rider_me_profile_providers.dart';
 
 /// Route target for `/dashboard/kyc/:section`.
 ///

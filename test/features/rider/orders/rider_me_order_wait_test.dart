@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:delivery_boy/features/rider/orders/models/rider_delivery_stage.dart';
-import 'package:delivery_boy/features/rider/orders/models/rider_me_order_model.dart';
-import 'package:delivery_boy/features/rider/orders/providers/rider_me_order_providers.dart';
+import 'package:gopady_rider/features/rider/orders/models/rider_delivery_stage.dart';
+import 'package:gopady_rider/features/rider/orders/models/rider_me_order_model.dart';
+import 'package:gopady_rider/features/rider/orders/providers/rider_me_order_providers.dart';
 
 // Trimmed `data` of POST /rider/me/orders/:id/arrived-at-dropoff.
 Map<String, dynamic> _arrivedJson({Map<String, dynamic>? wait}) => {

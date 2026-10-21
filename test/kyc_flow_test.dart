@@ -1,16 +1,16 @@
 import 'dart:convert';
 
 import 'package:dartz/dartz.dart';
-import 'package:delivery_boy/core/di/service_locator.dart';
-import 'package:delivery_boy/core/errors/failures.dart';
-import 'package:delivery_boy/core/router/app_routes.dart';
-import 'package:delivery_boy/features/rider/kyc/models/kyc_section.dart';
-import 'package:delivery_boy/features/rider/kyc/views/screens/kyc_hub_screen.dart';
-import 'package:delivery_boy/features/rider/kyc/views/screens/kyc_section_screen.dart';
-import 'package:delivery_boy/features/rider/profile/models/payout_provider_model.dart';
-import 'package:delivery_boy/features/rider/profile/models/rider_me_profile_model.dart';
-import 'package:delivery_boy/features/rider/profile/providers/rider_me_profile_providers.dart';
-import 'package:delivery_boy/features/rider/profile/repositories/rider_me_profile_repository.dart';
+import 'package:gopady_rider/core/di/service_locator.dart';
+import 'package:gopady_rider/core/errors/failures.dart';
+import 'package:gopady_rider/core/router/app_routes.dart';
+import 'package:gopady_rider/features/rider/kyc/models/kyc_section.dart';
+import 'package:gopady_rider/features/rider/kyc/views/screens/kyc_hub_screen.dart';
+import 'package:gopady_rider/features/rider/kyc/views/screens/kyc_section_screen.dart';
+import 'package:gopady_rider/features/rider/profile/models/payout_provider_model.dart';
+import 'package:gopady_rider/features/rider/profile/models/rider_me_profile_model.dart';
+import 'package:gopady_rider/features/rider/profile/providers/rider_me_profile_providers.dart';
+import 'package:gopady_rider/features/rider/profile/repositories/rider_me_profile_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';

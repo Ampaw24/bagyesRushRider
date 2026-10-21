@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-import 'package:delivery_boy/core/utils/json_utils.dart';
+import 'package:gopady_rider/core/utils/json_utils.dart';
 
 /// Persists the signed-in session (tokens + the raw user JSON) in the
 /// platform keychain/keystore via [FlutterSecureStorage].

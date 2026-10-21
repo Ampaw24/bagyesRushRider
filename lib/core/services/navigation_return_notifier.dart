@@ -1,13 +1,14 @@
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/constant/asset_images.dart';
 import 'dart:io' show Platform;
 import 'dart:typed_data';
-import 'dart:ui' show Color;
 
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
-import 'package:delivery_boy/core/services/fcm_service.dart';
-import 'package:delivery_boy/core/services/navigation_bubble_channel.dart';
-import 'package:delivery_boy/core/utils/app_logger.dart';
+import 'package:gopady_rider/core/services/fcm_service.dart';
+import 'package:gopady_rider/core/services/navigation_bubble_channel.dart';
+import 'package:gopady_rider/core/utils/app_logger.dart';
 
 /// The "tap to return" affordance for a rider who left the app to get
 /// turn-by-turn directions in an external Maps app.
@@ -33,7 +34,7 @@ class NavigationReturnNotifier {
   /// [show] call replaces the first rather than stacking notifications.
   static const _id = 90201;
 
-  static const _logoAsset = 'assets/images/splash_logo.png';
+  static const _logoAsset = AssetImages.gopadyLauncher;
 
   /// Cached after the first [show] — the asset never changes at runtime, so
   /// re-reading it from the bundle on every navigate would just be wasted
@@ -51,7 +52,7 @@ class NavigationReturnNotifier {
   static const _title = 'Delivery in progress';
 
   static String _text(String destinationLabel) =>
-      'Navigating to $destinationLabel — tap to return to BagyesRUSH';
+      'Navigating to $destinationLabel — tap to return to GoPady Rider';
 
   /// Shows (or replaces) the return prompt. Call once
   /// [ExternalNavigationLauncher] confirms Maps actually opened.
@@ -89,7 +90,7 @@ class NavigationReturnNotifier {
             channelDescription: FcmService.androidChannel.description,
             icon: '@drawable/ic_notification',
             largeIcon: ByteArrayAndroidBitmap(logo),
-            color: const Color(0xFFE91D25),
+            color: AppColors.primary,
             importance: Importance.high,
             priority: Priority.high,
             // Ongoing: can't be swiped away mid-trip by accident — mirrors

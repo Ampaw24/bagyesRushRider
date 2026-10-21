@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:delivery_boy/features/rider/orders/models/rider_delivery_stage.dart';
-import 'package:delivery_boy/features/rider/orders/models/rider_me_order_model.dart';
-import 'package:delivery_boy/features/rider/orders/providers/rider_me_order_providers.dart';
-import 'package:delivery_boy/features/rider/orders/views/widgets/rider_delivery_progress.dart';
-import 'package:delivery_boy/features/rider/orders/views/widgets/rider_me_order_detail_sheet.dart';
+import 'package:gopady_rider/features/rider/orders/models/rider_delivery_stage.dart';
+import 'package:gopady_rider/features/rider/orders/models/rider_me_order_model.dart';
+import 'package:gopady_rider/features/rider/orders/providers/rider_me_order_providers.dart';
+import 'package:gopady_rider/features/rider/orders/views/widgets/rider_delivery_progress.dart';
+import 'package:gopady_rider/features/rider/orders/views/widgets/rider_me_order_detail_sheet.dart';
 
 /// A [RiderMeOrdersNotifier] with no network and no realtime socket. Its
 /// actions succeed and move the order on as the real one does: "arrived at

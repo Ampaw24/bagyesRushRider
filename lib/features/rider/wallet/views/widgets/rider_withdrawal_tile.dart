@@ -1,10 +1,11 @@
+import 'package:gopady_rider/constant/app_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:intl/intl.dart';
 
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/core/widgets/status_badge.dart';
-import 'package:delivery_boy/features/rider/wallet/models/rider_me_wallet_model.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/core/widgets/status_badge.dart';
+import 'package:gopady_rider/features/rider/wallet/models/rider_me_wallet_model.dart';
 
 /// A single withdrawal request row — status pill colored per the 6-value
 /// enum documented in the admin `withdrawals` folder (`pending | approved |
@@ -76,7 +77,7 @@ class RiderWithdrawalTile extends StatelessWidget {
                 Text(
                   '$currency ${withdrawal.amount.toStringAsFixed(2)}',
                   style: TextStyle(
-                    fontFamily: 'Mukta',
+                    fontFamily: AppFonts.body,
                     fontSize: w * 0.038,
                     fontWeight: FontWeight.w700,
                     color: AppColors.textPrimary,
@@ -87,7 +88,7 @@ class RiderWithdrawalTile extends StatelessWidget {
                   Text(
                     _formattedDate!,
                     style: TextStyle(
-                      fontFamily: 'Mukta',
+                      fontFamily: AppFonts.body,
                       fontSize: w * 0.03,
                       color: AppColors.textSecondary,
                     ),
@@ -108,7 +109,7 @@ class RiderWithdrawalTile extends StatelessWidget {
                   child: Text(
                     'Cancel',
                     style: TextStyle(
-                      fontFamily: 'Mukta',
+                      fontFamily: AppFonts.body,
                       fontSize: w * 0.03,
                       fontWeight: FontWeight.w600,
                       color: AppColors.error,

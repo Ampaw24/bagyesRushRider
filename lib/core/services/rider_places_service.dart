@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 
-import 'package:delivery_boy/constant/map_config.dart';
-import 'package:delivery_boy/core/utils/app_logger.dart';
+import 'package:gopady_rider/constant/map_config.dart';
+import 'package:gopady_rider/core/utils/app_logger.dart';
 
 /// Google Geocoding API client.
 ///

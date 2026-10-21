@@ -4,8 +4,8 @@ import 'package:geocoding/geocoding.dart' as geo;
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart' as ph;
 
-import 'package:delivery_boy/core/services/rider_places_service.dart';
-import 'package:delivery_boy/core/utils/app_logger.dart';
+import 'package:gopady_rider/core/services/rider_places_service.dart';
+import 'package:gopady_rider/core/utils/app_logger.dart';
 
 enum RiderLocationStatus {
   success,

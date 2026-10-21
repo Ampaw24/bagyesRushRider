@@ -1,4 +1,4 @@
-import 'package:delivery_boy/features/rider/shared_widgets/password_strength_validator.dart';
+import 'package:gopady_rider/features/rider/shared_widgets/password_strength_validator.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

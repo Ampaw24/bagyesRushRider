@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:delivery_boy/features/rider/chat/models/rider_chat_message_model.dart';
-import 'package:delivery_boy/features/rider/chat/views/widgets/rider_chat_avatar.dart';
-import 'package:delivery_boy/features/rider/chat/views/widgets/rider_chat_timeline.dart';
-import 'package:delivery_boy/features/rider/chat/views/widgets/rider_message_bubble.dart';
+import 'package:gopady_rider/features/rider/chat/models/rider_chat_message_model.dart';
+import 'package:gopady_rider/features/rider/chat/views/widgets/rider_chat_avatar.dart';
+import 'package:gopady_rider/features/rider/chat/views/widgets/rider_chat_timeline.dart';
+import 'package:gopady_rider/features/rider/chat/views/widgets/rider_message_bubble.dart';
 
 RiderChatMessageModel _message({required bool isMine, String body = 'hello'}) =>
     RiderChatMessageModel(

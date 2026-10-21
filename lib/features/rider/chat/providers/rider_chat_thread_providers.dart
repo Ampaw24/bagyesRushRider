@@ -3,15 +3,15 @@ import 'dart:async';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
-import 'package:delivery_boy/core/di/service_locator.dart';
-import 'package:delivery_boy/core/errors/failures.dart';
-import 'package:delivery_boy/core/realtime/models/realtime_events.dart';
-import 'package:delivery_boy/core/realtime/realtime_service.dart';
-import 'package:delivery_boy/core/utils/app_logger.dart';
-import 'package:delivery_boy/features/rider/chat/models/rider_chat_message_model.dart';
-import 'package:delivery_boy/features/rider/chat/models/rider_conversation_model.dart';
-import 'package:delivery_boy/features/rider/chat/providers/rider_chat_thread_args.dart';
-import 'package:delivery_boy/features/rider/chat/repositories/rider_chat_repository.dart';
+import 'package:gopady_rider/core/di/service_locator.dart';
+import 'package:gopady_rider/core/errors/failures.dart';
+import 'package:gopady_rider/core/realtime/models/realtime_events.dart';
+import 'package:gopady_rider/core/realtime/realtime_service.dart';
+import 'package:gopady_rider/core/utils/app_logger.dart';
+import 'package:gopady_rider/features/rider/chat/models/rider_chat_message_model.dart';
+import 'package:gopady_rider/features/rider/chat/models/rider_conversation_model.dart';
+import 'package:gopady_rider/features/rider/chat/providers/rider_chat_thread_args.dart';
+import 'package:gopady_rider/features/rider/chat/repositories/rider_chat_repository.dart';
 
 enum RiderChatThreadStatus { loading, loaded, unavailable, error }
 

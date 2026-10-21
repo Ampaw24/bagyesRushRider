@@ -4,12 +4,12 @@ import 'package:flutter/foundation.dart';
 import 'package:pusher_client_socket/pusher_client_socket.dart';
 import 'package:pusher_client_socket/utils/connection_state.dart';
 
-import 'package:delivery_boy/core/realtime/models/realtime_config_model.dart';
-import 'package:delivery_boy/core/realtime/models/realtime_events.dart';
-import 'package:delivery_boy/core/realtime/services/realtime_config_api_service.dart';
-import 'package:delivery_boy/core/services/user_session_manager.dart';
-import 'package:delivery_boy/core/utils/app_logger.dart';
-import 'package:delivery_boy/core/utils/network_utility.dart' show sessionRevision;
+import 'package:gopady_rider/core/realtime/models/realtime_config_model.dart';
+import 'package:gopady_rider/core/realtime/models/realtime_events.dart';
+import 'package:gopady_rider/core/realtime/services/realtime_config_api_service.dart';
+import 'package:gopady_rider/core/services/user_session_manager.dart';
+import 'package:gopady_rider/core/utils/app_logger.dart';
+import 'package:gopady_rider/core/utils/network_utility.dart' show sessionRevision;
 
 enum RealtimeConnectionState { disconnected, connecting, connected, reconnecting }
 

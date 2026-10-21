@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
-import 'package:delivery_boy/core/network/api_endpoints.dart';
-import 'package:delivery_boy/features/rider/profile/models/rider_me_profile_model.dart';
+import 'package:gopady_rider/core/network/api_endpoints.dart';
+import 'package:gopady_rider/features/rider/profile/models/rider_me_profile_model.dart';
 
 /// Raw Dio calls for the `/rider/me` profile API — see
 /// the "v1 / rider" Postman collection (profile #1-10).

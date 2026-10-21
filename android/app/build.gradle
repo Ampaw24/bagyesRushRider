@@ -57,7 +57,7 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace "com.bagye.bagyesrushrider"
+    namespace "com.gopady.rider"
     compileSdk 36
     ndkVersion "28.2.13676358"
 
@@ -66,7 +66,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.bagye.bagyesrushrider"
+        applicationId "com.gopady.rider"
         minSdk flutter.minSdkVersion
         targetSdk 36
         versionCode 2

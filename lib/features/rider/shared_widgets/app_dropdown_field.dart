@@ -1,5 +1,6 @@
+import 'package:gopady_rider/constant/app_tokens.dart';
 import 'package:flutter/material.dart';
-import 'package:delivery_boy/constant/app_theme.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 class AppDropdownField<T> extends StatelessWidget {
@@ -31,7 +32,7 @@ class AppDropdownField<T> extends StatelessWidget {
       validator: validator,
       isExpanded: true,
       style: const TextStyle(
-        fontFamily: 'Mukta',
+        fontFamily: AppFonts.body,
         fontSize: 15,
         fontWeight: FontWeight.w500,
         color: AppColors.textPrimary,
@@ -45,12 +46,12 @@ class AppDropdownField<T> extends StatelessWidget {
             ? Icon(prefixIcon, size: 20, color: Colors.grey.shade400)
             : null,
         labelStyle: TextStyle(
-          fontFamily: 'Mukta',
+          fontFamily: AppFonts.body,
           fontSize: 14,
           color: Colors.grey.shade500,
         ),
         hintStyle: TextStyle(
-          fontFamily: 'Mukta',
+          fontFamily: AppFonts.body,
           fontSize: 14,
           color: Colors.grey.shade400,
         ),

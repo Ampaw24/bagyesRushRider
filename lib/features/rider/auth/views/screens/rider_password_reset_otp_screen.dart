@@ -1,3 +1,4 @@
+import 'package:gopady_rider/constant/app_tokens.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -6,11 +7,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/core/router/app_routes.dart';
-import 'package:delivery_boy/core/widgets/app_gradient_button.dart';
-import 'package:delivery_boy/features/rider/auth/viewmodels/rider_auth_viewmodel.dart';
-import 'package:delivery_boy/features/rider/shared_widgets/otp_code_input.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/core/router/app_routes.dart';
+import 'package:gopady_rider/core/widgets/app_gradient_button.dart';
+import 'package:gopady_rider/features/rider/auth/viewmodels/rider_auth_viewmodel.dart';
+import 'package:gopady_rider/features/rider/shared_widgets/otp_code_input.dart';
 
 const int _kCodeLength = 6;
 const int _kResendCooldownSeconds = 60;
@@ -293,7 +294,7 @@ class _Header extends StatelessWidget {
         Text(
           'Verify your\nphone number',
           style: TextStyle(
-            fontFamily: 'Mukta',
+            fontFamily: AppFonts.body,
             fontSize: (w * 0.072).clamp(24.0, 34.0),
             fontWeight: FontWeight.w700,
             color: AppColors.textPrimary,
@@ -315,7 +316,7 @@ class _Header extends StatelessWidget {
             ],
           ),
           style: TextStyle(
-            fontFamily: 'Mukta',
+            fontFamily: AppFonts.body,
             fontSize: (w * 0.038).clamp(13.0, 17.0),
             color: AppColors.textSecondary,
             height: 1.5,
@@ -353,7 +354,7 @@ class _ErrorBanner extends StatelessWidget {
               message,
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontFamily: 'Mukta',
+                fontFamily: AppFonts.body,
                 fontSize: fontSize,
                 color: AppColors.error,
               ),
@@ -383,7 +384,7 @@ class _ResendRow extends StatelessWidget {
     final w = MediaQuery.sizeOf(context).width;
     final fontSize = (w * 0.036).clamp(12.0, 16.0);
     final promptStyle = TextStyle(
-      fontFamily: 'Mukta',
+      fontFamily: AppFonts.body,
       fontSize: fontSize,
       color: AppColors.textSecondary,
     );

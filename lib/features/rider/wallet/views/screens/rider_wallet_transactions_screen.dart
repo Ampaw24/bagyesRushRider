@@ -1,14 +1,15 @@
+import 'package:gopady_rider/constant/app_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hugeicons/hugeicons.dart';
 
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/core/widgets/animated_list_item.dart';
-import 'package:delivery_boy/core/widgets/shimmer_list_placeholder.dart';
-import 'package:delivery_boy/features/rider/wallet/models/rider_me_wallet_model.dart';
-import 'package:delivery_boy/features/rider/wallet/providers/rider_me_wallet_providers.dart';
-import 'package:delivery_boy/features/rider/wallet/providers/rider_me_wallet_transactions_providers.dart';
-import 'package:delivery_boy/features/rider/wallet/views/widgets/rider_wallet_transaction_tile.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/core/widgets/animated_list_item.dart';
+import 'package:gopady_rider/core/widgets/shimmer_list_placeholder.dart';
+import 'package:gopady_rider/features/rider/wallet/models/rider_me_wallet_model.dart';
+import 'package:gopady_rider/features/rider/wallet/providers/rider_me_wallet_providers.dart';
+import 'package:gopady_rider/features/rider/wallet/providers/rider_me_wallet_transactions_providers.dart';
+import 'package:gopady_rider/features/rider/wallet/views/widgets/rider_wallet_transaction_tile.dart';
 
 enum WalletTxPeriod { all, today, thisWeek, thisMonth }
 
@@ -164,7 +165,7 @@ class _PeriodFilter extends StatelessWidget {
             child: Text(
               label,
               style: TextStyle(
-                fontFamily: 'Mukta',
+                fontFamily: AppFonts.body,
                 fontSize: w * 0.031,
                 fontWeight: FontWeight.w600,
                 color: selected ? Colors.white : AppColors.textSecondary,

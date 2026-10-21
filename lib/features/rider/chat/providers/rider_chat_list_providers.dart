@@ -1,8 +1,8 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:delivery_boy/core/di/service_locator.dart';
-import 'package:delivery_boy/features/rider/chat/models/rider_conversation_model.dart';
-import 'package:delivery_boy/features/rider/chat/repositories/rider_chat_repository.dart';
+import 'package:gopady_rider/core/di/service_locator.dart';
+import 'package:gopady_rider/features/rider/chat/models/rider_conversation_model.dart';
+import 'package:gopady_rider/features/rider/chat/repositories/rider_chat_repository.dart';
 
 enum RiderChatListStatus { initial, loading, loaded, error }
 

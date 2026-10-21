@@ -3,13 +3,13 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:delivery_boy/core/di/service_locator.dart';
-import 'package:delivery_boy/core/services/order_alert_service.dart';
-import 'package:delivery_boy/features/rider/orders/models/rider_me_order_model.dart';
-import 'package:delivery_boy/features/rider/orders/providers/incoming_offer_logic.dart';
-import 'package:delivery_boy/features/rider/orders/providers/rider_me_order_providers.dart';
-import 'package:delivery_boy/features/rider/orders/views/widgets/rider_incoming_offer_dialog.dart';
-import 'package:delivery_boy/features/rider/profile/providers/rider_me_profile_providers.dart';
+import 'package:gopady_rider/core/di/service_locator.dart';
+import 'package:gopady_rider/core/services/order_alert_service.dart';
+import 'package:gopady_rider/features/rider/orders/models/rider_me_order_model.dart';
+import 'package:gopady_rider/features/rider/orders/providers/incoming_offer_logic.dart';
+import 'package:gopady_rider/features/rider/orders/providers/rider_me_order_providers.dart';
+import 'package:gopady_rider/features/rider/orders/views/widgets/rider_incoming_offer_dialog.dart';
+import 'package:gopady_rider/features/rider/profile/providers/rider_me_profile_providers.dart';
 
 /// Watches the offers list and, when a new offer arrives while the rider is
 /// online and the app is open, rings and raises [RiderIncomingOfferDialog].

@@ -1,9 +1,9 @@
 import 'dart:async';
-import 'package:delivery_boy/core/di/service_locator.dart';
-import 'package:delivery_boy/core/services/rider_app_bootstrap.dart';
-import 'package:delivery_boy/core/services/rider_session_teardown.dart';
-import 'package:delivery_boy/core/utils/app_logger.dart';
-import 'package:delivery_boy/main_wrapper.dart';
+import 'package:gopady_rider/core/di/service_locator.dart';
+import 'package:gopady_rider/core/services/rider_app_bootstrap.dart';
+import 'package:gopady_rider/core/services/rider_session_teardown.dart';
+import 'package:gopady_rider/core/utils/app_logger.dart';
+import 'package:gopady_rider/main_wrapper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -30,7 +30,7 @@ void main() {
     runApp(
       UncontrolledProviderScope(
         container: container,
-        child: const BagyesRushApp(),
+        child: const GoPadyRiderApp(),
       ), 
     );
 

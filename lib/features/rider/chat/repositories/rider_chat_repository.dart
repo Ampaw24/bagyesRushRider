@@ -1,8 +1,8 @@
 import 'package:dartz/dartz.dart';
-import 'package:delivery_boy/core/errors/failures.dart';
-import 'package:delivery_boy/features/rider/chat/models/rider_chat_message_model.dart';
-import 'package:delivery_boy/features/rider/chat/models/rider_conversation_model.dart';
-import 'package:delivery_boy/features/rider/chat/models/rider_messages_page_model.dart';
+import 'package:gopady_rider/core/errors/failures.dart';
+import 'package:gopady_rider/features/rider/chat/models/rider_chat_message_model.dart';
+import 'package:gopady_rider/features/rider/chat/models/rider_conversation_model.dart';
+import 'package:gopady_rider/features/rider/chat/models/rider_messages_page_model.dart';
 
 abstract class RiderChatRepository {
   Future<Either<Failure, List<RiderConversationModel>>> getConversations();

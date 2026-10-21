@@ -1,3 +1,4 @@
+import 'package:gopady_rider/constant/app_tokens.dart';
 import 'dart:io';
 import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
@@ -5,16 +6,16 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/core/di/service_locator.dart';
-import 'package:delivery_boy/core/services/user_session_manager.dart';
-import 'package:delivery_boy/core/widgets/app_gradient_button.dart';
-import 'package:delivery_boy/core/widgets/custom_dialogs.dart';
-import 'package:delivery_boy/features/rider/auth/views/widgets/phone_change_flow_sheet.dart';
-import 'package:delivery_boy/features/rider/profile/providers/rider_avatar_providers.dart';
-import 'package:delivery_boy/features/rider/profile/providers/rider_me_profile_providers.dart';
-import 'package:delivery_boy/features/rider/shared/rider_me_action_status.dart';
-import 'package:delivery_boy/features/rider/shared_widgets/rider_avatar.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/core/di/service_locator.dart';
+import 'package:gopady_rider/core/services/user_session_manager.dart';
+import 'package:gopady_rider/core/widgets/app_gradient_button.dart';
+import 'package:gopady_rider/core/widgets/custom_dialogs.dart';
+import 'package:gopady_rider/features/rider/auth/views/widgets/phone_change_flow_sheet.dart';
+import 'package:gopady_rider/features/rider/profile/providers/rider_avatar_providers.dart';
+import 'package:gopady_rider/features/rider/profile/providers/rider_me_profile_providers.dart';
+import 'package:gopady_rider/features/rider/shared/rider_me_action_status.dart';
+import 'package:gopady_rider/features/rider/shared_widgets/rider_avatar.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 /// Edit Profile — personal info + vehicle plate, restyled after the
@@ -266,7 +267,7 @@ class _RiderProfileEditScreenState
                         child: Text(
                           'Save',
                           style: TextStyle(
-                            fontFamily: 'Mukta',
+                            fontFamily: AppFonts.body,
                             fontWeight: FontWeight.w700,
                             fontSize: (w * 0.038).clamp(13.0, 16.0),
                           ),
@@ -405,7 +406,7 @@ class _RiderProfileEditScreenState
             Text(
               'Update Profile Photo',
               style: TextStyle(
-                fontFamily: 'Mukta',
+                fontFamily: AppFonts.body,
                 fontSize: (w * 0.043).clamp(14.0, 18.0),
                 fontWeight: FontWeight.w700,
                 color: AppColors.textPrimary,
@@ -579,7 +580,7 @@ class _ProfileEditHero extends StatelessWidget {
             Text(
               'Tap to change photo',
               style: TextStyle(
-                fontFamily: 'Mukta',
+                fontFamily: AppFonts.body,
                 color: Colors.white.withValues(alpha: 0.8),
                 fontSize: (w * 0.032).clamp(11.0, 14.0),
               ),
@@ -603,7 +604,7 @@ class _SectionLabel extends StatelessWidget {
     return Text(
       label.toUpperCase(),
       style: TextStyle(
-        fontFamily: 'Mukta',
+        fontFamily: AppFonts.body,
         fontSize: (w * 0.03).clamp(10.0, 13.0),
         fontWeight: FontWeight.w800,
         color: AppColors.textHint,
@@ -711,7 +712,7 @@ class _ProfileFieldCardState extends State<_ProfileFieldCard> {
                 Text(
                   widget.label,
                   style: TextStyle(
-                    fontFamily: 'Mukta',
+                    fontFamily: AppFonts.body,
                     fontSize: (w * 0.028).clamp(10.0, 12.0),
                     fontWeight: FontWeight.w700,
                     color: _focused ? AppColors.primary : AppColors.textHint,
@@ -724,7 +725,7 @@ class _ProfileFieldCardState extends State<_ProfileFieldCard> {
                   focusNode: _focusNode,
                   textCapitalization: widget.textCapitalization,
                   style: TextStyle(
-                    fontFamily: 'Mukta',
+                    fontFamily: AppFonts.body,
                     fontSize: (w * 0.04).clamp(14.0, 17.0),
                     fontWeight: FontWeight.w600,
                     color: AppColors.textPrimary,
@@ -732,7 +733,7 @@ class _ProfileFieldCardState extends State<_ProfileFieldCard> {
                   decoration: InputDecoration(
                     hintText: widget.hint,
                     hintStyle: TextStyle(
-                      fontFamily: 'Mukta',
+                      fontFamily: AppFonts.body,
                       color: AppColors.textHint,
                       fontSize: (w * 0.036).clamp(12.0, 15.0),
                     ),
@@ -806,7 +807,7 @@ class _DeliveryRadiusCard extends StatelessWidget {
                 child: Text(
                   'MAX DELIVERY RADIUS',
                   style: TextStyle(
-                    fontFamily: 'Mukta',
+                    fontFamily: AppFonts.body,
                     fontSize: (w * 0.028).clamp(10.0, 12.0),
                     fontWeight: FontWeight.w700,
                     color: AppColors.textHint,
@@ -817,7 +818,7 @@ class _DeliveryRadiusCard extends StatelessWidget {
               Text(
                 '${radiusKm.round()} km',
                 style: TextStyle(
-                  fontFamily: 'Mukta',
+                  fontFamily: AppFonts.body,
                   fontSize: (w * 0.042).clamp(15.0, 18.0),
                   fontWeight: FontWeight.w800,
                   color: AppColors.primary,
@@ -911,7 +912,7 @@ class _OperatingAreasCard extends StatelessWidget {
                     Text(
                       'OPERATING AREAS',
                       style: TextStyle(
-                        fontFamily: 'Mukta',
+                        fontFamily: AppFonts.body,
                         fontSize: (w * 0.028).clamp(10.0, 12.0),
                         fontWeight: FontWeight.w700,
                         color: AppColors.textHint,
@@ -924,7 +925,7 @@ class _OperatingAreasCard extends StatelessWidget {
                           ? 'Maximum of 10 zones reached'
                           : 'Zones you\'re willing to deliver in',
                       style: TextStyle(
-                        fontFamily: 'Mukta',
+                        fontFamily: AppFonts.body,
                         fontSize: (w * 0.032).clamp(11.0, 13.0),
                         color: AppColors.textSecondary,
                       ),
@@ -956,7 +957,7 @@ class _OperatingAreasCard extends StatelessWidget {
                     controller: controller,
                     textCapitalization: TextCapitalization.words,
                     style: TextStyle(
-                      fontFamily: 'Mukta',
+                      fontFamily: AppFonts.body,
                       fontSize: (w * 0.038).clamp(13.0, 16.0),
                       color: AppColors.textPrimary,
                     ),
@@ -964,7 +965,7 @@ class _OperatingAreasCard extends StatelessWidget {
                       isDense: true,
                       hintText: 'e.g. East Legon',
                       hintStyle: TextStyle(
-                        fontFamily: 'Mukta',
+                        fontFamily: AppFonts.body,
                         color: AppColors.textHint,
                         fontSize: (w * 0.036).clamp(12.0, 15.0),
                       ),
@@ -1027,7 +1028,7 @@ class _RemovableChip extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
-              fontFamily: 'Mukta',
+              fontFamily: AppFonts.body,
               fontSize: (w * 0.033).clamp(12.0, 14.0),
               fontWeight: FontWeight.w600,
               color: AppColors.primary,
@@ -1121,7 +1122,7 @@ class _OperatingDaysCard extends StatelessWidget {
               Text(
                 'OPERATING DAYS',
                 style: TextStyle(
-                  fontFamily: 'Mukta',
+                  fontFamily: AppFonts.body,
                   fontSize: (w * 0.028).clamp(10.0, 12.0),
                   fontWeight: FontWeight.w700,
                   color: AppColors.textHint,
@@ -1161,7 +1162,7 @@ class _OperatingDaysCard extends StatelessWidget {
                   child: Text(
                     _dayLabels[day]!,
                     style: TextStyle(
-                      fontFamily: 'Mukta',
+                      fontFamily: AppFonts.body,
                       fontSize: (w * 0.033).clamp(12.0, 14.0),
                       fontWeight: FontWeight.w700,
                       color:
@@ -1220,7 +1221,7 @@ class _ShiftTimeCard extends StatelessWidget {
               Text(
                 label.toUpperCase(),
                 style: TextStyle(
-                  fontFamily: 'Mukta',
+                  fontFamily: AppFonts.body,
                   fontSize: (w * 0.026).clamp(9.0, 11.0),
                   fontWeight: FontWeight.w700,
                   color: AppColors.textHint,
@@ -1241,7 +1242,7 @@ class _ShiftTimeCard extends StatelessWidget {
                       time ?? 'Not set',
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontFamily: 'Mukta',
+                        fontFamily: AppFonts.body,
                         fontSize: (w * 0.038).clamp(13.0, 16.0),
                         fontWeight: FontWeight.w700,
                         color: time != null
@@ -1317,7 +1318,7 @@ class _ReadOnlyInfoCard extends StatelessWidget {
                 Text(
                   label,
                   style: TextStyle(
-                    fontFamily: 'Mukta',
+                    fontFamily: AppFonts.body,
                     fontSize: (w * 0.028).clamp(10.0, 12.0),
                     fontWeight: FontWeight.w700,
                     color: AppColors.textHint,
@@ -1328,7 +1329,7 @@ class _ReadOnlyInfoCard extends StatelessWidget {
                 Text(
                   value,
                   style: TextStyle(
-                    fontFamily: 'Mukta',
+                    fontFamily: AppFonts.body,
                     fontSize: (w * 0.04).clamp(14.0, 17.0),
                     fontWeight: FontWeight.w600,
                     color: AppColors.textPrimary,
@@ -1351,7 +1352,7 @@ class _ReadOnlyInfoCard extends StatelessWidget {
             child: Text(
               actionLabel,
               style: TextStyle(
-                fontFamily: 'Mukta',
+                fontFamily: AppFonts.body,
                 fontWeight: FontWeight.w700,
                 fontSize: (w * 0.033).clamp(12.0, 14.0),
               ),
@@ -1407,7 +1408,7 @@ class _PhotoSourceOption extends StatelessWidget {
               Text(
                 label,
                 style: TextStyle(
-                  fontFamily: 'Mukta',
+                  fontFamily: AppFonts.body,
                   fontSize: (w * 0.038).clamp(13.0, 16.0),
                   fontWeight: FontWeight.w600,
                   color: AppColors.textPrimary,

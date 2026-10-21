@@ -1,6 +1,6 @@
 import 'package:flutter/services.dart';
 
-import 'package:delivery_boy/core/utils/app_logger.dart';
+import 'package:gopady_rider/core/utils/app_logger.dart';
 
 /// Thin wrapper over the Android-only platform channel that posts a real
 /// Bubbles-API (API 30+) notification — see `NavigationBubbleHandler.kt`.
@@ -13,7 +13,7 @@ import 'package:delivery_boy/core/utils/app_logger.dart';
 class NavigationBubbleChannel {
   NavigationBubbleChannel._();
 
-  static const _channel = MethodChannel('bagyesrush/navigation_bubble');
+  static const _channel = MethodChannel('gopady/navigation_bubble');
 
   /// Returns true only once the native side actually posted a notification
   /// (bubble-capable or, on an older API, none — see the Kotlin side for

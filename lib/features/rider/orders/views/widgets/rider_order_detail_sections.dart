@@ -1,9 +1,10 @@
+import 'package:gopady_rider/constant/app_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/core/utils/initials.dart';
-import 'package:delivery_boy/core/utils/phone_mask.dart';
-import 'package:delivery_boy/features/rider/orders/views/widgets/rider_order_card_shell.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/core/utils/initials.dart';
+import 'package:gopady_rider/core/utils/phone_mask.dart';
+import 'package:gopady_rider/features/rider/orders/views/widgets/rider_order_card_shell.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 /// Presentational building blocks for `RiderMeOrderDetailSheet`. They hold no
@@ -35,7 +36,7 @@ class OrderSheetSummary extends StatelessWidget {
   Widget build(BuildContext context) {
     final w = MediaQuery.sizeOf(context).width;
     final caption = TextStyle(
-      fontFamily: 'Roboto',
+      fontFamily: AppFonts.body,
       fontSize: _font(w, 0.029, 11, 13),
       color: AppColors.textSecondary,
     );
@@ -57,7 +58,7 @@ class OrderSheetSummary extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  fontFamily: 'Roboto',
+                  fontFamily: AppFonts.body,
                   fontSize: _font(w, 0.05, 17, 22),
                   fontWeight: FontWeight.w700,
                   color: AppColors.textPrimary,
@@ -76,7 +77,7 @@ class OrderSheetSummary extends StatelessWidget {
               Text(
                 amount,
                 style: TextStyle(
-                  fontFamily: 'Roboto',
+                  fontFamily: AppFonts.body,
                   fontSize: _font(w, 0.045, 16, 20),
                   fontWeight: FontWeight.w700,
                   color: AppColors.textPrimary,
@@ -119,7 +120,7 @@ class OrderStatusPill extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
-              fontFamily: 'Roboto',
+              fontFamily: AppFonts.body,
               fontSize: _font(w, 0.03, 11, 13),
               fontWeight: FontWeight.w600,
               color: color,
@@ -150,7 +151,7 @@ class OrderSectionLabel extends StatelessWidget {
             child: Text(
               title,
               style: TextStyle(
-                fontFamily: 'Roboto',
+                fontFamily: AppFonts.body,
                 fontSize: _font(w, 0.034, 13, 15),
                 fontWeight: FontWeight.w600,
                 color: AppColors.textSecondary,
@@ -189,7 +190,7 @@ class OrderSectionAction extends StatelessWidget {
         visualDensity: VisualDensity.compact,
         padding: EdgeInsets.symmetric(horizontal: w * 0.02),
         textStyle: TextStyle(
-          fontFamily: 'Roboto',
+          fontFamily: AppFonts.body,
           fontSize: _font(w, 0.033, 12, 14),
           fontWeight: FontWeight.w600,
         ),
@@ -334,7 +335,7 @@ class _RouteStop extends StatelessWidget {
                   Text(
                     label,
                     style: TextStyle(
-                      fontFamily: 'Roboto',
+                      fontFamily: AppFonts.body,
                       fontSize: _font(w, 0.03, 11, 13),
                       fontWeight: FontWeight.w500,
                       color: AppColors.textSecondary,
@@ -346,7 +347,7 @@ class _RouteStop extends StatelessWidget {
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      fontFamily: 'Roboto',
+                      fontFamily: AppFonts.body,
                       fontSize: _font(w, 0.037, 14, 16),
                       fontWeight: FontWeight.w600,
                       color: AppColors.textPrimary,
@@ -401,7 +402,7 @@ class OrderCustomerTile extends StatelessWidget {
     final hasPhone = phone?.trim().isNotEmpty ?? false;
     final hidePhone = hasPhone && !canContact;
     final phoneStyle = TextStyle(
-      fontFamily: 'Roboto',
+      fontFamily: AppFonts.body,
       fontSize: _font(w, 0.033, 12, 14),
       color: AppColors.textSecondary,
     );
@@ -415,7 +416,7 @@ class OrderCustomerTile extends StatelessWidget {
             child: Text(
               initialsOf(name),
               style: TextStyle(
-                fontFamily: 'Roboto',
+                fontFamily: AppFonts.body,
                 fontSize: _font(w, 0.036, 13, 16),
                 fontWeight: FontWeight.w700,
                 color: AppColors.textPrimary,
@@ -432,7 +433,7 @@ class OrderCustomerTile extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontFamily: 'Roboto',
+                    fontFamily: AppFonts.body,
                     fontSize: _font(w, 0.038, 14, 17),
                     fontWeight: FontWeight.w600,
                     color: AppColors.textPrimary,
@@ -541,7 +542,7 @@ class OrderOnHoldNotice extends StatelessWidget {
                     Text(
                       'Waiting for support',
                       style: TextStyle(
-                        fontFamily: 'Roboto',
+                        fontFamily: AppFonts.body,
                         fontSize: _font(w, 0.037, 14, 16),
                         fontWeight: FontWeight.w700,
                         color: AppColors.textPrimary,
@@ -551,7 +552,7 @@ class OrderOnHoldNotice extends StatelessWidget {
                     Text(
                       message,
                       style: TextStyle(
-                        fontFamily: 'Roboto',
+                        fontFamily: AppFonts.body,
                         fontSize: _font(w, 0.032, 12, 14),
                         height: 1.35,
                         color: AppColors.textSecondary,
@@ -665,7 +666,7 @@ class _IssueRow extends StatelessWidget {
                     Text(
                       action.title,
                       style: TextStyle(
-                        fontFamily: 'Roboto',
+                        fontFamily: AppFonts.body,
                         fontSize: _font(w, 0.036, 14, 16),
                         fontWeight: FontWeight.w600,
                         color: tint,
@@ -675,7 +676,7 @@ class _IssueRow extends StatelessWidget {
                     Text(
                       action.subtitle,
                       style: TextStyle(
-                        fontFamily: 'Roboto',
+                        fontFamily: AppFonts.body,
                         fontSize: _font(w, 0.03, 11, 13),
                         color: AppColors.textSecondary,
                       ),

@@ -1,6 +1,7 @@
+import 'package:gopady_rider/constant/app_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:delivery_boy/constant/app_theme.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
 
 /// Surface shared by the order and offer cards: flat white, hairline border,
 /// moderate radius, whole card tappable with a slight press-in scale.
@@ -103,7 +104,7 @@ class RiderOrderChip extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
-              fontFamily: 'Roboto',
+              fontFamily: AppFonts.body,
               fontSize: w * 0.029,
               fontWeight: FontWeight.w600,
               color: color,
@@ -150,7 +151,7 @@ class RiderOrderCardButton extends StatelessWidget {
     final padding = EdgeInsets.symmetric(vertical: w * 0.03);
     final fontSize = (w * 0.036).clamp(13.0, 16.0);
     final textStyle = TextStyle(
-      fontFamily: 'Roboto',
+      fontFamily: AppFonts.body,
       fontSize: fontSize,
       fontWeight: FontWeight.w600,
     );

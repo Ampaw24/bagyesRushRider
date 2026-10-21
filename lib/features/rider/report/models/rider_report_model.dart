@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
-import 'package:delivery_boy/constant/app_theme.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
 
 /// What/who a rider is reporting. Unlike the customer/vendor app, a rider
 /// never reports another rider — the eligible categories here are the ones

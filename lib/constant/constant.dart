@@ -1,5 +1,6 @@
+import 'package:gopady_rider/constant/app_tokens.dart';
 import 'package:flutter/material.dart';
-import 'package:delivery_boy/constant/app_theme.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
 
 // ── Colors (mapped to the canonical AppColors palette) ───────────────────────
 Color scaffoldBgColor = AppColors.scaffold;
@@ -15,95 +16,95 @@ double fixPadding = 10.0;
 SizedBox heightSpace = const SizedBox(height: 10.0);
 SizedBox widthSpace = const SizedBox(width: 10.0);
 
-// ── Text styles (Mukta — matches AppTheme.light fontFamily) ──────────────────
+// ── Text styles (Inter — matches AppTheme.light fontFamily) ──────────────────
 TextStyle bottomBarItemStyle = TextStyle(
   color: greyColor,
   fontSize: 12.0,
-  fontFamily: 'Mukta',
+  fontFamily: AppFonts.body,
   fontWeight: FontWeight.w500,
 );
 
 TextStyle bigHeadingStyle = TextStyle(
   fontSize: 22.0,
   color: blackColor,
-  fontFamily: 'Mukta',
+  fontFamily: AppFonts.body,
   fontWeight: FontWeight.w600,
 );
 
 TextStyle bigWhiteHeadingStyle = TextStyle(
   fontSize: 24.0,
   color: whiteColor,
-  fontFamily: 'Mukta',
+  fontFamily: AppFonts.body,
   fontWeight: FontWeight.w600,
 );
 
 TextStyle headingStyle = TextStyle(
   fontSize: 18.0,
   color: blackColor,
-  fontFamily: 'Mukta',
+  fontFamily: AppFonts.body,
   fontWeight: FontWeight.w500,
 );
 
 TextStyle greyHeadingStyle = TextStyle(
   fontSize: 16.0,
   color: greyColor,
-  fontFamily: 'Mukta',
+  fontFamily: AppFonts.body,
   fontWeight: FontWeight.w500,
 );
 
 TextStyle blueTextStyle = const TextStyle(
   fontSize: 18.0,
   color: AppColors.info,
-  fontFamily: 'Mukta',
+  fontFamily: AppFonts.body,
   fontWeight: FontWeight.w400,
 );
 
 TextStyle whiteHeadingStyle = TextStyle(
   fontSize: 22.0,
   color: whiteColor,
-  fontFamily: 'Mukta',
+  fontFamily: AppFonts.body,
   fontWeight: FontWeight.w500,
 );
 
 TextStyle whiteSubHeadingStyle = TextStyle(
   fontSize: 14.0,
   color: whiteColor,
-  fontFamily: 'Mukta',
+  fontFamily: AppFonts.body,
   fontWeight: FontWeight.normal,
 );
 
 TextStyle wbuttonWhiteTextStyle = TextStyle(
   fontSize: 16.0,
   color: whiteColor,
-  fontFamily: 'Mukta',
+  fontFamily: AppFonts.body,
   fontWeight: FontWeight.w500,
 );
 
 TextStyle buttonBlackTextStyle = TextStyle(
   fontSize: 16.0,
   color: blackColor,
-  fontFamily: 'Mukta',
+  fontFamily: AppFonts.body,
   fontWeight: FontWeight.w500,
 );
 
 TextStyle moreStyle = TextStyle(
   fontSize: 14.0,
   color: primaryColor,
-  fontFamily: 'Mukta',
+  fontFamily: AppFonts.body,
   fontWeight: FontWeight.w500,
 );
 
 TextStyle priceStyle = TextStyle(
   fontSize: 18.0,
   color: primaryColor,
-  fontFamily: 'Mukta',
+  fontFamily: AppFonts.body,
   fontWeight: FontWeight.bold,
 );
 
 TextStyle lightGreyStyle = TextStyle(
   fontSize: 15.0,
   color: AppColors.textHint,
-  fontFamily: 'Mukta',
+  fontFamily: AppFonts.body,
   fontWeight: FontWeight.w500,
 );
 
@@ -111,14 +112,14 @@ TextStyle lightGreyStyle = TextStyle(
 TextStyle listItemTitleStyle = TextStyle(
   fontSize: 15.0,
   color: blackColor,
-  fontFamily: 'Mukta',
+  fontFamily: AppFonts.body,
   fontWeight: FontWeight.w500,
 );
 
 TextStyle listItemSubTitleStyle = TextStyle(
   fontSize: 14.0,
   color: greyColor,
-  fontFamily: 'Mukta',
+  fontFamily: AppFonts.body,
   fontWeight: FontWeight.normal,
 );
 
@@ -126,14 +127,14 @@ TextStyle listItemSubTitleStyle = TextStyle(
 TextStyle appbarHeadingStyle = const TextStyle(
   color: AppColors.primaryDark,
   fontSize: 14.0,
-  fontFamily: 'Mukta',
+  fontFamily: AppFonts.body,
   fontWeight: FontWeight.w500,
 );
 
 TextStyle appbarSubHeadingStyle = TextStyle(
   color: whiteColor,
   fontSize: 13.0,
-  fontFamily: 'Mukta',
+  fontFamily: AppFonts.body,
   fontWeight: FontWeight.w500,
 );
 
@@ -141,6 +142,6 @@ TextStyle appbarSubHeadingStyle = TextStyle(
 TextStyle searchTextStyle = const TextStyle(
   color: AppColors.textHint,
   fontSize: 16.0,
-  fontFamily: 'Mukta',
+  fontFamily: AppFonts.body,
   fontWeight: FontWeight.w500,
 );

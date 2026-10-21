@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.15)
-project(delivery_boy LANGUAGES CXX)
+project(gopady_rider LANGUAGES CXX)
 
-set(BINARY_NAME "delivery_boy")
+set(BINARY_NAME "gopady_rider")
 
 cmake_policy(SET CMP0063 NEW)
 

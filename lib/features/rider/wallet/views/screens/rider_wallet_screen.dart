@@ -1,3 +1,4 @@
+import 'package:gopady_rider/constant/app_tokens.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -5,16 +6,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hugeicons/hugeicons.dart';
 
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/core/router/app_routes.dart';
-import 'package:delivery_boy/core/widgets/animated_list_item.dart';
-import 'package:delivery_boy/core/widgets/shimmer_list_placeholder.dart';
-import 'package:delivery_boy/features/rider/profile/providers/rider_me_profile_providers.dart';
-import 'package:delivery_boy/features/rider/wallet/models/rider_me_wallet_model.dart';
-import 'package:delivery_boy/features/rider/wallet/providers/rider_me_wallet_providers.dart';
-import 'package:delivery_boy/features/rider/wallet/providers/rider_me_wallet_transactions_providers.dart';
-import 'package:delivery_boy/features/rider/wallet/views/widgets/rider_wallet_balance_card.dart';
-import 'package:delivery_boy/features/rider/wallet/views/widgets/rider_wallet_transaction_tile.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/core/router/app_routes.dart';
+import 'package:gopady_rider/core/widgets/animated_list_item.dart';
+import 'package:gopady_rider/core/widgets/shimmer_list_placeholder.dart';
+import 'package:gopady_rider/features/rider/profile/providers/rider_me_profile_providers.dart';
+import 'package:gopady_rider/features/rider/wallet/models/rider_me_wallet_model.dart';
+import 'package:gopady_rider/features/rider/wallet/providers/rider_me_wallet_providers.dart';
+import 'package:gopady_rider/features/rider/wallet/providers/rider_me_wallet_transactions_providers.dart';
+import 'package:gopady_rider/features/rider/wallet/views/widgets/rider_wallet_balance_card.dart';
+import 'package:gopady_rider/features/rider/wallet/views/widgets/rider_wallet_transaction_tile.dart';
 
 enum WalletPeriod { all, today, thisWeek, thisMonth }
 
@@ -160,7 +161,7 @@ class _RiderWalletScreenState extends ConsumerState<RiderWalletScreen> {
                   TextSpan(
                     text: 'Welcome back, ',
                     style: TextStyle(
-                      fontFamily: 'Mukta',
+                      fontFamily: AppFonts.body,
                       fontSize: w * 0.038,
                       fontWeight: FontWeight.w500,
                       color: AppColors.textSecondary,
@@ -169,7 +170,7 @@ class _RiderWalletScreenState extends ConsumerState<RiderWalletScreen> {
                       TextSpan(
                         text: riderName,
                         style: TextStyle(
-                          fontFamily: 'Mukta',
+                          fontFamily: AppFonts.body,
                           fontWeight: FontWeight.w700,
                           color: AppColors.textPrimary,
                         ),
@@ -292,7 +293,7 @@ class _RiderWalletScreenState extends ConsumerState<RiderWalletScreen> {
                     Text(
                       'Recent Transactions',
                       style: TextStyle(
-                        fontFamily: 'Mukta',
+                        fontFamily: AppFonts.body,
                         fontSize: w * 0.044,
                         fontWeight: FontWeight.w700,
                         color: AppColors.textPrimary,
@@ -303,7 +304,7 @@ class _RiderWalletScreenState extends ConsumerState<RiderWalletScreen> {
                       child: Text(
                         'View all',
                         style: TextStyle(
-                          fontFamily: 'Mukta',
+                          fontFamily: AppFonts.body,
                           fontSize: w * 0.033,
                           fontWeight: FontWeight.w600,
                           color: AppColors.primary,
@@ -408,7 +409,7 @@ class _WalletHeaderDelegate extends SliverPersistentHeaderDelegate {
       child: Text(
         'Wallet',
         style: TextStyle(
-          fontFamily: 'Mukta',
+          fontFamily: AppFonts.body,
           fontSize: w * 0.05,
           fontWeight: FontWeight.w800,
           color: AppColors.textPrimary,
@@ -458,7 +459,7 @@ class _StatPill extends StatelessWidget {
             Text(
               label,
               style: TextStyle(
-                fontFamily: 'Mukta',
+                fontFamily: AppFonts.body,
                 fontSize: w * 0.028,
                 color: AppColors.textSecondary,
                 fontWeight: FontWeight.w500,
@@ -470,7 +471,7 @@ class _StatPill extends StatelessWidget {
                   ? '$currency ••••'
                   : '$currency ${amount.toStringAsFixed(0)}',
               style: TextStyle(
-                fontFamily: 'Mukta',
+                fontFamily: AppFonts.body,
                 fontSize: w * 0.038,
                 fontWeight: FontWeight.w700,
                 color: AppColors.textPrimary,
@@ -517,7 +518,7 @@ class _WeeklyCard extends StatelessWidget {
               Text(
                 'This Week',
                 style: TextStyle(
-                  fontFamily: 'Mukta',
+                  fontFamily: AppFonts.body,
                   fontSize: w * 0.04,
                   fontWeight: FontWeight.w700,
                   color: AppColors.textPrimary,
@@ -526,7 +527,7 @@ class _WeeklyCard extends StatelessWidget {
               Text(
                 '$currency ${weekTotal.toStringAsFixed(2)}',
                 style: TextStyle(
-                  fontFamily: 'Mukta',
+                  fontFamily: AppFonts.body,
                   fontSize: w * 0.038,
                   fontWeight: FontWeight.w700,
                   color: AppColors.primary,
@@ -590,7 +591,7 @@ class _SimpleBarChart extends StatelessWidget {
                     Text(
                       _weekLabels[i],
                       style: TextStyle(
-                        fontFamily: 'Mukta',
+                        fontFamily: AppFonts.body,
                         fontSize: w * 0.028,
                         color:
                             isMax ? AppColors.primary : AppColors.textSecondary,
@@ -642,7 +643,7 @@ class _WalletActionButton extends StatelessWidget {
             Text(
               label,
               style: TextStyle(
-                fontFamily: 'Mukta',
+                fontFamily: AppFonts.body,
                 fontSize: w * 0.033,
                 fontWeight: FontWeight.w600,
                 color: AppColors.textPrimary,
@@ -682,7 +683,7 @@ class _InlineErrorBanner extends StatelessWidget {
             child: Text(
               message,
               style: TextStyle(
-                fontFamily: 'Mukta',
+                fontFamily: AppFonts.body,
                 fontSize: w * 0.031,
                 color: AppColors.textPrimary,
               ),
@@ -693,7 +694,7 @@ class _InlineErrorBanner extends StatelessWidget {
             child: Text(
               'Retry',
               style: TextStyle(
-                fontFamily: 'Mukta',
+                fontFamily: AppFonts.body,
                 fontSize: w * 0.031,
                 fontWeight: FontWeight.w700,
                 color: AppColors.error,
@@ -730,7 +731,7 @@ class _RecentEmptyState extends StatelessWidget {
             Text(
               'No transactions yet',
               style: TextStyle(
-                fontFamily: 'Mukta',
+                fontFamily: AppFonts.body,
                 fontSize: w * 0.035,
                 fontWeight: FontWeight.w600,
                 color: AppColors.textSecondary,

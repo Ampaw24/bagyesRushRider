@@ -3,17 +3,17 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hugeicons/hugeicons.dart';
 
-import 'package:delivery_boy/core/errors/failures.dart';
-import 'package:delivery_boy/features/rider/kyc/models/kyc_section.dart';
-import 'package:delivery_boy/features/rider/kyc/providers/kyc_providers.dart';
-import 'package:delivery_boy/features/rider/kyc/views/widgets/kyc_section_form_mixin.dart';
-import 'package:delivery_boy/features/rider/kyc/views/widgets/kyc_section_layout.dart';
-import 'package:delivery_boy/features/rider/profile/models/payout_provider_model.dart';
-import 'package:delivery_boy/features/rider/profile/models/rider_me_profile_model.dart';
-import 'package:delivery_boy/features/rider/shared_widgets/app_password_field.dart';
-import 'package:delivery_boy/features/rider/shared_widgets/app_phone_field.dart';
-import 'package:delivery_boy/features/rider/shared_widgets/app_select_field.dart';
-import 'package:delivery_boy/features/rider/shared_widgets/app_text_field.dart';
+import 'package:gopady_rider/core/errors/failures.dart';
+import 'package:gopady_rider/features/rider/kyc/models/kyc_section.dart';
+import 'package:gopady_rider/features/rider/kyc/providers/kyc_providers.dart';
+import 'package:gopady_rider/features/rider/kyc/views/widgets/kyc_section_form_mixin.dart';
+import 'package:gopady_rider/features/rider/kyc/views/widgets/kyc_section_layout.dart';
+import 'package:gopady_rider/features/rider/profile/models/payout_provider_model.dart';
+import 'package:gopady_rider/features/rider/profile/models/rider_me_profile_model.dart';
+import 'package:gopady_rider/features/rider/shared_widgets/app_password_field.dart';
+import 'package:gopady_rider/features/rider/shared_widgets/app_phone_field.dart';
+import 'package:gopady_rider/features/rider/shared_widgets/app_select_field.dart';
+import 'package:gopady_rider/features/rider/shared_widgets/app_text_field.dart';
 
 enum _Method { mobileMoney, bank }
 

@@ -1,6 +1,6 @@
 import 'package:flutter/services.dart';
 
-import 'package:delivery_boy/core/utils/app_logger.dart';
+import 'package:gopady_rider/core/utils/app_logger.dart';
 
 /// Android-only: sends the app to the background the way the Home button
 /// does, rather than finishing it.
@@ -11,7 +11,7 @@ import 'package:delivery_boy/core/utils/app_logger.dart';
 class AppBackgroundChannel {
   AppBackgroundChannel._();
 
-  static const _channel = MethodChannel('bagyesrush/app');
+  static const _channel = MethodChannel('gopady/app');
 
   /// Returns false where unsupported (iOS has no exit gesture to begin with).
   static Future<bool> moveToBackground() async {

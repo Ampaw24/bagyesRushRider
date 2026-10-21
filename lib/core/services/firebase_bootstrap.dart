@@ -1,7 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 
-import 'package:delivery_boy/core/utils/app_logger.dart';
-import 'package:delivery_boy/firebase_options.dart';
+import 'package:gopady_rider/core/utils/app_logger.dart';
+import 'package:gopady_rider/firebase_options.dart';
 
 /// Brings Firebase up once, and records whether it actually came up.
 ///

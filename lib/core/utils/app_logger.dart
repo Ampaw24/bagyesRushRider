@@ -5,7 +5,7 @@ import 'package:logger/logger.dart';
 ///
 /// Usage:
 /// ```dart
-/// import 'package:delivery_boy/core/utils/app_logger.dart';
+/// import 'package:gopady_rider/core/utils/app_logger.dart';
 ///
 /// appLogger.d('debug message');
 /// appLogger.i('info message');

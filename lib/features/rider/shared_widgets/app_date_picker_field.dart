@@ -1,6 +1,7 @@
+import 'package:gopady_rider/constant/app_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:delivery_boy/constant/app_theme.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 class AppDatePickerField extends StatefulWidget {
@@ -91,7 +92,7 @@ class _AppDatePickerFieldState extends State<AppDatePickerField> {
             return null;
           },
       style: const TextStyle(
-        fontFamily: 'Mukta',
+        fontFamily: AppFonts.body,
         fontSize: 15,
         fontWeight: FontWeight.w500,
         color: AppColors.textPrimary,
@@ -107,12 +108,12 @@ class _AppDatePickerFieldState extends State<AppDatePickerField> {
         suffixIcon: Icon(HugeIcons.strokeRoundedArrowDown01,
             size: 20, color: Colors.grey.shade400),
         labelStyle: TextStyle(
-          fontFamily: 'Mukta',
+          fontFamily: AppFonts.body,
           fontSize: 14,
           color: Colors.grey.shade500,
         ),
         hintStyle: TextStyle(
-          fontFamily: 'Mukta',
+          fontFamily: AppFonts.body,
           fontSize: 14,
           color: Colors.grey.shade400,
         ),

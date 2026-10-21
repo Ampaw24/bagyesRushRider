@@ -1,5 +1,6 @@
+import 'package:gopady_rider/constant/app_tokens.dart';
 import 'package:flutter/material.dart';
-import 'package:delivery_boy/constant/app_theme.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
 
 /// Shared empty state for the Active / New / History order lists. Still
 /// scrollable so pull-to-refresh works when there's nothing to show — the
@@ -50,7 +51,7 @@ class RiderOrdersEmptyState extends StatelessWidget {
                       title,
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        fontFamily: 'Roboto',
+                        fontFamily: AppFonts.body,
                         fontSize: w * 0.044,
                         fontWeight: FontWeight.w600,
                         color: AppColors.textPrimary,
@@ -61,7 +62,7 @@ class RiderOrdersEmptyState extends StatelessWidget {
                       message,
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        fontFamily: 'Roboto',
+                        fontFamily: AppFonts.body,
                         fontSize: w * 0.034,
                         height: 1.4,
                         color: AppColors.textSecondary,

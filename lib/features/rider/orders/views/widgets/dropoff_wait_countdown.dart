@@ -1,10 +1,11 @@
+import 'package:gopady_rider/constant/app_tokens.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/core/widgets/adaptive_animated_size.dart';
-import 'package:delivery_boy/features/rider/orders/models/rider_me_order_model.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/core/widgets/adaptive_animated_size.dart';
+import 'package:gopady_rider/features/rider/orders/models/rider_me_order_model.dart';
 
 /// `mm:ss`, rounded up so the clock never shows 00:00 while time remains.
 String formatWaitClock(Duration remaining) {
@@ -144,7 +145,7 @@ class DropoffWaitBanner extends StatelessWidget {
                     child: Text(
                       formatWaitClock(remaining),
                       style: TextStyle(
-                        fontFamily: 'Roboto',
+                        fontFamily: AppFonts.body,
                         fontSize: (w * 0.055).clamp(18.0, 26.0),
                         fontWeight: FontWeight.w700,
                         color: tint,
@@ -178,7 +179,7 @@ class DropoffWaitBanner extends StatelessWidget {
                 child: Text(
                   giveUpLabel,
                   style: const TextStyle(
-                    fontFamily: 'Roboto',
+                    fontFamily: AppFonts.body,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -211,7 +212,7 @@ class _WaitMessage extends StatelessWidget {
         Text(
           expired ? 'Wait time is over' : 'Waiting for customer',
           style: TextStyle(
-            fontFamily: 'Roboto',
+            fontFamily: AppFonts.body,
             fontSize: (w * 0.038).clamp(14.0, 17.0),
             fontWeight: FontWeight.w700,
             color: AppColors.textPrimary,
@@ -220,7 +221,7 @@ class _WaitMessage extends StatelessWidget {
         Text(
           subtitle,
           style: TextStyle(
-            fontFamily: 'Roboto',
+            fontFamily: AppFonts.body,
             fontSize: (w * 0.032).clamp(12.0, 14.0),
             color: AppColors.textSecondary,
           ),

@@ -1,18 +1,17 @@
-import 'package:delivery_boy/constant/asset_images.dart';
-import 'package:delivery_boy/constant/baseurl.dart';
-import 'package:delivery_boy/constant/colors.dart';
-import 'package:delivery_boy/core/di/service_locator.dart';
-import 'package:delivery_boy/core/router/app_routes.dart';
-import 'package:delivery_boy/core/services/fcm_service.dart';
-import 'package:delivery_boy/core/services/user_session_manager.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/constant/app_tokens.dart';
+import 'package:gopady_rider/constant/baseurl.dart';
+import 'package:gopady_rider/core/di/service_locator.dart';
+import 'package:gopady_rider/core/router/app_routes.dart';
+import 'package:gopady_rider/core/services/fcm_service.dart';
+import 'package:gopady_rider/core/services/user_session_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-// import 'package:package_info_plus/package_info_plus.dart';
+import 'package:gopady_rider/core/widgets/brand_pattern_background.dart';
+import 'package:gopady_rider/core/widgets/gopady_logo.dart';
+import 'package:gopady_rider/core/widgets/skyline_watermark.dart';
 
-import '../components/widget/decorative.widget.dart'
-    hide kDecorativeBackgroundColor;
-
-/// App entry splash — decorative motif background behind the logo card.
+/// App entry splash — GoPady lockup over the brand-green pattern and skyline.
 /// Rendered at [AppRoutes.splash] via `core/router/app_router.dart`.
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -24,8 +23,6 @@ class SplashScreen extends StatefulWidget {
 class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
   late final AnimationController _animationController;
-  late final Animation<double> _scaleAnimation;
-  late final Animation<double> _fadeAnimation;
 
   String? _versionLabel;
 
@@ -40,21 +37,8 @@ class _SplashScreenState extends State<SplashScreen>
   void _setupAnimations() {
     _animationController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1500),
-    );
-
-    _scaleAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.elasticOut),
-    );
-
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: const Interval(0.4, 1.0, curve: Curves.easeIn),
-      ),
-    );
-
-    _animationController.forward();
+      duration: AppMotion.intro,
+    )..forward();
   }
 
   Future<void> _loadVersion() async {
@@ -94,95 +78,101 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    // Standard, icon-like footprint — proportional across phones, tablets
-    // and landscape without ever dominating the screen.
-    final logoSize = (size.shortestSide * 0.22).clamp(80.0, 160.0);
-
     return Scaffold(
-      backgroundColor: kDecorativeBackgroundColor,
-      body: DecorativeBackground(
-        child: SafeArea(
-          child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: size.width * 0.08),
-            child: Column(
-              children: [
-                const Spacer(flex: 5),
-                ScaleTransition(
-                  scale: _scaleAnimation,
-                  child: FadeTransition(
-                    opacity: _fadeAnimation,
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(logoSize * 0.22),
-                      child: Image.asset(
-                        AssetImages.bagyesLogo,
-                        width: logoSize,
-                        height: logoSize,
-                        fit: BoxFit.cover,
+      backgroundColor: AppColors.primary,
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          // Everything scales off the shorter side so portrait, landscape and
+          // split-screen all keep the same proportions.
+          final unit = constraints.biggest.shortestSide;
+
+          return Stack(
+            children: [
+              Positioned.fill(
+                child: BrandReveal(
+                  animation: _animationController,
+                  end: 0.5,
+                  child: const BrandPatternBackground(),
+                ),
+              ),
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: BrandReveal(
+                  animation: _animationController,
+                  begin: 0.1,
+                  end: 0.65,
+                  slideFrom: const Offset(0, 0.25),
+                  child: const SkylineWatermark(color: AppColors.primaryDark),
+                ),
+              ),
+              SafeArea(
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      BrandReveal(
+                        animation: _animationController,
+                        begin: 0.2,
+                        end: 0.8,
+                        scaleFrom: 0.9,
+                        slideFrom: const Offset(0, 0.08),
+                        blurFrom: unit * 0.025,
+                        child: GoPadyLogo(
+                          width: unit * 0.72,
+                          variant: GoPadyLogoVariant.onDark,
+                        ),
                       ),
-                    ),
-                  ),
-                ),
-                SizedBox(height: size.height * 0.025),
-                FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: Container(
-                    width: size.width * 0.1,
-                    height: size.height * 0.0035,
-                    decoration: BoxDecoration(
-                      color: primaryColor.withValues(alpha: 0.55),
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
-                SizedBox(height: size.height * 0.018),
-                FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Text(
-                      'FAST · RELIABLE · QUALITY',
-                      textAlign: TextAlign.center,
-                      maxLines: 1,
-                      style: TextStyle(
-                        fontSize: size.width * 0.032,
-                        color: greyColor.withValues(alpha: 0.85),
-                        letterSpacing: size.width * 0.006,
-                        fontWeight: FontWeight.w600,
+                      SizedBox(height: unit * 0.04),
+                      BrandReveal(
+                        animation: _animationController,
+                        begin: 0.5,
+                        end: 0.9,
+                        child: Text(
+                          'RIDER',
+                          style: TextStyle(
+                            fontFamily: AppFonts.display,
+                            fontSize: unit * 0.045,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.accent,
+                            letterSpacing: unit * 0.02,
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                ),
-                const Spacer(flex: 6),
-                FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: SizedBox(
-                    width: size.width * 0.08,
-                    height: size.width * 0.08,
-                    child: CircularProgressIndicator(
-                      strokeWidth: size.width * 0.006,
-                      valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: EdgeInsets.symmetric(vertical: size.height * 0.02),
-                  child: FadeTransition(
-                    opacity: _fadeAnimation,
-                    child: Text(
-                      _versionLabel ?? '',
-                      style: TextStyle(
-                        fontSize: size.width * 0.03,
-                        color: greyColor.withValues(alpha: 0.6),
-                        letterSpacing: 0.5,
+                      SizedBox(height: unit * 0.08),
+                      BrandReveal(
+                        animation: _animationController,
+                        begin: 0.7,
+                        end: 1,
+                        child: SizedBox(
+                          width: unit * 0.3,
+                          height: unit * 0.008,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(unit * 0.004),
+                            child: const LinearProgressIndicator(
+                              backgroundColor: AppColors.primaryDark,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                AppColors.accent,
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
+                      SizedBox(height: unit * 0.04),
+                      Text(
+                        _versionLabel ?? '',
+                        style: TextStyle(
+                          fontSize: unit * 0.03,
+                          color: AppColors.onDarkMuted,
+                          letterSpacing: unit * 0.001,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ],
-            ),
-          ),
-        ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

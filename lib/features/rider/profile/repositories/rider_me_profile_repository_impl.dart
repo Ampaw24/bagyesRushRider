@@ -1,13 +1,13 @@
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
-import 'package:delivery_boy/core/errors/failures.dart';
-import 'package:delivery_boy/core/network/api_error_parser.dart';
-import 'package:delivery_boy/core/network/request_error_message.dart';
-import 'package:delivery_boy/core/utils/json_utils.dart';
-import 'package:delivery_boy/features/rider/profile/models/payout_provider_model.dart';
-import 'package:delivery_boy/features/rider/profile/models/rider_me_profile_model.dart';
-import 'package:delivery_boy/features/rider/profile/repositories/rider_me_profile_repository.dart';
-import 'package:delivery_boy/features/rider/profile/services/rider_me_profile_api_service.dart';
+import 'package:gopady_rider/core/errors/failures.dart';
+import 'package:gopady_rider/core/network/api_error_parser.dart';
+import 'package:gopady_rider/core/network/request_error_message.dart';
+import 'package:gopady_rider/core/utils/json_utils.dart';
+import 'package:gopady_rider/features/rider/profile/models/payout_provider_model.dart';
+import 'package:gopady_rider/features/rider/profile/models/rider_me_profile_model.dart';
+import 'package:gopady_rider/features/rider/profile/repositories/rider_me_profile_repository.dart';
+import 'package:gopady_rider/features/rider/profile/services/rider_me_profile_api_service.dart';
 
 class RiderMeProfileRepositoryImpl implements RiderMeProfileRepository {
   final RiderMeProfileApiService _api;

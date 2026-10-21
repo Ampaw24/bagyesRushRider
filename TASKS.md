@@ -1,4 +1,4 @@
-# BagyesRUSH Rider — Development Task List
+# GoPady Rider — Development Task List
 
 > Generated from code analysis against Budget Proposal (25 March 2026)  
 > Last updated: 20 May 2026  
@@ -114,10 +114,10 @@
     // REMOVE:
     child: legacy.MultiProvider(
       providers: [legacy.ChangeNotifierProvider(create: (_) => AppState())],
-      child: const BagyesRushApp(),
+      child: const GoPadyRiderApp(),
     ),
     // KEEP:
-    child: const BagyesRushApp(),
+    child: const GoPadyRiderApp(),
     ```
   - Delete `lib/states/app.state.dart`
   - Remove the `provider` import from `main.dart` if no longer used
@@ -230,7 +230,7 @@
   - Add a WhatsApp deep-link button alongside the existing call button:
     ```dart
     await launchUrl(Uri.parse(
-      'https://wa.me/$phoneNumber?text=Hi, I am your BagyesRUSH rider'));
+      'https://wa.me/$phoneNumber?text=Hi, I am your GoPady rider'));
     ```
   - Also add the call + chat buttons to `RiderOrderDetailSheet` so they are accessible without going to the map screen
 - **Why:** The proposal includes "initiate in-app chat with customers." Currently only a `tel:` phone call is wired, and only from the map screen.

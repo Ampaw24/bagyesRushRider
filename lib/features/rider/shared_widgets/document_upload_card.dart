@@ -1,9 +1,10 @@
+import 'package:gopady_rider/constant/app_tokens.dart';
 import 'dart:io';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
-import 'package:delivery_boy/core/widgets/custom_dialogs.dart';
-import 'package:delivery_boy/constant/app_theme.dart';
-import 'package:delivery_boy/features/rider/kyc/models/upload_state.dart';
+import 'package:gopady_rider/core/widgets/custom_dialogs.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/features/rider/kyc/models/upload_state.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 /// Cards grow past this with large text rather than clipping.
@@ -96,7 +97,7 @@ class _IdleCard extends StatelessWidget {
               Text(
                 label,
                 style: TextStyle(
-                  fontFamily: 'Mukta',
+                  fontFamily: AppFonts.body,
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
                   color: Colors.grey.shade600,
@@ -106,7 +107,7 @@ class _IdleCard extends StatelessWidget {
               Text(
                 'Tap to upload',
                 style: TextStyle(
-                  fontFamily: 'Mukta',
+                  fontFamily: AppFonts.body,
                   fontSize: 11,
                   color: Colors.grey.shade400,
                 ),
@@ -154,7 +155,7 @@ class _UploadingCard extends StatelessWidget {
           Text(
             'Uploading $label…',
             style: TextStyle(
-              fontFamily: 'Mukta',
+              fontFamily: AppFonts.body,
               fontSize: 12,
               color: Colors.grey.shade600,
             ),
@@ -225,7 +226,7 @@ class _DoneCard extends StatelessWidget {
                       child: Text(
                         label,
                         style: const TextStyle(
-                          fontFamily: 'Mukta',
+                          fontFamily: AppFonts.body,
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                           color: AppColors.success,
@@ -310,14 +311,14 @@ class _FailedCard extends StatelessWidget {
             Text(
               error ?? 'Upload failed',
               style: const TextStyle(
-                  fontFamily: 'Mukta', fontSize: 12, color: AppColors.error),
+                  fontFamily: AppFonts.body, fontSize: 12, color: AppColors.error),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 4),
             Text(
               'Tap to retry',
               style: TextStyle(
-                  fontFamily: 'Mukta',
+                  fontFamily: AppFonts.body,
                   fontSize: 11,
                   color: Colors.grey.shade500),
             ),
@@ -352,7 +353,7 @@ class _ActionChip extends StatelessWidget {
         child: Text(
           label,
           style: TextStyle(
-              fontFamily: 'Mukta',
+              fontFamily: AppFonts.body,
               fontSize: 11,
               fontWeight: FontWeight.w600,
               color: color),

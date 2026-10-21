@@ -1,8 +1,9 @@
+import 'package:gopady_rider/constant/app_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hugeicons/hugeicons.dart';
 
-import 'package:delivery_boy/constant/app_theme.dart';
+import 'package:gopady_rider/constant/app_theme.dart';
 
 /// Top balance card for the wallet overview — real balance, real pending
 /// amount and real currency, all sourced from `GET /rider/me/wallet`.
@@ -51,7 +52,7 @@ class RiderWalletBalanceCard extends StatelessWidget {
               Text(
                 'Total Earnings',
                 style: TextStyle(
-                  fontFamily: 'Mukta',
+                  fontFamily: AppFonts.body,
                   fontSize: w * 0.034,
                   color: Colors.white.withValues(alpha: 0.75),
                   fontWeight: FontWeight.w500,
@@ -72,7 +73,7 @@ class RiderWalletBalanceCard extends StatelessWidget {
                     Text(
                       'Wallet',
                       style: TextStyle(
-                        fontFamily: 'Mukta',
+                        fontFamily: AppFonts.body,
                         fontSize: w * 0.03,
                         color: Colors.white,
                         fontWeight: FontWeight.w600,
@@ -91,7 +92,7 @@ class RiderWalletBalanceCard extends StatelessWidget {
                     ? Text(
                         '$currency ${_mask(8)}',
                         style: TextStyle(
-                          fontFamily: 'Mukta',
+                          fontFamily: AppFonts.body,
                           fontSize: w * 0.095,
                           fontWeight: FontWeight.w800,
                           color: Colors.white,
@@ -107,7 +108,7 @@ class RiderWalletBalanceCard extends StatelessWidget {
                         builder: (_, v, __) => Text(
                           '$currency ${v.toStringAsFixed(2)}',
                           style: TextStyle(
-                            fontFamily: 'Mukta',
+                            fontFamily: AppFonts.body,
                             fontSize: w * 0.095,
                             fontWeight: FontWeight.w800,
                             color: Colors.white,
@@ -194,7 +195,7 @@ class _BalanceFooterItem extends StatelessWidget {
         Text(
           label,
           style: TextStyle(
-            fontFamily: 'Mukta',
+            fontFamily: AppFonts.body,
             fontSize: w * 0.03,
             color: Colors.white.withValues(alpha: 0.65),
           ),
@@ -203,7 +204,7 @@ class _BalanceFooterItem extends StatelessWidget {
         Text(
           value,
           style: TextStyle(
-            fontFamily: 'Mukta',
+            fontFamily: AppFonts.body,
             fontSize: w * 0.038,
             fontWeight: FontWeight.w700,
             color: Colors.white,

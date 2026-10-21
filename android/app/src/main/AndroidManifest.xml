@@ -16,8 +16,8 @@
     <uses-feature android:name="android.hardware.camera" android:required="false" />
     <uses-feature android:name="android.hardware.camera.front" android:required="false" />
    <application
-        android:label="BagyesRIDER"
-        android:icon="@mipmap/launcher_icon">
+        android:label="GoPady Rider"
+        android:icon="@mipmap/ic_launcher">
         <!-- Injected from G_CLIENTID_ANDROID in the project .env by
              android/app/build.gradle — edit the key there, not here. -->
         <meta-data android:name="com.google.android.geo.API_KEY"
@@ -27,18 +27,17 @@
              channel and never make a sound. -->
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"
-            android:value="bagyes_rush_high_importance" />
+            android:value="gopady_high_importance" />
         <!-- Must be a flat white-on-transparent silhouette: Android strips
              color from status bar icons on API 21+, so the full-color
-             launcher icon (@mipmap/ic_launcher, also stale/unused since
-             flutter_launcher_icons writes to @mipmap/launcher_icon) renders
-             as a blank shape or falls back to a system default. -->
+             launcher icon (@mipmap/ic_launcher) renders as a blank shape
+             or falls back to a system default. -->
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_icon"
             android:resource="@drawable/ic_notification" />
-        <!-- Tints the small icon's badge/circle to brand red instead of the
-             system's generic fallback color; same red as the launcher's
-             adaptive icon background (res/values/colors.xml). -->
+        <!-- Tints the small icon's badge/circle to brand green instead of the
+             system's generic fallback color (res/values/colors.xml). Not the
+             launcher icon's background, which is the yellow mipmap layer. -->
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_color"
             android:resource="@color/ic_launcher_background" />
