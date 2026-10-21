@@ -1,21 +1,21 @@
 {
   "project_info": {
-    "project_number": "782816451697",
-    "project_id": "bagyesrushapp-e0e4f",
-    "storage_bucket": "bagyesrushapp-e0e4f.firebasestorage.app"
+    "project_number": "REDACTED",
+    "project_id": "REDACTED",
+    "storage_bucket": "REDACTED.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:782816451697:android:0de01801954ecbdf350fd0",
+        "mobilesdk_app_id": "1:REDACTED:android:REDACTED",
         "android_client_info": {
-          "package_name": "com.bagye.bagyesrush2"
+          "package_name": "com.gopady.app"
         }
       },
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyBK1eFzwpRi5YmxraoGy8Hf6STQi-XAjA4"
+          "current_key": "REDACTED"
         }
       ],
       "services": {
@@ -26,15 +26,15 @@
     },
     {
       "client_info": {
-        "mobilesdk_app_id": "1:782816451697:android:7779010d1e36c650350fd0",
+        "mobilesdk_app_id": "1:REDACTED:android:REDACTED",
         "android_client_info": {
-          "package_name": "com.bagye.bagyesrushrider"
+          "package_name": "com.gopady.rider"
         }
       },
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyBK1eFzwpRi5YmxraoGy8Hf6STQi-XAjA4"
+          "current_key": "REDACTED"
         }
       ],
       "services": {

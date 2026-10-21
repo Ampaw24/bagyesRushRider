@@ -48,3 +48,35 @@ app.*.map.json
 # Local environment — API keys and endpoints. Never commit; copy
 # .env.example to .env and fill it in instead.
 .env
+.env.*
+!.env.example
+
+# Firebase configuration files (contain API keys and project IDs)
+# NOTE: These files are currently tracked. To stop tracking:
+# git rm --cached android/app/google-services.json
+# git rm --cached ios/Runner/GoogleService-Info.plist
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist
+firebase.json
+lib/firebase_options.dart
+
+# Android signing & security
+*.jks
+*.keystore
+key.properties
+android/key.properties
+android/app/upload-keystore.jks
+android/app/release-keystore.jks
+
+# iOS certificates & provisioning
+*.p12
+*.mobileprovision
+*.cer
+ios/Runner/GoogleService-Info.plist
+
+# Secret keys and credentials
+**/secrets/
+**/credentials/
+**/*_secret.dart
+**/*_secrets.dart
+**/*_credentials.dart
