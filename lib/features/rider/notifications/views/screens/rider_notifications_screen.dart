@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gopady_rider/constant/app_theme.dart';
 import 'package:gopady_rider/core/widgets/shimmer_list_placeholder.dart';
+import 'package:gopady_rider/core/widgets/skyline_watermark.dart';
 import 'package:gopady_rider/features/rider/notifications/models/rider_notification_model.dart';
 import 'package:gopady_rider/features/rider/notifications/providers/rider_notifications_providers.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -142,32 +143,52 @@ class _RiderNotificationsScreenState
 
     return Scaffold(
       backgroundColor: AppColors.scaffold,
-      body: SafeArea(
-        bottom: false,
-        child: Column(
-          children: [
-            _NotificationsHeader(
-              notifUnread: notifUnread,
-              onMarkAllRead: notifUnread > 0 ? _markAllRead : null,
+      body: Stack(
+        children: [
+          // ── Skyline watermark — same as onboarding, behind the list ──
+          const Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: SkylineWatermark(
+              color: AppColors.surfaceVariant,
+              opacity: 0.4,
+              maxHeightFactor: 0.25,
             ),
-            Expanded(
-              child: _NotificationsTab(
-                isLoading: notifState.status == NotificationsStatus.loading ||
-                    notifState.status == NotificationsStatus.initial,
-                notifs: notifState.notifications,
-                onMarkRead: (id) =>
-                    ref.read(riderNotificationsProvider.notifier).markRead(id),
-                // There is only one removal endpoint on the backend — both
-                // swipe directions dismiss the notification the same way.
-                onArchive: (id) =>
-                    ref.read(riderNotificationsProvider.notifier).dismiss(id),
-                onDelete: (id) =>
-                    ref.read(riderNotificationsProvider.notifier).dismiss(id),
-                onMarkAllRead: _markAllRead,
-              ),
+          ),
+
+          SafeArea(
+            bottom: false,
+            child: Column(
+              children: [
+                _NotificationsHeader(
+                  notifUnread: notifUnread,
+                  onMarkAllRead: notifUnread > 0 ? _markAllRead : null,
+                ),
+                Expanded(
+                  child: _NotificationsTab(
+                    isLoading:
+                        notifState.status == NotificationsStatus.loading ||
+                            notifState.status == NotificationsStatus.initial,
+                    notifs: notifState.notifications,
+                    onMarkRead: (id) => ref
+                        .read(riderNotificationsProvider.notifier)
+                        .markRead(id),
+                    // There is only one removal endpoint on the backend — both
+                    // swipe directions dismiss the notification the same way.
+                    onArchive: (id) => ref
+                        .read(riderNotificationsProvider.notifier)
+                        .dismiss(id),
+                    onDelete: (id) => ref
+                        .read(riderNotificationsProvider.notifier)
+                        .dismiss(id),
+                    onMarkAllRead: _markAllRead,
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

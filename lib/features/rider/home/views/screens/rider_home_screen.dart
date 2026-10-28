@@ -228,8 +228,9 @@ class _RiderHomeScreenState extends ConsumerState<RiderHomeScreen>
         !canGoOnline &&
         (kycProgress?.sections.any((s) => s.needsAction) ?? false);
 
+    // Transparent: the dashboard shell paints the skyline behind the tabs.
     return Scaffold(
-      backgroundColor: AppColors.scaffold,
+      backgroundColor: Colors.transparent,
       body: Stack(
         children: [
           SafeArea(

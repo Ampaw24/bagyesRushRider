@@ -57,8 +57,9 @@ class RiderProfileScreen extends ConsumerWidget {
       );
     }
 
+    // Transparent: the dashboard shell paints the skyline behind the tabs.
     return Scaffold(
-      backgroundColor: AppColors.scaffold,
+      backgroundColor: Colors.transparent,
       body: SafeArea(
         child: Column(
           children: [

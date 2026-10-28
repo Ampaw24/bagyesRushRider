@@ -9,6 +9,7 @@ import 'package:gopady_rider/core/router/app_routes.dart';
 import 'package:gopady_rider/core/services/user_session_manager.dart';
 import 'package:gopady_rider/core/utils/initials.dart';
 import 'package:gopady_rider/core/utils/legal_links.dart';
+import 'package:gopady_rider/core/widgets/skyline_watermark.dart';
 import 'package:gopady_rider/features/rider/shared_widgets/rider_avatar.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -264,79 +265,99 @@ class _CustomerDrawerState extends State<CustomerDrawer>
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(w * 0.07),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      child: Stack(
                         children: [
-                          // Header
-                          _DrawerHeader(
-                            ctrl: _ctrl,
-                            name: displayName,
-                            email: email,
-                            initials: initials,
-                            photoUrl: widget.photoUrl,
-                            isVerified: isVerified,
-                            onClose: _close,
-                            w: w,
-                            h: h,
-                          ),
-
-                          Padding(
-                            padding:
-                                EdgeInsets.symmetric(horizontal: w * 0.05),
-                            child: const Divider(
-                              color: AppColors.divider,
-                              height: 1,
+                          // ── Skyline watermark — same as onboarding, clipped
+                          // to the panel and sliding with it ──
+                          const Positioned(
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            child: SkylineWatermark(
+                              color: AppColors.surfaceVariant,
+                              opacity: 0.4,
+                              maxHeightFactor: 0.25,
                             ),
                           ),
 
-                          // Scrollable menu items
-                          Expanded(
-                            child: SingleChildScrollView(
-                              padding: EdgeInsets.symmetric(vertical: h * 0.008),
-                              child: Column(
-                                children: List.generate(
-                                  regularItems.length,
-                                  (i) => _DrawerTile(
-                                    item: regularItems[i],
-                                    index: i,
-                                    ctrl: _ctrl,
-                                    w: w,
-                                    h: h,
-                                    onTap: () => _handleTap(regularItems[i]),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Header
+                              _DrawerHeader(
+                                ctrl: _ctrl,
+                                name: displayName,
+                                email: email,
+                                initials: initials,
+                                photoUrl: widget.photoUrl,
+                                isVerified: isVerified,
+                                onClose: _close,
+                                w: w,
+                                h: h,
+                              ),
+
+                              Padding(
+                                padding:
+                                    EdgeInsets.symmetric(horizontal: w * 0.05),
+                                child: const Divider(
+                                  color: AppColors.divider,
+                                  height: 1,
+                                ),
+                              ),
+
+                              // Scrollable menu items
+                              Expanded(
+                                child: SingleChildScrollView(
+                                  padding: EdgeInsets.symmetric(
+                                      vertical: h * 0.008),
+                                  child: Column(
+                                    children: List.generate(
+                                      regularItems.length,
+                                      (i) => _DrawerTile(
+                                        item: regularItems[i],
+                                        index: i,
+                                        ctrl: _ctrl,
+                                        w: w,
+                                        h: h,
+                                        onTap: () =>
+                                            _handleTap(regularItems[i]),
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                          ),
 
-                          Padding(
-                            padding:
-                                EdgeInsets.symmetric(horizontal: w * 0.05),
-                            child: const Divider(
-                              color: AppColors.divider,
-                              height: 1,
-                            ),
-                          ),
-
-                          // Bottom destructive actions
-                          Padding(
-                            padding: EdgeInsets.symmetric(vertical: h * 0.008),
-                            child: Column(
-                              children: List.generate(
-                                bottomItems.length,
-                                (i) => _DrawerTile(
-                                  item: bottomItems[i],
-                                  index: regularItems.length + i,
-                                  ctrl: _ctrl,
-                                  w: w,
-                                  h: h,
-                                  onTap: () => _handleTap(bottomItems[i]),
+                              Padding(
+                                padding:
+                                    EdgeInsets.symmetric(horizontal: w * 0.05),
+                                child: const Divider(
+                                  color: AppColors.divider,
+                                  height: 1,
                                 ),
                               ),
-                            ),
-                          ),
 
-                          SizedBox(height: h * 0.025),
+                              // Bottom destructive actions
+                              Padding(
+                                padding: EdgeInsets.symmetric(
+                                    vertical: h * 0.008),
+                                child: Column(
+                                  children: List.generate(
+                                    bottomItems.length,
+                                    (i) => _DrawerTile(
+                                      item: bottomItems[i],
+                                      index: regularItems.length + i,
+                                      ctrl: _ctrl,
+                                      w: w,
+                                      h: h,
+                                      onTap: () => _handleTap(bottomItems[i]),
+                                    ),
+                                  ),
+                                ),
+                              ),
+
+                              SizedBox(height: h * 0.025),
+                            ],
+                          ),
                         ],
                       ),
                     ),

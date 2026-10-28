@@ -134,8 +134,9 @@ class _RiderWalletScreenState extends ConsumerState<RiderWalletScreen> {
             ? profile!.fullName
             : 'Rider';
 
+    // Transparent: the dashboard shell paints the skyline behind the tabs.
     return Scaffold(
-      backgroundColor: AppColors.scaffold,
+      backgroundColor: Colors.transparent,
       body: RefreshIndicator(
         color: AppColors.primary,
         onRefresh: _refresh,

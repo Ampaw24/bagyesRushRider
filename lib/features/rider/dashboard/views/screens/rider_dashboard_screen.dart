@@ -19,6 +19,7 @@ import 'package:gopady_rider/core/widgets/sos_floating_button.dart';
 import 'package:gopady_rider/core/widgets/app_toast.dart';
 import 'package:gopady_rider/core/widgets/custom_dialogs.dart';
 import 'package:gopady_rider/core/widgets/pulse_scale.dart';
+import 'package:gopady_rider/core/widgets/skyline_watermark.dart';
 import 'package:gopady_rider/features/rider/notifications/providers/rider_notifications_providers.dart';
 import 'package:gopady_rider/features/rider/profile/providers/rider_avatar_providers.dart';
 import 'package:gopady_rider/features/rider/profile/providers/rider_me_profile_providers.dart';
@@ -313,6 +314,19 @@ class _RiderDashboardScreenState extends ConsumerState<RiderDashboardScreen>
           backgroundColor: AppColors.scaffold,
           body: Stack(
             children: [
+              // ── Skyline watermark — one for all four tabs, whose own
+              // Scaffolds are transparent so it shows through behind them ──
+              const Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: SkylineWatermark(
+                  color: AppColors.surfaceVariant,
+                  opacity: 0.4,
+                  maxHeightFactor: 0.25,
+                ),
+              ),
+
               // ── Tab content — pad bottom so nothing hides under the bar ──
               // viewPadding too: a tab Scaffold positions its floating action
               // button (e.g. the Orders tab's SOS button) from viewPadding,
@@ -586,7 +600,7 @@ class _OrdersTabState extends ConsumerState<_OrdersTab> {
     return DefaultTabController(
       length: 3,
       child: Scaffold(
-        backgroundColor: AppColors.scaffold,
+        backgroundColor: Colors.transparent,
         floatingActionButton:
             hasActiveOrders ? const SosFloatingButton() : null,
         appBar: AppBar(
