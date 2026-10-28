@@ -50,20 +50,18 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'REDACTED',
-    appId: '1:REDACTED:android:REDACTED',
-    messagingSenderId: 'REDACTED',
-    projectId: 'REDACTED',
-    storageBucket: 'REDACTED.firebasestorage.app',
+    apiKey: 'AIzaSyAe5LCUu9Pj_VpnEwtjC-WEk1LIHeA7URI',
+    appId: '1:546762474757:android:70f4574439124ffab3e36c',
+    messagingSenderId: '546762474757',
+    projectId: 'gopady-mobile',
+    storageBucket: 'gopady-mobile.firebasestorage.app',
   );
-
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'REDACTED',
-    appId: '1:REDACTED:ios:REDACTED',
-    messagingSenderId: 'REDACTED',
-    projectId: 'REDACTED',
-    storageBucket: 'REDACTED.firebasestorage.app',
+    apiKey: 'AIzaSyD9jWp9ALprGSAWKM1rz9EUTHiLSPoXlLI',
+    appId: '1:546762474757:ios:b69bfcf4c90e1858b3e36c',
+    messagingSenderId: '546762474757',
+    projectId: 'gopady-mobile',
+    storageBucket: 'gopady-mobile.firebasestorage.app',
     iosBundleId: 'com.bagye.bagyesrushrider',
   );
-
 }

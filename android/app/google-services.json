@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "REDACTED",
-    "project_id": "REDACTED",
-    "storage_bucket": "REDACTED.firebasestorage.app"
+    "project_number": "546762474757",
+    "project_id": "gopady-mobile",
+    "storage_bucket": "gopady-mobile.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:REDACTED:android:REDACTED",
+        "mobilesdk_app_id": "1:546762474757:android:a075963896d3a03ab3e36c",
         "android_client_info": {
           "package_name": "com.gopady.app"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "REDACTED"
+          "current_key": "AIzaSyAe5LCUu9Pj_VpnEwtjC-WEk1LIHeA7URI"
         }
       ],
       "services": {
@@ -26,7 +26,7 @@
     },
     {
       "client_info": {
-        "mobilesdk_app_id": "1:REDACTED:android:REDACTED",
+        "mobilesdk_app_id": "1:546762474757:android:70f4574439124ffab3e36c",
         "android_client_info": {
           "package_name": "com.gopady.rider"
         }
@@ -34,7 +34,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "REDACTED"
+          "current_key": "AIzaSyAe5LCUu9Pj_VpnEwtjC-WEk1LIHeA7URI"
         }
       ],
       "services": {

@@ -3,17 +3,17 @@
 <plist version="1.0">
 <dict>
 	<key>API_KEY</key>
-	<string>REDACTED</string>
+	<string>AIzaSyD9jWp9ALprGSAWKM1rz9EUTHiLSPoXlLI</string>
 	<key>GCM_SENDER_ID</key>
-	<string>REDACTED</string>
+	<string>546762474757</string>
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
 	<string>com.bagye.bagyesrushrider</string>
 	<key>PROJECT_ID</key>
-	<string>REDACTED</string>
+	<string>gopady-mobile</string>
 	<key>STORAGE_BUCKET</key>
-	<string>REDACTED.firebasestorage.app</string>
+	<string>gopady-mobile.firebasestorage.app</string>
 	<key>IS_ADS_ENABLED</key>
 	<false></false>
 	<key>IS_ANALYTICS_ENABLED</key>
@@ -25,6 +25,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:REDACTED:ios:REDACTED</string>
+	<string>1:546762474757:ios:b69bfcf4c90e1858b3e36c</string>
 </dict>
 </plist>

@@ -11,7 +11,7 @@
 ## Tech Stack
 
 - Flutter 3.x / Dart
-- Package: `com.gopady.rider` (Android applicationId; iOS bundle ID still `com.bagye.bagyesrushrider` pending migration)
+- Package: `com.gopady.rider` (Android applicationId); iOS bundle ID `com.bagye.bagyesrushrider`; Firebase project `gopady-mobile`
 - AGP 8.9.1, Kotlin 2.1.0, Gradle 8.11.1, compileSdk 36
 # Flutter Responsiveness Rules (STRICT)
 

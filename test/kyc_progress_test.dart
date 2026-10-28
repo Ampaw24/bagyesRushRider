@@ -52,7 +52,7 @@ void main() {
       expect(p.idType, 'ghana_card');
       expect(p.idNumber, isNull);
       expect(p.city, 'Accra');
-      expect(p.photoUrl, startsWith('https://api.bagyesrushdelivery.com/'));
+      expect(p.photoUrl, startsWith('https://api.gopady.com/'));
     });
 
     test('reads the server’s completeness and gate', () {

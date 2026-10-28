@@ -15,7 +15,7 @@ const riderMeIncompleteJson = r'''
     "date_of_birth": null,
     "residential_address": null,
     "city": "Accra",
-    "profile_photo_url": "https://api.bagyesrushdelivery.com/storage/riders/01M2R55RKZV5F8M8KYS2TDC420/photo/75dee7ed-5b17-44ec-aa1d-3e0b67a90343.jpg",
+    "profile_photo_url": "https://api.gopady.com/storage/riders/01M2R55RKZV5F8M8KYS2TDC420/photo/75dee7ed-5b17-44ec-aa1d-3e0b67a90343.jpg",
     "identity": {"type": "ghana_card", "type_label": "Ghana Card", "number": null},
     "vehicle": {
       "type_id": 1, "type": "motorbike", "type_label": "Motorbike",

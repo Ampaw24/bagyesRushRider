@@ -35,7 +35,7 @@ void main() {
     test('replaces Dio developer text when the server is unreachable', () {
       final e = DioException.connectionError(
         requestOptions: _options,
-        reason: "Failed host lookup: 'api.bagyesrushdelivery.com'",
+        reason: "Failed host lookup: 'api.gopady.com'",
       );
 
       final message = dioErrorMessage(e);
