@@ -1,6 +1,7 @@
 import 'package:gopady_rider/constant/app_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/core/widgets/app_status_animation.dart';
 
 /// Shared empty state for the Active / New / History order lists. Still
 /// scrollable so pull-to-refresh works when there's nothing to show — the
@@ -11,13 +12,33 @@ class RiderOrdersEmptyState extends StatelessWidget {
   final String message;
   final Future<void> Function() onRefresh;
 
+  /// Plays this animation in place of [icon] — e.g. [AppStatus.searching]
+  /// while the rider is waiting for new requests.
+  final AppStatus? status;
+
   const RiderOrdersEmptyState({
     super.key,
     required this.icon,
     required this.title,
     required this.message,
     required this.onRefresh,
+    this.status,
   });
+
+  Widget _buildVisual(double w) {
+    final status = this.status;
+    if (status != null) {
+      return AppStatusAnimation(status, size: w * 0.3, semanticLabel: title);
+    }
+    return Container(
+      padding: EdgeInsets.all(w * 0.05),
+      decoration: const BoxDecoration(
+        color: AppColors.surfaceVariant,
+        shape: BoxShape.circle,
+      ),
+      child: Icon(icon, color: AppColors.textSecondary, size: w * 0.09),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,15 +58,7 @@ class RiderOrdersEmptyState extends StatelessWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Container(
-                      padding: EdgeInsets.all(w * 0.05),
-                      decoration: const BoxDecoration(
-                        color: AppColors.surfaceVariant,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(icon,
-                          color: AppColors.textSecondary, size: w * 0.09),
-                    ),
+                    _buildVisual(w),
                     SizedBox(height: w * 0.05),
                     Text(
                       title,

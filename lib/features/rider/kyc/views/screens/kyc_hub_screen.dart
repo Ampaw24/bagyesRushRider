@@ -14,6 +14,7 @@ import 'package:gopady_rider/features/rider/kyc/views/widgets/kyc_hub_widgets.da
 import 'package:gopady_rider/features/rider/kyc/views/widgets/kyc_metrics.dart';
 import 'package:gopady_rider/features/rider/kyc/views/widgets/kyc_section_layout.dart';
 import 'package:gopady_rider/features/rider/profile/providers/rider_me_profile_providers.dart';
+import 'package:gopady_rider/core/widgets/app_status_animation.dart';
 
 /// The rider's verification checklist (`/dashboard/kyc`).
 ///
@@ -60,7 +61,7 @@ class _KycHubScreenState extends ConsumerState<KycHubScreen> {
                   message: profileState.errorMessage,
                   onRetry: _reload,
                 )
-              : const Center(child: CircularProgressIndicator()))
+              : const AppLoader())
           : RefreshIndicator(
               color: AppColors.primary,
               onRefresh: _reload,

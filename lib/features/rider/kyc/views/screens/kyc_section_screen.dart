@@ -15,6 +15,7 @@ import 'package:gopady_rider/features/rider/kyc/views/sections/photo_section.dar
 import 'package:gopady_rider/features/rider/kyc/views/sections/vehicle_section.dart';
 import 'package:gopady_rider/features/rider/kyc/views/widgets/kyc_hub_widgets.dart';
 import 'package:gopady_rider/features/rider/profile/providers/rider_me_profile_providers.dart';
+import 'package:gopady_rider/core/widgets/app_status_animation.dart';
 
 /// Route target for `/dashboard/kyc/:section`.
 ///
@@ -62,7 +63,7 @@ class _KycSectionScreenState extends ConsumerState<KycSectionScreen> {
                 message: state.errorMessage,
                 onRetry: () => ref.read(riderMeProfileProvider.notifier).load(),
               )
-            : const Center(child: CircularProgressIndicator()),
+            : const AppLoader(),
       );
     }
 

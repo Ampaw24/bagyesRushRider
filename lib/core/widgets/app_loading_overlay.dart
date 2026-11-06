@@ -3,11 +3,13 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/core/widgets/app_status_animation.dart';
 
 /// Full-screen, non-dismissible busy indicator for actions that must block
 /// interaction until they settle — e.g. logout. Same visual language as
-/// [CustomDialog] (white card, soft shadow, no gradients/glow) so it reads
-/// as part of the same design system rather than a one-off spinner.
+/// [CustomDialog] (white card, soft shadow, no gradients/glow) with the
+/// brand processing animation, so it reads as part of the same design
+/// system rather than a one-off spinner.
 ///
 /// ```dart
 /// AppLoadingOverlay.show(context, message: 'Logging out...');
@@ -84,13 +86,10 @@ class _AppLoadingOverlayView extends StatelessWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    SizedBox(
-                      width: base * 0.11,
-                      height: base * 0.11,
-                      child: CircularProgressIndicator(
-                        strokeWidth: base * 0.009,
-                        valueColor: const AlwaysStoppedAnimation(AppColors.primary),
-                      ),
+                    AppStatusAnimation(
+                      AppStatus.processing,
+                      size: base * 0.2,
+                      semanticLabel: message,
                     ),
                     SizedBox(height: size.height * 0.018),
                     Text(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/core/widgets/app_status_animation.dart';
 import 'package:gopady_rider/features/rider/kyc/models/kyc_progress.dart';
 import 'package:gopady_rider/features/rider/kyc/models/kyc_section.dart';
 import 'package:gopady_rider/features/rider/kyc/views/widgets/kyc_metrics.dart';
@@ -332,11 +333,7 @@ class KycLoadError extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              HugeIcons.strokeRoundedAlert02,
-              size: m.iconBadge,
-              color: AppColors.textHint,
-            ),
+            AppStatusAnimation(AppStatus.error, size: m.iconBadge * 1.8),
             SizedBox(height: m.gap),
             Text(
               message ?? "We couldn't load your profile.",

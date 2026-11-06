@@ -13,6 +13,7 @@ import 'package:gopady_rider/features/rider/orders/views/widgets/rider_me_offer_
 import 'package:gopady_rider/features/rider/orders/views/widgets/rider_me_offer_detail_sheet.dart';
 import 'package:gopady_rider/features/rider/orders/views/widgets/rider_orders_empty_state.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:gopady_rider/core/widgets/app_status_animation.dart';
 
 /// Position of the Active tab in the Orders page's Active / New / History
 /// bar — where an accepted offer continues.
@@ -113,6 +114,7 @@ class _RiderNewOrdersScreenState extends ConsumerState<RiderNewOrdersScreen> {
         message: 'New delivery requests will appear here. Stay online to '
             'receive them.',
         onRefresh: reload,
+        status: AppStatus.searching,
       );
     }
 

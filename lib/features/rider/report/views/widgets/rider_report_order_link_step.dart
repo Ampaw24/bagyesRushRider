@@ -4,6 +4,7 @@ import 'package:hugeicons/hugeicons.dart';
 import 'package:gopady_rider/constant/app_theme.dart';
 import 'package:gopady_rider/features/rider/orders/models/rider_me_order_model.dart';
 import 'package:gopady_rider/features/rider/report/models/rider_report_model.dart';
+import 'package:gopady_rider/core/widgets/app_status_animation.dart';
 
 /// The fields this step derives once an order is picked — a rider has no
 /// vendor/customer id anywhere except on an order, so this doubles as the
@@ -154,8 +155,7 @@ class _RiderReportOrderLinkStepState extends State<RiderReportOrderLinkStep> {
         SizedBox(height: w * 0.03),
         Expanded(
           child: widget.isLoading
-              ? const Center(
-                  child: CircularProgressIndicator(color: AppColors.primary))
+              ? const AppLoader()
               : widget.errorMessage != null
                   ? _MessageState(
                       w: w,

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import 'package:gopady_rider/constant/app_theme.dart';
 import 'package:gopady_rider/features/rider/report/models/rider_report_model.dart';
+import 'package:gopady_rider/core/widgets/app_status_animation.dart';
 
 /// Step 3 (or 2, when the order-link step is skipped for `general`) —
 /// "What went wrong?"
@@ -48,9 +49,7 @@ class RiderReportReasonStep extends StatelessWidget {
         if (isLoading)
           Padding(
             padding: EdgeInsets.symmetric(vertical: w * 0.12),
-            child: const Center(
-              child: CircularProgressIndicator(color: AppColors.primary),
-            ),
+            child: const AppLoader(),
           )
         else if (errorMessage != null)
           Padding(

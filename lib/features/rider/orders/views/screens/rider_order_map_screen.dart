@@ -21,6 +21,7 @@ import 'package:gopady_rider/features/rider/orders/models/rider_me_order_model.d
 import 'package:gopady_rider/features/rider/orders/providers/rider_me_order_providers.dart';
 import 'package:gopady_rider/features/rider/orders/views/widgets/order_map_sheet.dart';
 import 'package:gopady_rider/features/rider/orders/views/widgets/rider_me_order_status.dart';
+import 'package:gopady_rider/core/widgets/app_status_animation.dart';
 
 /// Route overview for an order: the road route through every stop, drawn
 /// with the brand marker, plus a compact trip sheet. Turn-by-turn guidance
@@ -385,9 +386,7 @@ class _RiderOrderMapScreenState extends ConsumerState<RiderOrderMapScreen>
         children: [
           Positioned.fill(
             child: _resolving
-                ? const Center(
-                    child: CircularProgressIndicator(color: AppColors.primary),
-                  )
+                ? const AppLoader(message: 'Locating the stops…')
                 : _resolvedPoints.isEmpty
                     ? Padding(
                         padding: EdgeInsets.only(bottom: size.height * _sheetInitial),

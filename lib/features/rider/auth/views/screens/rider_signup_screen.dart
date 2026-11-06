@@ -21,6 +21,7 @@ import 'package:gopady_rider/features/rider/vehicles/model/vehicle_make_model.da
 import 'package:gopady_rider/features/rider/vehicles/model/vehicle_model_model.dart';
 import 'package:gopady_rider/features/rider/vehicles/model/vehicle_type_model.dart';
 import 'package:gopady_rider/features/rider/vehicles/viewmodel/vehicle_catalog_viewmodel.dart';
+import 'package:gopady_rider/core/widgets/app_status_animation.dart';
 
 class RiderSignupScreen extends ConsumerStatefulWidget {
   /// Values to restore into the form when registration fails or is redirected back.
@@ -753,7 +754,7 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
           if (catalog.isLoadingTypes)
             Padding(
               padding: EdgeInsets.symmetric(vertical: h * 0.06),
-              child: const Center(child: CircularProgressIndicator()),
+              child: const AppLoader(),
             )
           else if (catalog.typesError != null)
             _CatalogRetry(

@@ -10,6 +10,7 @@ import 'package:gopady_rider/features/rider/wallet/models/rider_me_wallet_model.
 import 'package:gopady_rider/features/rider/wallet/providers/rider_me_wallet_providers.dart';
 import 'package:gopady_rider/features/rider/wallet/providers/rider_me_wallet_transactions_providers.dart';
 import 'package:gopady_rider/features/rider/wallet/views/widgets/rider_wallet_transaction_tile.dart';
+import 'package:gopady_rider/core/widgets/app_status_animation.dart';
 
 enum WalletTxPeriod { all, today, thisWeek, thisMonth }
 
@@ -233,8 +234,7 @@ class _ErrorState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(HugeIcons.strokeRoundedAlertCircle,
-                size: w * 0.14, color: AppColors.error),
+            AppStatusAnimation(AppStatus.error, size: w * 0.24),
             SizedBox(height: w * 0.04),
             Text(
               "Couldn't load your transactions",

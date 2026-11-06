@@ -9,6 +9,7 @@ import 'package:gopady_rider/features/rider/report/providers/rider_my_reports_pr
 import 'package:gopady_rider/features/rider/report/views/widgets/rider_report_card.dart'
     show reportRelativeTime;
 import 'package:gopady_rider/features/rider/report/views/widgets/rider_report_status_badge.dart';
+import 'package:gopady_rider/core/widgets/app_status_animation.dart';
 import 'package:gopady_rider/features/rider/report/views/widgets/rider_report_target_type_step.dart'
     show targetTypeIcon;
 
@@ -26,16 +27,22 @@ class RiderReportDetailScreen extends ConsumerWidget {
       backgroundColor: AppColors.scaffold,
       appBar: AppBar(title: const Text('Report Details')),
       body: async.when(
-        loading: () => const Center(
-            child: CircularProgressIndicator(color: AppColors.primary)),
+        loading: () => const AppLoader(),
         error: (error, stack) => Center(
           child: Padding(
             padding: EdgeInsets.symmetric(horizontal: w * 0.1),
-            child: Text(
-              "Couldn't load this report.\n${error is Failure ? error.message : error}",
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                  color: AppColors.textSecondary, fontSize: w * 0.034),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AppStatusAnimation(AppStatus.error, size: w * 0.24),
+                SizedBox(height: w * 0.04),
+                Text(
+                  "Couldn't load this report.\n${error is Failure ? error.message : error}",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                      color: AppColors.textSecondary, fontSize: w * 0.034),
+                ),
+              ],
             ),
           ),
         ),

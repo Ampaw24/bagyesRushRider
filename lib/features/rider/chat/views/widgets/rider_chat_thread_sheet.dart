@@ -14,6 +14,7 @@ import 'package:gopady_rider/features/rider/chat/views/widgets/rider_chat_compos
 import 'package:gopady_rider/features/rider/chat/views/widgets/rider_chat_timeline.dart';
 import 'package:gopady_rider/features/rider/chat/views/widgets/rider_message_bubble.dart';
 import 'package:gopady_rider/features/rider/chat/views/widgets/rider_quick_actions_grid.dart';
+import 'package:gopady_rider/core/widgets/app_status_animation.dart';
 
 /// Presents a conversation thread as a draggable bottom sheet over whatever
 /// screen is already on-screen (the order detail sheet, the chat inbox, …)
@@ -75,7 +76,7 @@ class _RiderChatThreadSheetBody extends ConsumerWidget {
                 Expanded(
                   child: switch (state.status) {
                     RiderChatThreadStatus.loading =>
-                      const Center(child: CircularProgressIndicator(color: AppColors.primary)),
+                      const AppLoader(),
                     RiderChatThreadStatus.error => _ErrorState(
                         w: w,
                         message: state.message ?? 'Something went wrong.',
@@ -493,11 +494,7 @@ class _ErrorState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            HugeIcon(
-              icon: HugeIcons.strokeRoundedAlertCircle,
-              size: w * 0.14,
-              color: AppColors.error,
-            ),
+            AppStatusAnimation(AppStatus.error, size: w * 0.24),
             SizedBox(height: w * 0.04),
             Text(
               "Couldn't load this conversation",

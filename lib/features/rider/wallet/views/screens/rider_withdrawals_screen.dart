@@ -15,6 +15,7 @@ import 'package:gopady_rider/features/rider/profile/providers/rider_me_profile_p
 import 'package:gopady_rider/features/rider/wallet/providers/rider_me_wallet_providers.dart';
 import 'package:gopady_rider/features/rider/wallet/views/widgets/rider_withdrawal_request_sheet.dart';
 import 'package:gopady_rider/features/rider/wallet/views/widgets/rider_withdrawal_tile.dart';
+import 'package:gopady_rider/core/widgets/app_status_animation.dart';
 
 /// Withdrawal lifecycle in one place: balance summary, the Withdraw action
 /// (gated on payout details being configured), and the full history from
@@ -321,8 +322,7 @@ class _WithdrawalsErrorState extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(HugeIcons.strokeRoundedAlertCircle,
-              size: w * 0.13, color: AppColors.error),
+          AppStatusAnimation(AppStatus.error, size: w * 0.24),
           SizedBox(height: w * 0.04),
           Text(
             "Couldn't load withdrawals",

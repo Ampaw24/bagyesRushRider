@@ -81,6 +81,9 @@ dependencies:
   # dedupe key the chat API contract requires.
   uuid: ^4.5.1
   markdown: ^7.3.1
+  # Brand status animations in assets/lottie/ — shared with the customer
+  # and vendor app, played through AppStatusAnimation.
+  lottie: ^3.3.2
 
 dev_dependencies:
   flutter_test:
@@ -124,6 +127,7 @@ flutter:
     - assets/images/onboarding/
     - assets/brand/
     - assets/sounds/
+    - assets/lottie/
 
   fonts:
     - family: Outfit

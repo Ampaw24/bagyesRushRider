@@ -7,6 +7,7 @@ import 'package:gopady_rider/features/rider/chat/providers/rider_chat_list_provi
 import 'package:gopady_rider/features/rider/chat/providers/rider_chat_thread_args.dart';
 import 'package:gopady_rider/features/rider/chat/views/widgets/rider_chat_thread_sheet.dart';
 import 'package:gopady_rider/features/rider/chat/views/widgets/rider_conversation_tile.dart';
+import 'package:gopady_rider/core/widgets/app_status_animation.dart';
 
 /// The chat inbox — `GET /conversations`, filtered to threads whose order is
 /// still in progress. Not a permanent archive: once an order is
@@ -54,7 +55,7 @@ class _RiderChatListScreenState extends ConsumerState<RiderChatListScreen> {
         child: switch (state.status) {
           RiderChatListStatus.initial ||
           RiderChatListStatus.loading =>
-            const Center(child: CircularProgressIndicator(color: AppColors.primary)),
+            const AppLoader(),
           RiderChatListStatus.error => _ErrorState(
               w: w,
               message: state.errorMessage ?? 'Something went wrong.',
@@ -141,11 +142,7 @@ class _ErrorState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            HugeIcon(
-              icon: HugeIcons.strokeRoundedAlertCircle,
-              size: w * 0.14,
-              color: AppColors.error,
-            ),
+            AppStatusAnimation(AppStatus.error, size: w * 0.24),
             SizedBox(height: w * 0.04),
             Text(
               "Couldn't load your messages",

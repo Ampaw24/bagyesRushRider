@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 import 'package:gopady_rider/constant/app_theme.dart';
+import 'package:gopady_rider/core/widgets/app_status_animation.dart';
 
 /// What a [CustomDialog] communicates — drives its accent colour and icon.
 enum DialogType { success, error, confirmation, info, warning }
@@ -323,11 +324,7 @@ class _CustomDialogState extends State<CustomDialog>
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        _IconBadge(
-                          icon: _icon,
-                          color: _accent,
-                          diameter: base * 0.155,
-                        ),
+                        _buildBadge(base),
                         SizedBox(height: size.height * 0.016),
                         Text(
                           config.title,
@@ -364,6 +361,33 @@ class _CustomDialogState extends State<CustomDialog>
         ),
       ),
     );
+  }
+
+  /// Animated status for outcome dialogs; confirmations and dialogs given
+  /// a custom icon or colour keep the static icon badge.
+  AppStatus? get _animatedStatus {
+    final config = widget.config;
+    if (config.customColor != null || config.icon != null) return null;
+    return switch (config.type) {
+      DialogType.success => AppStatus.success,
+      DialogType.error => AppStatus.error,
+      DialogType.warning => AppStatus.warning,
+      DialogType.info => AppStatus.info,
+      DialogType.confirmation => null,
+    };
+  }
+
+  Widget _buildBadge(double base) {
+    final status = _animatedStatus;
+    if (status != null) {
+      return AppStatusAnimation(
+        status,
+        size: base * 0.26,
+        // Let the dialog's own scale-in land before the badge draws.
+        delay: _animationDuration * 0.45,
+      );
+    }
+    return _IconBadge(icon: _icon, color: _accent, diameter: base * 0.155);
   }
 
   Widget _buildActions(double base, double screenHeight) {

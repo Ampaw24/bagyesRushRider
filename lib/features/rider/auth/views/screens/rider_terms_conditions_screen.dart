@@ -14,6 +14,7 @@ import 'package:gopady_rider/features/rider/auth/views/widgets/registration_step
 import 'package:gopady_rider/features/rider/legal/models/legal_document_model.dart';
 import 'package:gopady_rider/features/rider/legal/providers/legal_document_providers.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:gopady_rider/core/widgets/app_status_animation.dart';
 
 /// Final gate of the signup wizard: the rider accepts the terms/consent,
 /// which registers the account and records that consent, then hands off
@@ -409,16 +410,7 @@ class _TermsDocument extends ConsumerWidget {
         ],
       ),
       child: agreement.when(
-        loading: () => Center(
-          child: SizedBox(
-            width: w * 0.06,
-            height: w * 0.06,
-            child: const CircularProgressIndicator(
-              color: AppColors.primary,
-              strokeWidth: 2.4,
-            ),
-          ),
-        ),
+        loading: () => const AppLoader(sizeFactor: 0.14),
         error: (error, stack) => Padding(
           padding: EdgeInsets.all(w * 0.045),
           child: Column(

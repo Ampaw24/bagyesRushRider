@@ -16,6 +16,7 @@ import 'package:gopady_rider/features/rider/vehicles/viewmodel/vehicle_kyc_viewm
 import 'package:gopady_rider/features/rider/vehicles/views/screens/vehicle_verification_camera.dart';
 import 'package:gopady_rider/features/rider/vehicles/views/widgets/vehicle_capture_step_list.dart';
 import 'package:gopady_rider/features/rider/vehicles/views/widgets/vehicle_verification_widgets.dart';
+import 'package:gopady_rider/core/widgets/app_status_animation.dart';
 
 /// Route target for `/dashboard/vehicle-verification`: the rider's vehicle,
 /// its verification status, and each photo — take, review, upload, retake.
@@ -209,7 +210,7 @@ class _LoadingProfile extends ConsumerWidget {
               message: state.errorMessage,
               onRetry: () => ref.read(riderMeProfileProvider.notifier).load(),
             )
-          : const Center(child: CircularProgressIndicator()),
+          : const AppLoader(),
     );
   }
 }

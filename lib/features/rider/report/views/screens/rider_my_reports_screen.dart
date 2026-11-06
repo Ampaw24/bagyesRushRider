@@ -10,6 +10,7 @@ import 'package:gopady_rider/core/widgets/shimmer_list_placeholder.dart';
 import 'package:gopady_rider/features/rider/report/models/rider_report_model.dart';
 import 'package:gopady_rider/features/rider/report/providers/rider_my_reports_providers.dart';
 import 'package:gopady_rider/features/rider/report/views/widgets/rider_report_card.dart';
+import 'package:gopady_rider/core/widgets/app_status_animation.dart';
 
 enum _ReportFilter { open, closed, all }
 
@@ -234,11 +235,7 @@ class _ErrorState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            HugeIcon(
-              icon: HugeIcons.strokeRoundedAlertCircle,
-              size: w * 0.14,
-              color: AppColors.error,
-            ),
+            AppStatusAnimation(AppStatus.error, size: w * 0.24),
             SizedBox(height: w * 0.04),
             Text(
               "Couldn't load your reports",
