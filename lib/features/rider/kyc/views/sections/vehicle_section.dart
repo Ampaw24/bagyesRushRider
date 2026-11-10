@@ -17,6 +17,7 @@ import 'package:gopady_rider/features/rider/shared_widgets/app_select_field.dart
 import 'package:gopady_rider/features/rider/shared_widgets/app_text_field.dart';
 import 'package:gopady_rider/features/rider/vehicles/model/vehicle_make_model.dart';
 import 'package:gopady_rider/features/rider/vehicles/model/vehicle_model_model.dart';
+import 'package:gopady_rider/features/rider/vehicles/model/vehicle_type_model.dart';
 import 'package:gopady_rider/features/rider/vehicles/viewmodel/vehicle_catalog_viewmodel.dart';
 import 'package:gopady_rider/features/rider/vehicles/viewmodel/vehicle_kyc_viewmodel.dart';
 import 'package:gopady_rider/features/rider/vehicles/views/widgets/vehicle_photos_entry_tile.dart';
@@ -40,6 +41,14 @@ class _VehicleSectionState extends ConsumerState<VehicleSection>
   @override
   KycSection get section => KycSection.vehicle;
 
+  /// Signup collects no vehicle details, so a new rider sets type and
+  /// plate here. Once the server has them they're shown read-only, as
+  /// before — changing either goes through support.
+  late final bool _typeLocked = widget.profile.vehicleTypeId != null;
+  late final bool _plateLocked = widget.profile.plateNumber != null;
+  late int? _typeId = widget.profile.vehicleTypeId;
+  final _plateCtrl = TextEditingController();
+
   late int? _makeId = widget.profile.vehicleMakeId;
   late int? _modelId = widget.profile.vehicleModelId;
   late String _ownership = widget.profile.vehicleOwnership ?? 'owned';
@@ -54,17 +63,64 @@ class _VehicleSectionState extends ConsumerState<VehicleSection>
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final typeId = widget.profile.vehicleTypeId;
-      if (typeId == null) return;
-      final catalog = ref.read(vehicleCatalogProvider.notifier);
-      await catalog.loadMakes(typeId);
-      if (_makeId != null) await catalog.loadModels(_makeId!);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadCatalog());
+  }
+
+  /// This section is where every new rider first picks type, make and
+  /// model — a failed or empty fetch must be recoverable here, not a dead
+  /// end.
+  Future<void> _loadCatalog() async {
+    final catalog = ref.read(vehicleCatalogProvider.notifier);
+    if (!_typeLocked) {
+      await catalog.loadTypes();
+      if (!mounted) return;
+      // Only one type on offer (motorbike, today): pick it rather than
+      // make the rider choose from a list of one.
+      final types = ref.read(vehicleCatalogProvider).types;
+      if (_typeId == null && types.length == 1) {
+        setState(() => _typeId = types.single.id);
+      }
+    }
+    final typeId = _typeId;
+    if (typeId == null || !mounted) return;
+    await catalog.loadMakes(typeId);
+    if (mounted && _makeId != null) await catalog.loadModels(_makeId!);
+  }
+
+  void _selectType(VehicleTypeModel? type) {
+    clearServerError('vehicle_type_id');
+    if (type == null || type.id == _typeId) return;
+    setState(() {
+      _typeId = type.id;
+      _makeId = null;
+      _modelId = null;
     });
+    ref.read(vehicleCatalogProvider.notifier).loadMakes(type.id);
+  }
+
+  String _typesUnavailableHint(VehicleCatalogState catalog) {
+    if (catalog.typesError != null) return catalog.typesError!;
+    if (catalog.hasLoadedTypes) return 'No vehicle types available';
+    return 'Loading vehicle types…';
+  }
+
+  String _makesUnavailableHint(VehicleCatalogState catalog) {
+    if (_typeId == null) return 'Select the vehicle type first';
+    if (catalog.makesError != null) return catalog.makesError!;
+    if (catalog.hasLoadedMakes) return 'No makes listed for this vehicle type';
+    return 'Loading makes…';
+  }
+
+  String _modelsUnavailableHint(VehicleCatalogState catalog) {
+    if (_makeId == null) return 'Select the make first';
+    if (catalog.modelsError != null) return catalog.modelsError!;
+    if (catalog.hasLoadedModels) return 'No models listed for this make';
+    return 'Loading models…';
   }
 
   @override
   void dispose() {
+    _plateCtrl.dispose();
     _colourCtrl.dispose();
     _yearCtrl.dispose();
     super.dispose();
@@ -86,6 +142,10 @@ class _VehicleSectionState extends ConsumerState<VehicleSection>
     final catalog = ref.watch(vehicleCatalogProvider);
     final profile = widget.profile;
 
+    VehicleTypeModel? type;
+    for (final t in catalog.types) {
+      if (t.id == _typeId) type = t;
+    }
     VehicleMakeModel? make;
     for (final m in catalog.makes) {
       if (m.id == _makeId) make = m;
@@ -106,12 +166,48 @@ class _VehicleSectionState extends ConsumerState<VehicleSection>
         isBusy: isSaving,
         onPrimary: _save,
         children: [
-          KycInfoRow(
-            icon: HugeIcons.strokeRoundedMotorbike01,
-            label: profile.vehicleTypeLabel ?? 'Vehicle',
-            value: profile.plateNumber ?? 'No plate',
-            note: 'Set at registration — contact support to change it.',
-          ),
+          if (_typeLocked && _plateLocked)
+            KycInfoRow(
+              icon: HugeIcons.strokeRoundedMotorbike01,
+              label: profile.vehicleTypeLabel ?? 'Vehicle',
+              value: profile.plateNumber!,
+              note: 'Contact support to change your vehicle type or plate.',
+            ),
+          if (!_typeLocked) ...[
+            AppSelectField<VehicleTypeModel>(
+              key: ValueKey('type-${catalog.types.length}-$_typeId'),
+              label: 'Vehicle type',
+              hint: 'Select vehicle type',
+              value: type,
+              options: catalog.types,
+              labelBuilder: (t) => t.name,
+              prefixIcon: HugeIcons.strokeRoundedMotorbike01,
+              enabled: catalog.types.isNotEmpty,
+              disabledHint: _typesUnavailableHint(catalog),
+              onChanged: _selectType,
+              validator: (t) =>
+                  serverError('vehicle_type_id') ??
+                  (t == null ? 'Select the vehicle type' : null),
+            ),
+            if (catalog.typesError != null ||
+                (catalog.hasLoadedTypes && catalog.types.isEmpty))
+              _CatalogRetry(onRetry: _loadCatalog),
+          ],
+          if (!_plateLocked && (type?.requiresPlate ?? true))
+            AppTextField(
+              label: 'License plate number',
+              hint: 'e.g. GR-1234-22',
+              prefixIcon: HugeIcons.strokeRoundedIdentityCard,
+              controller: _plateCtrl,
+              textCapitalization: TextCapitalization.characters,
+              inputFormatters: [LengthLimitingTextInputFormatter(32)],
+              onChanged: (_) => clearServerError('plate_number'),
+              validator: (v) =>
+                  serverError('plate_number') ??
+                  ((v ?? '').trim().isEmpty
+                      ? 'Enter the license plate number'
+                      : null),
+            ),
           // Keyed on the loaded options: the select only reads its value
           // once, and makes/models arrive after the first build.
           AppSelectField<VehicleMakeModel>(
@@ -123,12 +219,15 @@ class _VehicleSectionState extends ConsumerState<VehicleSection>
             labelBuilder: (m) => m.name,
             prefixIcon: HugeIcons.strokeRoundedMotorbike01,
             enabled: catalog.makes.isNotEmpty,
-            disabledHint: catalog.makesError ?? 'Loading makes…',
+            disabledHint: _makesUnavailableHint(catalog),
             onChanged: _selectMake,
             validator: (m) =>
                 serverError('vehicle_make_id') ??
                 (m == null ? 'Select the make' : null),
           ),
+          if (catalog.makesError != null ||
+              (catalog.hasLoadedMakes && catalog.makes.isEmpty))
+            _CatalogRetry(onRetry: _loadCatalog),
           AppSelectField<VehicleModelModel>(
             key: ValueKey('model-$_makeId-${catalog.models.length}'),
             label: 'Model',
@@ -138,9 +237,7 @@ class _VehicleSectionState extends ConsumerState<VehicleSection>
             labelBuilder: (m) => m.name,
             prefixIcon: HugeIcons.strokeRoundedMotorbike02,
             enabled: catalog.models.isNotEmpty,
-            disabledHint: _makeId == null
-                ? 'Select the make first'
-                : (catalog.modelsError ?? 'Loading models…'),
+            disabledHint: _modelsUnavailableHint(catalog),
             onChanged: (m) {
               clearServerError('vehicle_model_id');
               if (m != null) setState(() => _modelId = m.id);
@@ -149,6 +246,14 @@ class _VehicleSectionState extends ConsumerState<VehicleSection>
                 serverError('vehicle_model_id') ??
                 (m == null ? 'Select the model' : null),
           ),
+          if (_makeId != null &&
+              (catalog.modelsError != null ||
+                  (catalog.hasLoadedModels && catalog.models.isEmpty)))
+            _CatalogRetry(
+              onRetry: () => ref
+                  .read(vehicleCatalogProvider.notifier)
+                  .loadModels(_makeId!),
+            ),
           AppTextField(
             label: 'Colour (optional)',
             prefixIcon: HugeIcons.strokeRoundedPaintBoard,
@@ -224,10 +329,15 @@ class _VehicleSectionState extends ConsumerState<VehicleSection>
 
     final colour = _colourCtrl.text.trim();
     final year = int.tryParse(_yearCtrl.text.trim());
+    // Normalised: `unique:riders,plate_number` is a raw string comparison,
+    // and TextCapitalization doesn't touch pasted text.
+    final plate = _plateCtrl.text.trim().toUpperCase();
     submit(
       () async {
         final failure =
             await ref.read(kycActionsProvider.notifier).saveProfile({
+          if (!_typeLocked) 'vehicle_type_id': _typeId,
+          if (!_plateLocked && plate.isNotEmpty) 'plate_number': plate,
           'vehicle_make_id': _makeId,
           'vehicle_model_id': _modelId,
           'vehicle_ownership': _ownership,
@@ -274,5 +384,25 @@ class _VehicleSectionState extends ConsumerState<VehicleSection>
             'one.',
       );
     }
+  }
+}
+
+/// Re-fetches a catalogue list that failed or came back empty, so the
+/// make/model pickers are never a dead end.
+class _CatalogRetry extends StatelessWidget {
+  const _CatalogRetry({required this.onRetry});
+
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: AlignmentDirectional.centerStart,
+      child: TextButton.icon(
+        onPressed: onRetry,
+        icon: const Icon(HugeIcons.strokeRoundedRefresh),
+        label: const Text('Try again'),
+      ),
+    );
   }
 }

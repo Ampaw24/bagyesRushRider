@@ -3,25 +3,22 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:go_router/go_router.dart';
 import 'package:gopady_rider/constant/app_theme.dart';
 import 'package:gopady_rider/core/router/app_routes.dart';
 import 'package:gopady_rider/core/widgets/app_gradient_button.dart';
 import 'package:gopady_rider/core/widgets/custom_dialogs.dart';
 import 'package:gopady_rider/features/rider/auth/viewmodels/rider_auth_viewmodel.dart';
-import 'package:gopady_rider/features/rider/profile/providers/rider_me_profile_providers.dart';
 import 'package:gopady_rider/features/rider/shared_widgets/otp_input_field.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 /// Phone verification. Reached from two paths:
-///  - signup: carries the vehicle fields collected on the previous screens,
-///    which are submitted to `PUT /rider/me` once verification yields a token;
-///  - login of an unverified account: `mode == 'verify'`, no vehicle data.
+///  - signup: the account already exists — `/register` took every signup
+///    field; the remaining vehicle details are collected in KYC;
+///  - login of an unverified account: `mode == 'verify'`.
 class RiderOtpScreen extends ConsumerStatefulWidget {
-  /// Passed via GoRouter extra: `{phone, email, password, mode?,
-  /// vehicle_type?, plate_number?, vehicle_make?, vehicle_model?,
-  /// vehicle_colour?, vehicle_year?}`
+  /// Passed via GoRouter extra: `{phone, email, password, mode?, ...}` —
+  /// on the signup path, the rest of the signup fields ride along unused.
   final Map<String, dynamic> credentials;
 
   const RiderOtpScreen({super.key, required this.credentials});
@@ -118,45 +115,7 @@ class _RiderOtpScreenState extends ConsumerState<RiderOtpScreen>
       return;
     }
 
-    await _submitVehicleProfile();
     if (mounted) context.go(AppRoutes.dashboard);
-  }
-
-  /// Submits the vehicle fields gathered during signup. A failure here must
-  /// not block entry — the rider has verified their phone and can correct
-  /// these later from the profile screen.
-  Future<void> _submitVehicleProfile() async {
-    final c = widget.credentials;
-    if (c['vehicle_type'] == null) return; // login-verify path
-
-    // Only the fields /register does NOT accept. vehicle_type and
-    // plate_number were set atomically at registration; re-sending the plate
-    // would re-run `unique:riders,plate_number` against the rider's own row.
-    // The ids are what /rider/me checks (`missing_profile_fields` lists
-    // vehicle_make_id / vehicle_model_id); the names alone don't satisfy it.
-    const keys = [
-      'vehicle_make_id',
-      'vehicle_model_id',
-      'vehicle_make',
-      'vehicle_model',
-      'vehicle_colour',
-      'vehicle_year',
-    ];
-    final body = {
-      for (final k in keys)
-        if (c[k] != null) k: c[k],
-    };
-
-    final ok = await ref
-        .read(riderMeProfileProvider.notifier)
-        .updateProfile(body);
-
-    if (!ok && mounted) {
-      Fluttertoast.showToast(
-        msg: 'Vehicle details need re-entering in your profile',
-        backgroundColor: AppColors.warning,
-      );
-    }
   }
 
   /// Both paths exit to login rather than back into the signup form.

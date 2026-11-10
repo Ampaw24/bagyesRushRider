@@ -13,6 +13,7 @@ import 'package:gopady_rider/core/widgets/custom_dialogs.dart';
 import 'package:gopady_rider/core/widgets/shimmer_list_placeholder.dart';
 import 'package:gopady_rider/features/rider/profile/providers/rider_me_profile_providers.dart';
 import 'package:gopady_rider/features/rider/wallet/providers/rider_me_wallet_providers.dart';
+import 'package:gopady_rider/features/rider/wallet/views/widgets/payout_destination_row.dart';
 import 'package:gopady_rider/features/rider/wallet/views/widgets/rider_withdrawal_request_sheet.dart';
 import 'package:gopady_rider/features/rider/wallet/views/widgets/rider_withdrawal_tile.dart';
 import 'package:gopady_rider/core/widgets/app_status_animation.dart';
@@ -48,9 +49,11 @@ class _RiderWithdrawalsScreenState
     // `payout` defaults to `RiderPayoutInfo(isConfigured: false)` until a
     // real `GET /rider/me` response says otherwise, so this fails closed —
     // there is no path to the amount sheet without a confirmed payout.
+    // The standalone editor (not the checklist step) so saving lands the
+    // rider back here, ready to withdraw.
     final payout = ref.read(riderMeProfileProvider).profile?.payout;
     if (payout?.isConfigured != true) {
-      context.push(AppRoutes.kycSection('payout'));
+      context.push(AppRoutes.payoutEdit);
       return;
     }
     final wallet = ref.read(riderMeWalletProvider).wallet;
@@ -133,6 +136,12 @@ class _RiderWithdrawalsScreenState
                         ? _onWithdrawTap
                         : null,
                   ),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(w * 0.05, 0, w * 0.05, w * 0.03),
+                  child: const PayoutDestinationRow(),
                 ),
               ),
               SliverToBoxAdapter(

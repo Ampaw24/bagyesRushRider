@@ -15,8 +15,6 @@ import 'package:gopady_rider/features/rider/auth/views/screens/rider_signup_scre
 import 'package:gopady_rider/features/rider/auth/views/screens/rider_otp_screen.dart';
 import 'package:gopady_rider/features/rider/auth/views/screens/rider_password_reset_otp_screen.dart';
 import 'package:gopady_rider/features/rider/auth/views/screens/rider_reset_password_screen.dart';
-import 'package:gopady_rider/features/rider/auth/views/screens/rider_vehicle_info_screen.dart';
-import 'package:gopady_rider/features/rider/auth/views/screens/rider_vehicle_details_screen.dart';
 import 'package:gopady_rider/features/rider/auth/views/screens/rider_terms_conditions_screen.dart';
 // ── Dashboard ─────────────────────────────────────────────────────────────────
 import 'package:gopady_rider/features/rider/dashboard/views/screens/rider_dashboard_screen.dart';
@@ -29,6 +27,8 @@ import 'package:gopady_rider/features/rider/chat/views/screens/rider_chat_list_s
 // ── Settings ──────────────────────────────────────────────────────────────────
 import 'package:gopady_rider/features/rider/settings/views/screens/rider_settings_screen.dart';
 // ── Wallet ────────────────────────────────────────────────────────────────────
+import 'package:gopady_rider/features/rider/wallet/views/screens/rider_payout_edit_screen.dart';
+import 'package:gopady_rider/features/rider/wallet/views/screens/rider_payout_screen.dart';
 import 'package:gopady_rider/features/rider/wallet/views/screens/rider_wallet_transactions_screen.dart';
 import 'package:gopady_rider/features/rider/wallet/views/screens/rider_withdrawals_screen.dart';
 // ── Support / Report a Problem ───────────────────────────────────────────────
@@ -56,18 +56,12 @@ import 'package:gopady_rider/features/rider/orders/views/screens/rider_order_map
 /// captured for `POST /rider/me/agreement` — and from there to `/otp`, which
 /// may run either side of a token depending on whether registration
 /// returned one.
-///
-/// `/vehicle-info` and `/vehicle-details` are an earlier, unused split of
-/// the same steps: nothing currently navigates to them, but their routes
-/// and screens are left in place rather than deleted here.
 const _publicRoutes = {
   AppRoutes.splash,
   AppRoutes.intro,
   AppRoutes.login,
   AppRoutes.signup,
   AppRoutes.otp,
-  AppRoutes.vehicleInfo,
-  AppRoutes.vehicleDetails,
   AppRoutes.termsAndConditions,
   AppRoutes.forgotPasswordOtp,
   AppRoutes.resetPassword,
@@ -170,24 +164,6 @@ GoRouter createAppRouter() {
         ),
       ),
       GoRoute(
-        path: AppRoutes.vehicleInfo,
-        pageBuilder: (_, state) => _slideRight(
-          state,
-          RiderVehicleInfoScreen(
-            credentials: (state.extra as Map<String, dynamic>?) ?? {},
-          ),
-        ),
-      ),
-      GoRoute(
-        path: AppRoutes.vehicleDetails,
-        pageBuilder: (_, state) => _slideRight(
-          state,
-          RiderVehicleDetailsScreen(
-            credentials: (state.extra as Map<String, dynamic>?) ?? {},
-          ),
-        ),
-      ),
-      GoRoute(
         path: AppRoutes.termsAndConditions,
         pageBuilder: (_, state) => _slideRight(
           state,
@@ -272,6 +248,18 @@ GoRouter createAppRouter() {
             path: 'wallet/withdrawals',
             pageBuilder: (_, state) =>
                 _slideRight(state, const RiderWithdrawalsScreen()),
+          ),
+          GoRoute(
+            path: 'wallet/payout',
+            pageBuilder: (_, state) =>
+                _slideRight(state, const RiderPayoutScreen()),
+            routes: [
+              GoRoute(
+                path: 'edit',
+                pageBuilder: (_, state) =>
+                    _slideRight(state, const RiderPayoutEditScreen()),
+              ),
+            ],
           ),
           GoRoute(
             path: 'help-support',

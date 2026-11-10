@@ -9,8 +9,6 @@ abstract final class AppRoutes {
   /// screen; these are the two screens that follow it.
   static const forgotPasswordOtp = '/forgot-password/verify';
   static const resetPassword = '/forgot-password/reset';
-  static const vehicleInfo = '/vehicle-info';
-  static const vehicleDetails = '/vehicle-details';
   static const termsAndConditions = '/terms-and-conditions';
   static const dashboard = '/dashboard';
   static const editProfile = '/dashboard/profile/edit';
@@ -23,6 +21,11 @@ abstract final class AppRoutes {
   static const deleteAccount = '/dashboard/delete-account';
   static const walletTransactions = '/dashboard/wallet/transactions';
   static const walletWithdrawals = '/dashboard/wallet/withdrawals';
+
+  /// Where withdrawals are paid: view the account on file, then edit it
+  /// (password-confirmed) outside the verification checklist.
+  static const payout = '/dashboard/wallet/payout';
+  static const payoutEdit = '/dashboard/wallet/payout/edit';
   static const helpSupport = '/dashboard/help-support';
   static const reports = '/dashboard/reports';
 

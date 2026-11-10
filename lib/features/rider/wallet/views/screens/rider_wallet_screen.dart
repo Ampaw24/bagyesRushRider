@@ -280,6 +280,16 @@ class _RiderWalletScreenState extends ConsumerState<RiderWalletScreen> {
                         onTap: () => context.push(AppRoutes.walletTransactions),
                       ),
                     ),
+                    SizedBox(width: w * 0.03),
+                    Expanded(
+                      child: _WalletActionButton(
+                        icon: HugeIcons.strokeRoundedWallet01,
+                        label: 'Payout',
+                        w: w,
+                        h: h,
+                        onTap: () => context.push(AppRoutes.payout),
+                      ),
+                    ),
                   ],
                 ),
               ),

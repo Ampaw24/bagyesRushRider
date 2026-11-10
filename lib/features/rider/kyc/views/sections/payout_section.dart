@@ -18,9 +18,13 @@ import 'package:gopady_rider/features/rider/shared_widgets/app_text_field.dart';
 enum _Method { mobileMoney, bank }
 
 class PayoutSection extends ConsumerStatefulWidget {
-  const PayoutSection({super.key, required this.profile});
+  const PayoutSection({super.key, required this.profile, this.onSaved});
 
   final RiderMeProfileModel profile;
+
+  /// Runs after a successful save in place of moving on to the next
+  /// checklist step — for editing payout outside verification.
+  final VoidCallback? onSaved;
 
   @override
   ConsumerState<PayoutSection> createState() => _PayoutSectionState();
@@ -96,8 +100,11 @@ class _PayoutSectionState extends ConsumerState<PayoutSection>
       key: formKey,
       child: KycSectionLayout(
         section: section,
-        primaryLabel:
-            current.isConfigured ? 'Update payout account' : 'Save & continue',
+        primaryLabel: current.isConfigured
+            ? 'Update payout account'
+            : widget.onSaved == null
+                ? 'Save & continue'
+                : 'Save payout account',
         isBusy: isSaving,
         onPrimary: _save,
         children: [
@@ -218,6 +225,7 @@ class _PayoutSectionState extends ConsumerState<PayoutSection>
               payoutProviderId: _providerId,
               accountNumber: _accountNumberCtrl.text.trim(),
             ),
+      onSaved: widget.onSaved,
     );
   }
 }
@@ -258,19 +266,12 @@ class _CurrentPayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final provider = payout.isMobileMoney
-        ? (payout.momoProviderName ?? 'Mobile money')
-        : (payout.bankName ?? 'Bank account');
-    final last4 = payout.isMobileMoney
-        ? payout.mobileMoneyNumberLast4
-        : payout.accountNumberLast4;
-
     return KycInfoRow(
       icon: payout.isMobileMoney
           ? HugeIcons.strokeRoundedSmartPhone01
           : HugeIcons.strokeRoundedBank,
       label: 'Paid to',
-      value: last4 == null ? provider : '$provider •••• $last4',
+      value: payout.destinationLabel,
       note: [
         if (payout.accountName != null) payout.accountName!,
         'Fill in the form below to change it.',

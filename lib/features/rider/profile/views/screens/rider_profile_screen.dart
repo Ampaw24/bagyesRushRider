@@ -111,6 +111,12 @@ class RiderProfileScreen extends ConsumerWidget {
                               w: w,
                             ),
                             _ProfileTile(
+                              icon: HugeIcons.strokeRoundedWallet01,
+                              label: 'Payout Account',
+                              onTap: () => context.push(AppRoutes.payout),
+                              w: w,
+                            ),
+                            _ProfileTile(
                               icon: HugeIcons.strokeRoundedUserEdit01,
                               label: 'Edit Profile',
                               onTap: () => context.push(AppRoutes.editProfile),

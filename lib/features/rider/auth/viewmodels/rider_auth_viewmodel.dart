@@ -250,9 +250,6 @@ class RiderAuthNotifier extends Notifier<RiderAuthState> {
   }
 
   /// Returns true on success, so the view can navigate.
-  ///
-  /// Every parameter is required by the backend for `role: rider`, which is
-  /// why this can only be called once the vehicle screens have run.
   Future<bool> register({
     required String email,
     required String phone,
@@ -261,8 +258,6 @@ class RiderAuthNotifier extends Notifier<RiderAuthState> {
     required String firstName,
     required String lastName,
     required String city,
-    required int vehicleTypeId,
-    required String plateNumber,
   }) async {
     state = state.copyWith(status: AuthStatus.loading, clearError: true);
 
@@ -274,8 +269,6 @@ class RiderAuthNotifier extends Notifier<RiderAuthState> {
       firstName: firstName,
       lastName: lastName,
       city: city,
-      vehicleTypeId: vehicleTypeId,
-      plateNumber: plateNumber,
     );
 
     if (result.isLeft()) {
@@ -315,8 +308,6 @@ class RiderAuthNotifier extends Notifier<RiderAuthState> {
     required String firstName,
     required String lastName,
     required String city,
-    required int vehicleTypeId,
-    required String plateNumber,
     required bool acceptTerms,
     required bool consentToVerification,
     String? termsVersion,
@@ -329,8 +320,6 @@ class RiderAuthNotifier extends Notifier<RiderAuthState> {
       firstName: firstName,
       lastName: lastName,
       city: city,
-      vehicleTypeId: vehicleTypeId,
-      plateNumber: plateNumber,
     );
     if (!registered) return false;
 

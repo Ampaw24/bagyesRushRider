@@ -41,6 +41,12 @@ class VehicleCatalogState extends Equatable {
   bool get isLoadingMakes => makesStatus == _LoadStatus.loading;
   bool get isLoadingModels => modelsStatus == _LoadStatus.loading;
 
+  /// The fetch finished successfully — lets a view tell "nothing in the
+  /// catalogue" apart from "not fetched yet" when the list is empty.
+  bool get hasLoadedTypes => typesStatus == _LoadStatus.loaded;
+  bool get hasLoadedMakes => makesStatus == _LoadStatus.loaded;
+  bool get hasLoadedModels => modelsStatus == _LoadStatus.loaded;
+
   VehicleCatalogState copyWith({
     List<VehicleTypeModel>? types,
     List<VehicleMakeModel>? makes,

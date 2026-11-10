@@ -49,6 +49,21 @@ class RiderPayoutInfo extends Equatable {
 
   bool get isMobileMoney => momoProviderId != null;
 
+  /// The network or bank paid into, e.g. "MTN MoMo".
+  String get providerLabel => isMobileMoney
+      ? (momoProviderName ?? 'Mobile money')
+      : (bankName ?? 'Bank account');
+
+  /// The last four digits on file — the API never returns more.
+  String? get last4 =>
+      isMobileMoney ? mobileMoneyNumberLast4 : accountNumberLast4;
+
+  /// One-line destination, e.g. "MTN MoMo •••• 1234".
+  String get destinationLabel {
+    final digits = last4;
+    return digits == null ? providerLabel : '$providerLabel •••• $digits';
+  }
+
   factory RiderPayoutInfo.fromJson(Object? json) {
     if (json is! Map) return const RiderPayoutInfo();
     return RiderPayoutInfo(

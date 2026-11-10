@@ -14,9 +14,10 @@ abstract class RiderAuthRepository {
   /// Registers a rider account. `role` is not a parameter — the
   /// implementation always sends [AuthRoles.rider].
   ///
-  /// All eight fields are required by the backend's `RegisterRequest` for
-  /// `role: rider`, so this cannot be called until the vehicle screens have
-  /// collected [vehicleType] and [plateNumber].
+  /// No vehicle fields: type, plate, make and model are collected after
+  /// signup in the KYC vehicle section (`PUT /rider/me`). This relies on the
+  /// backend's `RegisterRequest` not requiring `vehicle_type_id` or
+  /// `plate_number` for `role: rider`.
   ResultFuture<AuthResult> register({
     required String email,
     required String phone,
@@ -27,15 +28,6 @@ abstract class RiderAuthRepository {
 
     /// `required_if:role,vendor,rider`, max 255.
     required String city,
-
-    /// Must be one of `VehicleType::selectable()` — currently only
-    /// `motorbike`.
-    required int vehicleTypeId,
-
-    /// Non-nullable on purpose: the backend exempts bicycles, but bicycle
-    /// isn't selectable, so a rider always needs a plate. Relax to `String?`
-    /// only if that changes. `unique:riders,plate_number`, max 32.
-    required String plateNumber,
   });
 
 
