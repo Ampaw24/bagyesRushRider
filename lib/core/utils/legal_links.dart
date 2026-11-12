@@ -4,7 +4,8 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:gopady_rider/core/utils/app_logger.dart';
 import 'package:gopady_rider/core/widgets/custom_dialogs.dart';
 
-/// The rider-facing legal pages hosted on the GoPady website.
+/// Rider-facing pages hosted on the GoPady website: the legal documents and
+/// the account-deletion request page.
 enum LegalDocument {
   privacyPolicy(
     'Privacy Policy',
@@ -17,6 +18,13 @@ enum LegalDocument {
   termsConditions(
     'Terms & Conditions',
     'https://gopady.com/terms-conditions',
+  ),
+
+  /// Riders delete their account here, verifying with their phone number,
+  /// not inside the app.
+  deleteAccount(
+    'Account Deletion',
+    'https://gopady.com/delete-account',
   );
 
   const LegalDocument(this.title, this.url);

@@ -258,6 +258,8 @@ class RiderAuthNotifier extends Notifier<RiderAuthState> {
     required String firstName,
     required String lastName,
     required String city,
+    required int vehicleTypeId,
+    String? plateNumber,
   }) async {
     state = state.copyWith(status: AuthStatus.loading, clearError: true);
 
@@ -269,6 +271,8 @@ class RiderAuthNotifier extends Notifier<RiderAuthState> {
       firstName: firstName,
       lastName: lastName,
       city: city,
+      vehicleTypeId: vehicleTypeId,
+      plateNumber: plateNumber,
     );
 
     if (result.isLeft()) {
@@ -308,6 +312,8 @@ class RiderAuthNotifier extends Notifier<RiderAuthState> {
     required String firstName,
     required String lastName,
     required String city,
+    required int vehicleTypeId,
+    String? plateNumber,
     required bool acceptTerms,
     required bool consentToVerification,
     String? termsVersion,
@@ -320,6 +326,8 @@ class RiderAuthNotifier extends Notifier<RiderAuthState> {
       firstName: firstName,
       lastName: lastName,
       city: city,
+      vehicleTypeId: vehicleTypeId,
+      plateNumber: plateNumber,
     );
     if (!registered) return false;
 
@@ -622,53 +630,6 @@ class RiderAuthNotifier extends Notifier<RiderAuthState> {
         return true;
       },
     );
-  }
-
-  /// Permanently deletes the signed-in rider's account (`/account/delete`),
-  /// then tears down the local session exactly like [logout]. Returns true
-  /// on success; on failure the state carries the error the same way
-  /// [changePassword] does.
-  Future<bool> deleteAccount({
-    required String password,
-    String? reason,
-  }) async {
-    state = state.copyWith(status: AuthStatus.loading, clearError: true);
-
-    // Deregister BEFORE the delete call, same reasoning as logout(): once
-    // the account is gone the Bearer token is invalid and a DELETE
-    // /device-tokens issued after it would 401.
-    try {
-      final registeredToken =
-          sl<SharedPreferences>().getString(_registeredTokenKey);
-      if (registeredToken != null && registeredToken.isNotEmpty) {
-        await sl<DeviceTokenRepository>().unregister(token: registeredToken);
-      }
-    } catch (e) {
-      appLogger.w('[DeviceToken] deregister failed (ignored): $e');
-    }
-
-    final result = await _repo.deleteAccount(password: password, reason: reason);
-
-    if (result.isLeft()) {
-      final failure = _failureOf(result);
-      state = state.copyWith(
-        status: AuthStatus.error,
-        errorMessage: failure?.message ?? 'Request failed',
-        fieldErrors:
-            failure is ValidationFailure ? failure.errors : const {},
-      );
-      return false;
-    }
-
-    await sl<RealtimeService>().disconnect();
-    await _session.clearSession();
-    await _forgetDeviceToken();
-
-    state = const RiderAuthState();
-    // Not via sessionRevision: that would redirect away from the calling
-    // screen before it can dismiss its loading overlay and navigate.
-    RiderSessionTeardown.reset(ref.invalidate);
-    return true;
   }
 
   /// Refreshes the cached user from `/profile`.

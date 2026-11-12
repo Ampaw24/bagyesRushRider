@@ -3,12 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:gopady_rider/core/utils/account_deletion_prompt.dart';
 import 'package:gopady_rider/core/utils/legal_links.dart';
 import 'package:gopady_rider/constant/app_theme.dart';
 import 'package:gopady_rider/core/di/service_locator.dart';
 import 'package:gopady_rider/core/router/app_routes.dart';
 import 'package:gopady_rider/core/services/user_session_manager.dart';
-import 'package:gopady_rider/core/widgets/custom_dialogs.dart';
 import 'package:gopady_rider/features/rider/auth/views/widgets/change_password_sheet.dart';
 import 'package:gopady_rider/features/rider/auth/views/widgets/phone_change_flow_sheet.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -148,7 +148,7 @@ class _RiderSettingsScreenState extends ConsumerState<RiderSettingsScreen> {
             iconColor: AppColors.error,
             title: 'Delete Account',
             titleColor: AppColors.error,
-            onTap: () => _showDeleteDialog(context),
+            onTap: () => confirmAccountDeletion(context),
           ),
           const SizedBox(height: 40),
         ],
@@ -280,18 +280,6 @@ class _RiderSettingsScreenState extends ConsumerState<RiderSettingsScreen> {
           borderRadius: BorderRadius.circular(12),
         ),
       ),
-    );
-  }
-
-  void _showDeleteDialog(BuildContext context) {
-    CustomDialog.showConfirmation(
-      context: context,
-      title: 'Delete Account',
-      subtitle: 'This action is permanent and cannot be undone. All your '
-          'delivery history and personal data will be permanently deleted.',
-      confirmText: 'Continue',
-      cancelText: 'Cancel',
-      onConfirm: () => context.push(AppRoutes.deleteAccount),
     );
   }
 }

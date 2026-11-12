@@ -19,15 +19,15 @@ import 'package:gopady_rider/features/rider/wallet/providers/rider_me_wallet_pro
 import 'package:gopady_rider/features/rider/wallet/providers/rider_me_wallet_transactions_providers.dart';
 
 /// Resets every piece of per-rider Riverpod state whenever the session
-/// ends — logout, account deletion, or a 401 clearing it out of band.
+/// ends — logout, or a 401 clearing it out of band (including after the
+/// rider deletes their account on the website).
 ///
 /// The root `ProviderContainer` lives for the whole process and these
 /// providers aren't autoDispose, so without this the next rider to sign in
 /// on the device would briefly see the previous rider's profile, orders and
 /// wallet, and GPS would keep pinging `/rider/me/location` with no token.
 ///
-/// Logout and account deletion call [reset] themselves, since they own the
-/// navigation that follows. The 401 path has no `Ref`, so [attach] covers
+/// Logout calls [reset] itself, since it owns the navigation that follows. The 401 path has no `Ref`, so [attach] covers
 /// it by listening to [sessionRevision].
 class RiderSessionTeardown {
   RiderSessionTeardown._();

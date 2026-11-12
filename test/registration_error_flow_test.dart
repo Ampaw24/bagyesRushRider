@@ -10,6 +10,8 @@ import 'package:gopady_rider/features/rider/auth/views/screens/rider_signup_scre
 import 'package:gopady_rider/features/rider/auth/views/screens/rider_terms_conditions_screen.dart';
 import 'package:gopady_rider/features/rider/legal/models/legal_document_model.dart';
 import 'package:gopady_rider/features/rider/legal/providers/legal_document_providers.dart';
+import 'package:gopady_rider/features/rider/vehicles/model/vehicle_type_model.dart';
+import 'package:gopady_rider/features/rider/vehicles/viewmodel/vehicle_catalog_viewmodel.dart';
 
 /// Fails `/register` the way the real notifier reports it: a message, plus
 /// per-field errors for a 422.
@@ -18,6 +20,11 @@ class _FailingAuth extends RiderAuthNotifier {
 
   final String message;
   final Map<String, List<String>> fieldErrors;
+
+  /// What the terms screen sent for the vehicle — `/register` rejects a
+  /// rider without them.
+  int? sentVehicleTypeId;
+  String? sentPlateNumber;
 
   @override
   Future<bool> registerAndAcceptAgreement({
@@ -28,10 +35,14 @@ class _FailingAuth extends RiderAuthNotifier {
     required String firstName,
     required String lastName,
     required String city,
+    required int vehicleTypeId,
+    String? plateNumber,
     required bool acceptTerms,
     required bool consentToVerification,
     String? termsVersion,
   }) async {
+    sentVehicleTypeId = vehicleTypeId;
+    sentPlateNumber = plateNumber;
     state = state.copyWith(status: AuthStatus.loading, clearError: true);
     await Future<void>.delayed(const Duration(milliseconds: 50));
     state = state.copyWith(
@@ -43,6 +54,24 @@ class _FailingAuth extends RiderAuthNotifier {
   }
 }
 
+const _motorbike = VehicleTypeModel(
+  id: 1,
+  name: 'Motorbike',
+  slug: 'motorbike',
+  requiresPlate: true,
+  maxParcelSize: 'small',
+  maxParcelSizeLabel: 'Small',
+  isActive: true,
+  displayOrder: 0,
+);
+
+/// Serves the live catalogue's one selectable type without the network.
+class _OneTypeCatalog extends VehicleCatalogNotifier {
+  @override
+  Future<void> loadTypes() async =>
+      state = const VehicleCatalogState(types: [_motorbike]);
+}
+
 /// What the terms screen hands back to the wizard (see
 /// `RiderSignupScreen._proceedToTerms`).
 const _collected = <String, dynamic>{
@@ -52,6 +81,8 @@ const _collected = <String, dynamic>{
   'phone': '+233241234567',
   'city': 'Accra',
   'password': 'Str0ng!Passw0rd',
+  'vehicle_type_id': '1',
+  'plate_number': 'GR-1234-24',
 };
 
 Future<void> _pumpSignup(
@@ -59,6 +90,7 @@ Future<void> _pumpSignup(
   Map<String, dynamic> prefill,
 ) async {
   await tester.pumpWidget(ProviderScope(
+    overrides: [vehicleCatalogProvider.overrideWith(_OneTypeCatalog.new)],
     child: MaterialApp(home: RiderSignupScreen(prefill: prefill)),
   ));
   await tester.pumpAndSettle();
@@ -113,10 +145,8 @@ void main() {
     final stepFor = {
       'phone': 'Personal Profile',
       'password': 'Secure Your Account',
-      // Signup no longer has vehicle steps; should the backend still reject
-      // these, the wizard opens at the start and the dialog names them.
-      'vehicle_type_id': 'Personal Profile',
-      'plate_number': 'Personal Profile',
+      'vehicle_type_id': 'Your Vehicle',
+      'plate_number': 'Your Vehicle',
     };
     stepFor.forEach((field, stepTitle) {
       testWidgets('opens on "$stepTitle" for a $field error', (tester) async {
@@ -134,20 +164,28 @@ void main() {
 
   testWidgets('backing out of terms returns to the last step',
       (tester) async {
-    await _pumpSignup(tester, {..._collected, 'resume_step': 1});
+    await _pumpSignup(tester, {..._collected, 'resume_step': 2});
 
     expect(tester.takeException(), isNull);
     expect(_dialog, findsNothing);
-    expect(find.text('Secure Your Account'), findsOneWidget);
+    expect(find.text('Your Vehicle'), findsOneWidget);
     expect(find.text('Personal Profile'), findsNothing);
   });
 
-  testWidgets('signup has no vehicle steps', (tester) async {
-    await _pumpSignup(tester, const {});
+  testWidgets('one vehicle step, with the only type pre-selected',
+      (tester) async {
+    // No earlier choice to restore: the type must be picked for them.
+    await _pumpSignup(
+      tester,
+      {..._collected, 'resume_step': 2}..remove('vehicle_type_id'),
+    );
 
-    expect(find.text('Step 1 of 2'), findsOneWidget);
-    expect(find.text('Vehicle'), findsNothing);
-    expect(find.text('Details'), findsNothing);
+    expect(find.text('Step 3 of 3'), findsOneWidget);
+    expect(find.text('Motorbike'), findsOneWidget);
+    expect(find.text('GR-1234-24'), findsOneWidget);
+    // Make, model and year stay in KYC.
+    expect(find.text('Make'), findsNothing);
+    expect(find.text('Year'), findsNothing);
   });
 }
 
@@ -179,6 +217,7 @@ Future<void> _submitTerms(WidgetTester tester, _FailingAuth auth) async {
   await tester.pumpWidget(ProviderScope(
     overrides: [
       riderAuthProvider.overrideWith(() => auth),
+      vehicleCatalogProvider.overrideWith(_OneTypeCatalog.new),
       riderAgreementProvider.overrideWith((_) async => const LegalDocumentModel(
             version: '1',
             title: 'Rider Agreement',
@@ -203,6 +242,15 @@ Future<void> _submitTerms(WidgetTester tester, _FailingAuth auth) async {
 
 void _registerTermsTests() {
   group('submitting the terms screen', () {
+    testWidgets('sends the vehicle type and plate /register requires',
+        (tester) async {
+      final auth = _FailingAuth('Unable to reach the server. Try again.');
+      await _submitTerms(tester, auth);
+
+      expect(auth.sentVehicleTypeId, 1);
+      expect(auth.sentPlateNumber, 'GR-1234-24');
+    });
+
     testWidgets('a network/server failure shows the error dialog',
         (tester) async {
       await _submitTerms(

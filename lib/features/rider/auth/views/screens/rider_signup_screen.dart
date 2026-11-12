@@ -14,11 +14,14 @@ import 'package:gopady_rider/core/widgets/app_gradient_button.dart';
 import 'package:gopady_rider/core/widgets/custom_dialogs.dart';
 import 'package:gopady_rider/features/rider/auth/viewmodels/rider_auth_viewmodel.dart';
 import 'package:gopady_rider/features/rider/auth/views/widgets/registration_stepper.dart';
+import 'package:gopady_rider/features/rider/auth/views/widgets/signup_vehicle_step.dart';
 import 'package:gopady_rider/features/rider/shared_widgets/app_password_field.dart';
 import 'package:gopady_rider/features/rider/shared_widgets/app_phone_field.dart';
 import 'package:gopady_rider/features/rider/shared_widgets/app_select_field.dart';
 import 'package:gopady_rider/features/rider/shared_widgets/app_text_field.dart';
 import 'package:gopady_rider/features/rider/shared_widgets/password_strength_validator.dart';
+import 'package:gopady_rider/features/rider/vehicles/model/vehicle_type_model.dart';
+import 'package:gopady_rider/features/rider/vehicles/viewmodel/vehicle_catalog_viewmodel.dart';
 
 class RiderSignupScreen extends ConsumerStatefulWidget {
   /// Values to restore into the form when registration fails or is redirected back.
@@ -34,6 +37,7 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
     with TickerProviderStateMixin {
   final _formKey0 = GlobalKey<FormState>();
   final _formKey1 = GlobalKey<FormState>();
+  final _formKey2 = GlobalKey<FormState>();
 
   late PageController _pageController;
   int _currentStep = 0;
@@ -51,9 +55,17 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
   final _confirmCtrl = TextEditingController();
   String _password = '';
 
-  // No vehicle steps: type, plate, make and model are all collected after
-  // signup, in the KYC vehicle section.
-  static const _lastStep = 1;
+  // Step 2: Vehicle — only what `/register` requires for a rider
+  // (`vehicle_type_id`, `plate_number`). Make, model, year and colour are
+  // collected later, in the KYC vehicle section.
+  VehicleTypeModel? _selectedVehicleType;
+  final _plateCtrl = TextEditingController();
+
+  /// Type id to re-select once the catalogue loads after a register failure
+  /// sends the rider back here with [widget.prefill].
+  int? _pendingVehicleTypeId;
+
+  static const _lastStep = 2;
 
   DateTime? _lastBackPress;
   Map<String, String> _serverErrors = {};
@@ -64,11 +76,13 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
   static const List<String> _stepTitles = [
     'Personal Profile',
     'Secure Your Account',
+    'Your Vehicle',
   ];
 
   static const List<String> _stepSubtitles = [
     'Enter your name, phone, email and operating city',
     'Create a strong password to protect your account',
+    'Confirm your vehicle type and enter its license plate',
   ];
 
   /// Placeholder list of major Ghanaian cities for the operating-city
@@ -116,9 +130,33 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
       _emailCtrl,
       _cityCtrl,
       _confirmCtrl,
+      _plateCtrl,
     ]) {
       c.addListener(_rebuild);
     }
+
+    Future.microtask(_loadVehicleTypes);
+  }
+
+  /// Fetches the selectable vehicle types, then re-selects the rider's
+  /// earlier choice (after a register failure) or — when only one type is
+  /// on offer — picks it for them.
+  Future<void> _loadVehicleTypes() async {
+    await ref.read(vehicleCatalogProvider.notifier).loadTypes();
+    if (!mounted || _selectedVehicleType != null) return;
+
+    final types = ref.read(vehicleCatalogProvider).types;
+    VehicleTypeModel? pick;
+    for (final t in types) {
+      if (t.id == _pendingVehicleTypeId) pick = t;
+    }
+    if (pick == null && types.length == 1) pick = types.single;
+    if (pick != null) setState(() => _selectedVehicleType = pick);
+  }
+
+  void _selectVehicleType(VehicleTypeModel type) {
+    HapticFeedback.selectionClick();
+    setState(() => _selectedVehicleType = type);
   }
 
   void _rebuild() {
@@ -140,6 +178,11 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
     final fullPhone = (p['phone'] as String?) ?? '';
     _phone = fullPhone;
     _phoneDigitsCtrl.text = _localDigitsOf(fullPhone);
+
+    // Resolved against the live catalogue once it loads — see
+    // _loadVehicleTypes, which runs right after this.
+    _pendingVehicleTypeId = int.tryParse('${p['vehicle_type_id'] ?? ''}');
+    _plateCtrl.text = (p['plate_number'] as String?) ?? '';
 
     // Runs from initState, before the PageView is attached, so this sets
     // the starting page rather than calling _navigateToStep (whose
@@ -171,6 +214,9 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
       'city': 0,
       'password': 1,
       'password_confirmation': 1,
+      'vehicle_type_id': 2,
+      'vehicle_type': 2,
+      'plate_number': 2,
     };
     final steps = fields.map((f) => stepOf[f]).whereType<int>();
     return steps.isEmpty ? 0 : steps.reduce(math.min);
@@ -209,6 +255,7 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
     _cityCtrl.dispose();
     _passwordCtrl.dispose();
     _confirmCtrl.dispose();
+    _plateCtrl.dispose();
     super.dispose();
   }
 
@@ -230,8 +277,19 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
         _confirmCtrl.text == _password;
   }
 
-  bool get _canProceedCurrentStep =>
-      _currentStep == 0 ? _isStep0Valid : _isStep1Valid;
+  bool get _isStep2Valid =>
+      _selectedVehicleType != null &&
+      (!_selectedVehicleType!.requiresPlate ||
+          _plateCtrl.text.trim().isNotEmpty);
+
+  bool get _canProceedCurrentStep => switch (_currentStep) {
+        0 => _isStep0Valid,
+        1 => _isStep1Valid,
+        _ => _isStep2Valid,
+      };
+
+  GlobalKey<FormState> get _currentFormKey =>
+      [_formKey0, _formKey1, _formKey2][_currentStep];
 
   void _navigateToStep(int step) {
     if (step < 0 || step > _lastStep) return;
@@ -247,7 +305,7 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
 
   void _nextStep() {
     FocusManager.instance.primaryFocus?.unfocus();
-    if (!_formKey0.currentState!.validate()) return;
+    if (!_currentFormKey.currentState!.validate()) return;
     _navigateToStep(_currentStep + 1);
   }
 
@@ -264,9 +322,10 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
   /// so this screen needs no failure-handling of its own.
   void _proceedToTerms() {
     FocusManager.instance.primaryFocus?.unfocus();
-    if (!_formKey1.currentState!.validate()) return;
+    if (!_formKey2.currentState!.validate()) return;
 
     HapticFeedback.mediumImpact();
+    final type = _selectedVehicleType!;
 
     // Exactly what `POST /register` takes (see RiderTermsConditionsScreen).
     final collected = {
@@ -276,6 +335,9 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
       'phone': _phone,
       'city': _cityCtrl.text.trim(),
       'password': _password,
+      'vehicle_type_id': type.id.toString(),
+      if (type.requiresPlate)
+        'plate_number': _plateCtrl.text.trim().toUpperCase(),
     };
 
     context.go(AppRoutes.termsAndConditions, extra: collected);
@@ -365,7 +427,7 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: hPad),
                   child: RegistrationStepper(
-                    steps: const ['Personal', 'Account'],
+                    steps: const ['Personal', 'Account', 'Vehicle'],
                     currentIndex: _currentStep,
                     onStepTapped: (step) => _navigateToStep(step),
                   ),
@@ -425,6 +487,17 @@ class _RiderSignupScreenState extends ConsumerState<RiderSignupScreen>
                     children: [
                       _buildStep0Personal(hPad, w, h),
                       _buildStep1Account(hPad, w, h),
+                      SignupVehicleStep(
+                        formKey: _formKey2,
+                        selectedType: _selectedVehicleType,
+                        onTypeChanged: _selectVehicleType,
+                        plateController: _plateCtrl,
+                        serverError: _takeServerError,
+                        onFieldEdited: _clearServerError,
+                        onRetry: _loadVehicleTypes,
+                        horizontalPadding: hPad,
+                        screenHeight: h,
+                      ),
                     ],
                   ),
                 ),

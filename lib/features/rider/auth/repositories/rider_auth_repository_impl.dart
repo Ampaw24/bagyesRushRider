@@ -24,6 +24,8 @@ class RiderAuthRepositoryImpl implements RiderAuthRepository {
     required String firstName,
     required String lastName,
     required String city,
+    required int vehicleTypeId,
+    String? plateNumber,
   }) =>
       _run(() async {
         final response = await _api.register({
@@ -35,6 +37,12 @@ class RiderAuthRepositoryImpl implements RiderAuthRepository {
           'first_name': firstName,
           'last_name': lastName,
           'city': city,
+          'vehicle_type_id': vehicleTypeId,
+          // Normalised: `unique:riders,plate_number` is a raw string
+          // comparison, and TextCapitalization is only a keyboard hint —
+          // it doesn't touch pasted text.
+          if (plateNumber != null && plateNumber.trim().isNotEmpty)
+            'plate_number': plateNumber.trim().toUpperCase(),
         });
         return _parseAuth(response);
       });
@@ -122,13 +130,6 @@ class RiderAuthRepositoryImpl implements RiderAuthRepository {
             newPassword: newPassword,
             confirmPassword: confirmPassword,
           ));
-
-  @override
-  Future<Either<Failure, void>> deleteAccount({
-    required String password,
-    String? reason,
-  }) =>
-      _run(() => _api.deleteAccount(password: password, reason: reason));
 
   @override
   Future<Either<Failure, AuthUserModel>> getProfile() => _run(() async {

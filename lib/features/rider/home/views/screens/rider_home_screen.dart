@@ -11,9 +11,9 @@ import 'package:gopady_rider/constant/app_theme.dart';
 import 'package:gopady_rider/core/di/service_locator.dart';
 import 'package:gopady_rider/core/router/app_routes.dart';
 import 'package:gopady_rider/core/services/user_session_manager.dart';
+import 'package:gopady_rider/core/utils/account_deletion_prompt.dart';
 import 'package:gopady_rider/core/widgets/app_loading_overlay.dart';
 import 'package:gopady_rider/core/widgets/app_shimmer.dart';
-import 'package:gopady_rider/core/widgets/custom_dialogs.dart';
 import 'package:gopady_rider/core/widgets/notification_permission_prompt.dart';
 import 'package:gopady_rider/features/rider/auth/models/rider_user_model.dart';
 import 'package:gopady_rider/features/rider/auth/viewmodels/rider_auth_viewmodel.dart';
@@ -159,18 +159,6 @@ class _RiderHomeScreenState extends ConsumerState<RiderHomeScreen>
       ref.read(riderBannersProvider.notifier).load(),
       ref.read(riderMeProfileProvider.notifier).load(),
     ]);
-  }
-
-  void _handleDeleteAccount() {
-    CustomDialog.showConfirmation(
-      context: context,
-      title: 'Delete Account',
-      subtitle: 'This action is permanent and cannot be undone. All your '
-          'delivery history and personal data will be permanently deleted.',
-      confirmText: 'Continue',
-      cancelText: 'Cancel',
-      onConfirm: () => context.push(AppRoutes.deleteAccount),
-    );
   }
 
   /// Opens the same order sheet as the Orders tab, where the rider can move
@@ -368,7 +356,7 @@ class _RiderHomeScreenState extends ConsumerState<RiderHomeScreen>
               onWallet: widget.onViewWallet,
               onProfile: widget.onViewProfile,
               onLogout: _handleLogout,
-              onDeleteAccount: _handleDeleteAccount,
+              onDeleteAccount: () => confirmAccountDeletion(context),
               isVerified:
                   ref.watch(riderKycStatusProvider) == KycStatus.approved,
               photoUrl: photoUrl,

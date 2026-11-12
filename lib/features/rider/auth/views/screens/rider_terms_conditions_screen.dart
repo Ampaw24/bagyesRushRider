@@ -27,7 +27,7 @@ import 'package:gopady_rider/core/widgets/app_status_animation.dart';
 /// `RiderAuthNotifier.registerAndAcceptAgreement`.
 class RiderTermsConditionsScreen extends ConsumerStatefulWidget {
   /// Everything collected across the signup wizard: `email, phone, password,
-  /// first_name, last_name, city`.
+  /// first_name, last_name, city, vehicle_type_id, plate_number`.
   final Map<String, dynamic> credentials;
 
   const RiderTermsConditionsScreen({super.key, required this.credentials});
@@ -86,7 +86,7 @@ class _RiderTermsConditionsScreenState
     // doesn't have to retype everything.
     context.go(AppRoutes.signup, extra: {
       ...widget.credentials,
-      'resume_step': 1,
+      'resume_step': 2,
     });
   }
 
@@ -107,6 +107,9 @@ class _RiderTermsConditionsScreenState
           firstName: c['first_name'] as String? ?? '',
           lastName: c['last_name'] as String? ?? '',
           city: c['city'] as String? ?? '',
+          vehicleTypeId:
+              int.tryParse(c['vehicle_type_id'] as String? ?? '') ?? 0,
+          plateNumber: c['plate_number'] as String?,
           acceptTerms: _acceptTerms,
           consentToVerification: _consentToVerification,
           termsVersion: ref.read(riderAgreementProvider).valueOrNull?.version,

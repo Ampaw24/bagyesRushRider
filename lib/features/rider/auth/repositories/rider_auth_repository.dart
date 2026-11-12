@@ -14,10 +14,9 @@ abstract class RiderAuthRepository {
   /// Registers a rider account. `role` is not a parameter — the
   /// implementation always sends [AuthRoles.rider].
   ///
-  /// No vehicle fields: type, plate, make and model are collected after
-  /// signup in the KYC vehicle section (`PUT /rider/me`). This relies on the
-  /// backend's `RegisterRequest` not requiring `vehicle_type_id` or
-  /// `plate_number` for `role: rider`.
+  /// The backend's `RegisterRequest` requires [vehicleTypeId] and (for
+  /// plated types) [plateNumber] for `role: rider`; make, model, year and
+  /// colour are collected later in the KYC vehicle section.
   ResultFuture<AuthResult> register({
     required String email,
     required String phone,
@@ -28,6 +27,14 @@ abstract class RiderAuthRepository {
 
     /// `required_if:role,vendor,rider`, max 255.
     required String city,
+
+    /// Must be one of `VehicleType::selectable()` — currently only
+    /// `motorbike`.
+    required int vehicleTypeId,
+
+    /// Null only for a type that doesn't take a plate (`requires_plate`
+    /// false). `unique:riders,plate_number`, max 32.
+    String? plateNumber,
   });
 
 
@@ -73,14 +80,6 @@ abstract class RiderAuthRepository {
     required String currentPassword,
     required String newPassword,
     required String confirmPassword,
-  });
-
-  /// Permanently deletes the signed-in rider's account
-  /// (`POST /account/delete`). Requires the current password to confirm
-  /// intent; `reason` is optional feedback sent to support.
-  ResultFuture<void> deleteAccount({
-    required String password,
-    String? reason,
   });
 
   ResultFuture<AuthUserModel> getProfile();

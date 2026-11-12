@@ -62,7 +62,6 @@ abstract final class ApiEndpoints {
 
   /// Permanently deletes the signed-in user's account. Requires Bearer
   /// auth. Body: `{password (required), reason (optional, max:500)}`.
-  static const accountDelete = '/account/delete';
 
   // NOTE: this backend has no /auth/refresh-token route (verified: 404).
   // A refresh token is persisted when returned, but cannot be redeemed yet.
