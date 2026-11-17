@@ -17,7 +17,6 @@ const _goodCode = '123456';
 
 /// Only the forgot-password calls are real; anything else fails loudly.
 class _FakeAuthRepository implements RiderAuthRepository {
-  final verified = <String>[];
   final resets = <Map<String, String>>[];
 
   @override
@@ -27,17 +26,6 @@ class _FakeAuthRepository implements RiderAuthRepository {
       const Right(null);
 
   @override
-  Future<Either<Failure, void>> verifyPasswordResetCode({
-    required String phone,
-    required String code,
-  }) async {
-    verified.add(code);
-    return code == _goodCode
-        ? const Right(null)
-        : const Left(ServerFailure('Invalid or expired code'));
-  }
-
-  @override
   Future<Either<Failure, void>> resetPassword({
     required String phone,
     required String code,
@@ -45,7 +33,13 @@ class _FakeAuthRepository implements RiderAuthRepository {
     required String confirmPassword,
   }) async {
     resets.add({'phone': phone, 'code': code, 'password': password});
-    return const Right(null);
+    // `/password/reset` is the only check on the code.
+    return code == _goodCode
+        ? const Right(null)
+        : const Left(ValidationFailure(
+            'Invalid or expired code',
+            {'code': ['Invalid or expired code']},
+          ));
   }
 
   @override
@@ -179,21 +173,47 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets('a wrong code shows the error and clears the boxes',
+    Future<void> enterStrongPassword(WidgetTester tester) async {
+      final fields = find.byType(TextFormField);
+      await tester.enterText(fields.at(0), 'Abcd1234!');
+      await tester.enterText(fields.at(1), 'Abcd1234!');
+      await tester.pump();
+      await tester.ensureVisible(find.byType(AppGradientButton));
+      await tester.tap(find.byType(AppGradientButton));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('a fresh code is not pre-checked before the reset screen',
+        (tester) async {
+      await pumpFlow(tester);
+
+      await tester.enterText(_box(0), _goodCode);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(RiderResetPasswordScreen), findsOneWidget);
+      expect(repo.resets, isEmpty);
+    });
+
+    testWidgets(
+        'a code rejected by the reset returns to the OTP screen with the error',
         (tester) async {
       await pumpFlow(tester);
 
       await tester.enterText(_box(0), '000000');
       await tester.pumpAndSettle();
+      expect(find.byType(RiderResetPasswordScreen), findsOneWidget);
 
-      expect(repo.verified, ['000000']);
+      await enterStrongPassword(tester);
+
+      expect(repo.resets.single['code'], '000000');
+      expect(find.byType(RiderPasswordResetOtpScreen), findsOneWidget);
+      expect(find.byType(RiderResetPasswordScreen), findsNothing);
       expect(find.text('Invalid or expired code'), findsOneWidget);
       expect(_codeOf(tester), isEmpty);
-      expect(find.byType(RiderPasswordResetOtpScreen), findsOneWidget);
     });
 
     testWidgets(
-        'the verified code carries through to a reset gated on strength',
+        'the entered code carries through to a reset gated on strength',
         (tester) async {
       await pumpFlow(tester);
 

@@ -95,17 +95,6 @@ class RiderAuthRepositoryImpl implements RiderAuthRepository {
       _run(() => _api.sendForgotPasswordCode(phone));
 
   @override
-  Future<Either<Failure, void>> verifyPasswordResetCode({
-    required String phone,
-    required String code,
-  }) =>
-      _run(() => _api.verifyOtp(
-            phone: phone,
-            code: code,
-            purpose: OtpPurposes.accountRecovery,
-          ));
-
-  @override
   Future<Either<Failure, void>> resetPassword({
     required String phone,
     required String code,

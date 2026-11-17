@@ -14,8 +14,9 @@ import 'package:gopady_rider/features/rider/shared_widgets/password_strength_val
 
 /// Forgot-password step 3: choose a new password.
 ///
-/// [code] was already confirmed on the OTP screen, but `/password/reset`
-/// re-validates it, so it is submitted again with the new password.
+/// [code] is checked for the first time here, by `/password/reset`. If the
+/// server rejects it, this screen pops back to the OTP screen with the
+/// server's message, so the rider can fix the code or request a new one.
 class RiderResetPasswordScreen extends ConsumerStatefulWidget {
   const RiderResetPasswordScreen({
     super.key,
@@ -61,7 +62,7 @@ class _RiderResetPasswordScreenState
 
     setState(() => _submitting = true);
     final notifier = ref.read(riderAuthProvider.notifier);
-    final ok = await notifier.resetPassword(
+    final outcome = await notifier.resetPassword(
       phone: widget.phone,
       code: widget.code,
       password: _passwordCtrl.text,
@@ -70,10 +71,16 @@ class _RiderResetPasswordScreenState
     if (!mounted) return;
     setState(() => _submitting = false);
 
-    if (!ok) {
+    if (outcome != PasswordResetOutcome.success) {
       final message = ref.read(riderAuthProvider).errorMessage ??
           'Your password could not be reset. Please try again.';
       notifier.clearError();
+
+      // A rejected code is fixed on the OTP screen, not here.
+      if (outcome == PasswordResetOutcome.codeRejected && context.canPop()) {
+        context.pop(message);
+        return;
+      }
       CustomDialog.showError(
         context: context,
         title: 'Password Not Reset',

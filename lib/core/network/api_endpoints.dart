@@ -13,14 +13,6 @@ abstract final class AuthRoles {
   static const riderAccountRoles = {'rider', rider};
 }
 
-/// `purpose` values accepted by [ApiEndpoints.otpVerify].
-///
-/// Verified against the live backend — an unknown value returns
-/// `That is not a purpose a code can be requested for`.
-abstract final class OtpPurposes {
-  static const accountRecovery = 'account_recovery';
-}
-
 abstract final class ApiEndpoints {
   // ═══════════════════════════════════════════════════════════════════════
   // Auth — role-agnostic Laravel v1. The same endpoints serve customer,
@@ -42,15 +34,12 @@ abstract final class ApiEndpoints {
   static const passwordForgot = '/password/forgot';
 
   /// Body: `{phone, code, password, password_confirmation}`.
+  ///
+  /// The only endpoint that checks a [passwordForgot] code. Do not pre-check
+  /// it with `/otp/verify` (purpose `account_recovery`): in practice that
+  /// rejected freshly sent [passwordForgot] codes as expired. The
+  /// customer/vendor app does not use it for this flow either.
   static const passwordReset = '/password/reset';
-
-  /// Purpose-scoped code check. Body: `{phone, code, purpose}`.
-  /// Confirms a [passwordForgot] code (purpose [OtpPurposes.accountRecovery])
-  /// before the rider picks a new password — the same step the customer and
-  /// vendor app takes. [passwordReset] re-validates the code, so it is still
-  /// sent there. Distinct from [phoneVerify], which marks a signed-up
-  /// account's phone as verified.
-  static const otpVerify = '/otp/verify';
 
   /// Changes the signed-in user's password using their current one —
   /// distinct from the OTP-based [passwordForgot]/[passwordReset] pair.

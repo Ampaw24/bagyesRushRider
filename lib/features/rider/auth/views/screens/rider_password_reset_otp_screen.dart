@@ -2,7 +2,6 @@ import 'package:gopady_rider/constant/app_tokens.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:go_router/go_router.dart';
@@ -16,7 +15,7 @@ import 'package:gopady_rider/features/rider/shared_widgets/otp_code_input.dart';
 const int _kCodeLength = 6;
 const int _kResendCooldownSeconds = 60;
 
-/// Consecutive wrong codes before verification locks until a new code is
+/// Consecutive rejected codes before input locks until a new code is
 /// requested.
 const int _kMaxAttempts = 5;
 
@@ -28,12 +27,12 @@ int? _cooldownFrom(String message) {
   return match == null ? null : int.tryParse(match.group(1)!);
 }
 
-/// Forgot-password step 2: confirm the code `/password/forgot` sent.
+/// Forgot-password step 2: enter the code `/password/forgot` sent.
 ///
-/// Same flow as the customer/vendor app: the code is checked here
-/// (`/otp/verify`, purpose `account_recovery`) so a wrong code surfaces
-/// before the rider picks a new password, then handed on to
-/// `RiderResetPasswordScreen`, since `/password/reset` re-validates it.
+/// The code is not checked here. `/password/reset` is the only endpoint
+/// that validates it, so it is handed on to `RiderResetPasswordScreen`.
+/// If the server rejects it there, that screen pops back here with the
+/// reason, and the rider can retype it or request a new one.
 class RiderPasswordResetOtpScreen extends ConsumerStatefulWidget {
   const RiderPasswordResetOtpScreen({super.key, required this.phone});
 
@@ -56,16 +55,18 @@ class _RiderPasswordResetOtpScreenState
 
   String _code = '';
   String? _errorMessage;
-  bool _verifying = false;
   bool _resending = false;
-  bool _isSuccess = false;
   bool _locked = false;
   int _failedAttempts = 0;
+
+  /// True while the reset screen is pushed above this one, so a second
+  /// completion or tap can't push it twice.
+  bool _resetOpen = false;
 
   Timer? _resendTimer;
   int _secondsLeft = 0;
 
-  bool get _canInput => !_verifying && !_locked && !_isSuccess;
+  bool get _canInput => !_locked && !_resetOpen;
 
   @override
   void initState() {
@@ -106,47 +107,29 @@ class _RiderPasswordResetOtpScreenState
     setState(() => _errorMessage = null);
   }
 
-  Future<void> _verify() async {
+  /// Opens the reset screen with the entered code. It is stacked, not
+  /// replaced: the reset screen pops back with the server's message
+  /// (non-null) when `/password/reset` rejects the code.
+  Future<void> _continue() async {
     if (!_canInput || _code.length < _kCodeLength) return;
+    FocusManager.instance.primaryFocus?.unfocus();
 
-    final code = _code;
-    setState(() => _verifying = true);
-
-    final notifier = ref.read(riderAuthProvider.notifier);
-    final ok =
-        await notifier.verifyPasswordResetCode(phone: widget.phone, code: code);
-    if (!mounted) return;
-
-    if (!ok) {
-      final message = ref.read(riderAuthProvider).errorMessage ??
-          'That code is not valid. Please try again.';
-      notifier.clearError();
-      _onVerifyFailed(message);
-      return;
-    }
-
-    HapticFeedback.lightImpact();
-    setState(() {
-      _verifying = false;
-      _isSuccess = true;
-    });
-    await Future<void>.delayed(OtpCodeInput.successDuration);
-    if (!mounted) return;
-
-    // Replaced rather than stacked: the code is spent, so backing out of
-    // the next screen should return to login, not to this one.
-    context.pushReplacement(
+    setState(() => _resetOpen = true);
+    final rejection = await context.push<String>(
       AppRoutes.resetPassword,
-      extra: {'phone': widget.phone, 'code': code},
+      extra: {'phone': widget.phone, 'code': _code},
     );
+    if (!mounted) return;
+    setState(() => _resetOpen = false);
+
+    if (rejection != null) _onCodeRejected(rejection);
   }
 
-  void _onVerifyFailed(String message) {
+  void _onCodeRejected(String message) {
     _failedAttempts++;
     final locked = _failedAttempts >= _kMaxAttempts;
 
     setState(() {
-      _verifying = false;
       _locked = locked;
       _errorMessage = locked
           ? 'Too many incorrect attempts. Request a new code to continue.'
@@ -239,9 +222,8 @@ class _RiderPasswordResetOtpScreenState
                     length: _kCodeLength,
                     enabled: _canInput,
                     hasError: _errorMessage != null,
-                    isSuccess: _isSuccess,
                     onChanged: _onCodeChanged,
-                    onCompleted: (_) => _verify(),
+                    onCompleted: (_) => _continue(),
                   ),
                   AnimatedSize(
                     duration: const Duration(milliseconds: 200),
@@ -254,18 +236,17 @@ class _RiderPasswordResetOtpScreenState
                   ),
                   SizedBox(height: h * 0.038),
                   AppGradientButton(
-                    label: 'Verify & Continue',
-                    isLoading: _verifying,
+                    label: 'Continue',
                     height: (h * 0.058).clamp(46.0, 54.0),
                     onPressed: _canInput && _code.length == _kCodeLength
-                        ? _verify
+                        ? _continue
                         : null,
                   ),
                   SizedBox(height: h * 0.025),
                   _ResendRow(
                     secondsLeft: _secondsLeft,
                     resending: _resending,
-                    enabled: !_verifying && !_isSuccess,
+                    enabled: !_resetOpen,
                     onResend: _resend,
                   ),
                 ],

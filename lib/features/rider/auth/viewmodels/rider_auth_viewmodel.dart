@@ -24,6 +24,24 @@ import 'package:gopady_rider/features/rider/profile/providers/rider_me_profile_p
 
 enum AuthStatus { initial, loading, success, error }
 
+/// What [RiderAuthNotifier.resetPassword] reports back.
+///
+/// [codeRejected] is split out from [failed] because the fixes differ: a
+/// rejected code needs a new code on the OTP screen, anything else (a weak
+/// password, no network) is fixed where the rider already is.
+enum PasswordResetOutcome { success, codeRejected, failed }
+
+/// Whether a `/password/reset` failure is about the OTP rather than the
+/// new password. That endpoint is the only check on a forgot-password code,
+/// so this is where a wrong or expired code surfaces.
+bool _isCodeRejection(Failure f) {
+  if (f is ValidationFailure) {
+    if (f.firstFor('code') != null) return true;
+    if (f.firstFor('password') != null) return false;
+  }
+  return RegExp(r'\b(code|otp)\b', caseSensitive: false).hasMatch(f.message);
+}
+
 class RiderAuthState extends Equatable {
   final AuthStatus status;
   final AuthUserModel? user;
@@ -484,30 +502,6 @@ class RiderAuthNotifier extends Notifier<RiderAuthState> {
     );
   }
 
-  /// Checks a [sendForgotPasswordCode] code before the rider chooses a new
-  /// password. No session side-effects — the same code is submitted again
-  /// with [resetPassword].
-  Future<bool> verifyPasswordResetCode({
-    required String phone,
-    required String code,
-  }) async {
-    state = state.copyWith(status: AuthStatus.loading, clearError: true);
-
-    final result =
-        await _repo.verifyPasswordResetCode(phone: phone, code: code);
-    return result.fold(
-      (f) {
-        state = state.copyWith(
-            status: AuthStatus.error, errorMessage: f.message);
-        return false;
-      },
-      (_) {
-        state = state.copyWith(status: AuthStatus.initial);
-        return true;
-      },
-    );
-  }
-
   /// Verifies the phone, then guarantees an authenticated session.
   ///
   /// If `/register` issued no token, this transparently logs in with
@@ -603,7 +597,10 @@ class RiderAuthNotifier extends Notifier<RiderAuthState> {
     return true;
   }
 
-  Future<bool> resetPassword({
+  /// Sets a new password with a [sendForgotPasswordCode] code. The code is
+  /// validated here and only here — on failure [RiderAuthState.errorMessage]
+  /// holds the reason.
+  Future<PasswordResetOutcome> resetPassword({
     required String phone,
     required String code,
     required String password,
@@ -622,12 +619,14 @@ class RiderAuthNotifier extends Notifier<RiderAuthState> {
       (f) {
         state = state.copyWith(
             status: AuthStatus.error, errorMessage: f.message);
-        return false;
+        return _isCodeRejection(f)
+            ? PasswordResetOutcome.codeRejected
+            : PasswordResetOutcome.failed;
       },
       (_) {
         state = state.copyWith(
             status: AuthStatus.initial, passwordReset: true);
-        return true;
+        return PasswordResetOutcome.success;
       },
     );
   }
